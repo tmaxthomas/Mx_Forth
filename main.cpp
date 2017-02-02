@@ -3,7 +3,6 @@
 #include <vector>
 #include <stack>
 
-std::map<std::string, std::vector<Function> > glossary;
 std::stack<double> stack;
 
 class Function {
@@ -27,6 +26,8 @@ public:
                     val = v;
                 }
             }
+        } else {
+            func = fxn;
         }
     }
     void operator() () {
@@ -42,6 +43,8 @@ private:
     double val;
     void(*func)();
 };
+
+std::map<std::string, std::vector<Function> > glossary;
 
 void addWord();
 void cr();
@@ -65,7 +68,9 @@ void addWord() {
         else {
             vec.push_back(Function(NULL, func));
         }
+        std::cin >> func;
     }
+    glossary.insert(std::make_pair(name, vec));
 }
 
 void cr() {
@@ -131,7 +136,7 @@ int main() {
         auto itr = glossary.find(str);
         if(itr != glossary.end()) {
             for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
-                itr2->();
+                (*itr2)();
             }
         } else {
             Function number(NULL, str);
