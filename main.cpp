@@ -1,50 +1,15 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <list>
 #include <stack>
 
-std::stack<double> stack;
+#include "Stack.h"
 
-class Function {
-public:
-    Function(void(*fxn)(), std::string str = "") : val(0) {
-        if(str.size() > 0) {
-            if(str.size() == 1) {
-                if(str.at(0) >= '0' && str.at(0) <= '9')
-                    val = std::stod(str);
-                else {
-                    val = str.at(0);
-                }
-            } else {
-                size_t a;
-                double v;
-                v = stod(str, &a);
-                if(a < str.size()) {
-                    std::cout << str << " ?";
-                    exit(1);
-                } else {
-                    val = v;
-                }
-            }
-        } else {
-            func = fxn;
-        }
-    }
-    void operator() () {
-        if(val > 0)
-            number();
-        else
-            func();
-    }
-private:
-    void number() {
-        stack.push(val);
-    }
-    double val;
-    void(*func)();
-};
+Stack stack(4096);
 
-std::map<std::string, std::vector<Function> > glossary;
+std::map<std::string, void(*)() > glossary;
+std::map<std::string, std::vector<std::string> > usr_glossary;
 
 void addWord();
 void cr();
@@ -53,24 +18,32 @@ void space();
 void emit();
 void strPrint();
 void add();
+void sub();
+void mult();
+void div();
+void mod();
+void modDiv();
+void swap();
+void dup();
+void over();
+void rot();
+void drop();
 void print();
+void printS();
+void number(std::string& str);
+void parseFunc(std::map<std::string, std::vector<std::string> >::iterator);
 
 
 void addWord() {
     std::string name, func;
     std::cin >> name;
-    std::vector<Function> vec;
+    std::vector<std::string> vec;
     std::cin >> func;
     while(func != ";") {
-        std::map<std::string, std::vector<Function> >::iterator itr = glossary.find(func);
-        if(itr != glossary.end())
-            vec.insert(vec.end(), itr->second.begin(), itr->second.end());
-        else {
-            vec.push_back(Function(NULL, func));
-        }
+        vec.push_back(func);
         std::cin >> func;
     }
-    glossary.insert(std::make_pair(name, vec));
+    usr_glossary.insert(std::make_pair(name, vec));
 }
 
 void cr() {
@@ -78,7 +51,7 @@ void cr() {
 }
 
 void spaces() {
-    std::string str(stack.top(), ' ');
+    std::string str(*(int*)stack.at(0), ' ');
     std::cout << str;
     stack.pop();
 }
@@ -88,7 +61,7 @@ void space() {
 }
 
 void emit() {
-    char ch = stack.top();
+    char ch = *(int*)stack.at(0);
     std::cout << ch;
     stack.pop();
 }
@@ -101,46 +74,159 @@ void strPrint() {
 }
 
 void add() {
-    int s = stack.top();
+    int s = *(int*)stack.at(0);
     stack.pop();
-    stack.top() += s;
+    *(int*)stack.at(0) += s;
+}
+
+void sub() {
+    int s = *(int*)stack.at(0);
+    stack.pop();
+    *(int*)stack.at(0) -= s;
+}
+
+void mult() {
+    int s = *(int*)stack.at(0);
+    stack.pop();
+    *(int*)stack.at(0) *= s;
+}
+
+void div() {
+    int s = *(int*)stack.at(0);
+    stack.pop();
+    *(int*)stack.at(0) /= s;
+}
+
+void mod() {
+    int s = *(int*)stack.at(0);
+    stack.pop();
+    *(int*)stack.at(0) %= s;
+}
+
+void modDiv() {
+    int m, s = *(int*)stack.at(0);
+    stack.pop();
+    m = *(int*)stack.at(0) % s;
+    *(int*)stack.at(0) /= s;
+    stack.push(m);
+}
+
+void swap() {
+    int t = *(int*)stack.at(0);
+    stack.pop();
+    int b = *(int*)stack.at(0);
+    stack.pop();
+    stack.push(t);
+    stack.push(b);
+}
+
+void dup() {
+    stack.push(*(int*)stack.at(0));
+}
+
+void over() {
+    int t = *(int*)stack.at(0);
+    stack.pop();
+    int d = *(int*)stack.at(0);
+    stack.push(t);
+    stack.push(d);
+}
+
+void rot() {
+    int t = *(int*)stack.at(0);
+    stack.pop();
+    int m = *(int*)stack.at(0);
+    stack.pop();
+    int b = *(int*)stack.at(0);
+    stack.pop();
+    stack.push(m);
+    stack.push(t);
+    stack.push(b);
+}
+
+void drop() {
+    stack.pop();
 }
 
 void print() {
-    std::cout << stack.top();
+    std::cout << *(int*)stack.at(0);
     stack.pop();
 }
 
+void printS() {
+    std::list<double> buf;
+    for(int a = 0; a < stack.size(); a++) {
+        std::cout << *(int*)stack.at(a) << " ";
+    }
+}
+
+void number(std::string& str) {
+    if(str.size() == 1) {
+        if(str.at(0) >= '0' && str.at(0) <= '9')
+            stack.push(std::stod(str));
+        else {
+            stack.push(str.at(0));
+        }
+    } else {
+        size_t a;
+        double v;
+        v = stod(str, &a);
+        if(a < str.size()) {
+            std::cout << str << " ?";
+            exit(1);
+        } else {
+            stack.push(v);
+        }
+    }
+}
+
+void parseFunc (std::map<std::string, std::vector<std::string> >::iterator itr){
+    for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
+        auto itr3 = glossary.find(*itr2);
+        auto itr4 = usr_glossary.find(*itr2);
+        if(itr3 != glossary.end()) {
+            itr3->second();
+        } else if(itr4 != usr_glossary.end()) {
+            parseFunc(itr4);
+        } else {
+            number(*itr2);
+        }
+    }
+};
+
 int main() {
     //Generating FORTH environment
-    Function addWordf(addWord);
-    glossary[":"].push_back(addWordf);
-    Function crf(cr);
-    glossary["CR"].push_back(crf);
-    Function spacesf(spaces);
-    glossary["SPACES"].push_back(spacesf);
-    Function spacef(space);
-    glossary["SPACE"].push_back(spacef);
-    Function emitf(emit);
-    glossary["EMIT"].push_back(emitf);
-    Function strPrintf(strPrint);
-    glossary[".\""].push_back(strPrintf);
-    Function addf(add);
-    glossary["+"].push_back(addf);
-    Function printf(print);
-    glossary["."].push_back(printf);
+    glossary[":"] = addWord;
+    glossary["CR"] = cr;
+    glossary["SPACES"] = spaces;
+    glossary["SPACE"] = space;
+    glossary["EMIT"] = emit;
+    glossary[".\""] = strPrint;
+    glossary["+"] = add;
+    glossary["-"] = sub;
+    glossary["*"] = mult;
+    glossary["/"] = div;
+    glossary["MOD"] = mod;
+    glossary["/MOD"] = modDiv;
+    glossary["SWAP"] = swap;
+    glossary["DUP"] = dup;
+    glossary["OVER"] = over;
+    glossary["ROT"] = rot;
+    glossary["DROP"] = drop;
+    glossary[".S"] = printS;
+    glossary["."] = print;
 
     std::string str;
     while(std::cin) {
         std::cin >> str;
         auto itr = glossary.find(str);
+        auto itr2 = usr_glossary.find(str);
         if(itr != glossary.end()) {
-            for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
-                (*itr2)();
-            }
+            itr->second();
+        } else if(itr2 != usr_glossary.end()) {
+            parseFunc(itr2);
         } else {
-            Function number(NULL, str);
-            number();
+            number(str);
         }
     }
     return 0;
