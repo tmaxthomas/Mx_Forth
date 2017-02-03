@@ -10,11 +10,12 @@
 
 class Stack {
 public:
-    Stack(int bytes) : stack(malloc(bytes)) {}
+    Stack(int bytes) : top(-1), stack(malloc(bytes)) {}
     ~Stack() { free(stack); }
-    void* at(int index) { return &stack[top - index]; }
-    void pop();
+    void* at(int index);
+    void pop(int mag);
     void push(int val);
+    void push(long val);
     int size() { return top + 1; }
 private:
     int top; //Site of the top of the stack, counting by intervals of 4 bytes
