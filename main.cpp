@@ -9,9 +9,10 @@
 Stack stack(4096);
 
 std::map<std::string, void(*)() > glossary;
-std::map<std::string, std::vector<std::string> > usr_glossary;
+std::vector<std::pair<std::string, std::vector<std::string> > > usr_glossary;
 
 void addWord();
+void forget();
 void cr();
 void spaces();
 void space();
@@ -34,8 +35,9 @@ void drop();
 void drop2();
 void print();
 void printS();
+void comment();
 void number(std::string& str);
-void parseFunc(std::map<std::string, std::vector<std::string> >::iterator);
+void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr);
 
 
 void addWord() {
@@ -47,7 +49,19 @@ void addWord() {
         vec.push_back(func);
         std::cin >> func;
     }
-    usr_glossary.insert(std::make_pair(name, vec));
+    usr_glossary.push_back(std::make_pair(name, vec));
+}
+
+void forget() {
+    std::string name;
+    std::cin >> name;
+    auto itr = --usr_glossary.end();
+    for(; itr != usr_glossary.begin(); itr--) {
+        if(itr->first == name)
+            break;
+    }
+    if(itr->first == name)
+        usr_glossary.erase(itr, usr_glossary.end());
 }
 
 void cr() {
@@ -189,6 +203,10 @@ void printS() {
     }
 }
 
+void comment() {
+
+}
+
 void number(std::string& str) {
     if(str.size() == 1) {
         if(str.at(0) >= '0' && str.at(0) <= '9')
@@ -209,13 +227,17 @@ void number(std::string& str) {
     }
 }
 
-void parseFunc (std::map<std::string, std::vector<std::string> >::iterator itr){
+void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr){
     for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
         auto itr3 = glossary.find(*itr2);
-        auto itr4 = usr_glossary.find(*itr2);
+        auto itr4 = usr_glossary.rbegin();
+        for(; itr4 != usr_glossary.rend(); itr4++) {
+            if(itr4->first == *itr2)
+                break;
+        }
         if(itr3 != glossary.end()) {
             itr3->second();
-        } else if(itr4 != usr_glossary.end()) {
+        } else if(itr4 != usr_glossary.rend()) {
             parseFunc(itr4);
         } else {
             number(*itr2);
@@ -226,6 +248,7 @@ void parseFunc (std::map<std::string, std::vector<std::string> >::iterator itr){
 int main() {
     //Generating FORTH environment
     glossary[":"] = addWord;
+    glossary["FORGET"] = forget;
     glossary["CR"] = cr;
     glossary["SPACES"] = spaces;
     glossary["SPACE"] = space;
@@ -253,10 +276,14 @@ int main() {
     while(std::cin) {
         std::cin >> str;
         auto itr = glossary.find(str);
-        auto itr2 = usr_glossary.find(str);
+        auto itr2 = usr_glossary.rbegin();
+        for(; itr2 != usr_glossary.rend(); itr2++) {
+            if(itr2->first == str)
+                break;
+        }
         if(itr != glossary.end()) {
             itr->second();
-        } else if(itr2 != usr_glossary.end()) {
+        } else if(itr2 != usr_glossary.rend()) {
             parseFunc(itr2);
         } else {
             number(str);
