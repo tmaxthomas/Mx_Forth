@@ -125,9 +125,9 @@ void swap() {
 }
 
 void swap2() {
-    long t = *(long*)stack.at(0);
+    long t = *(long*)stack.at(1);
     stack.pop(2);
-    long b = *(long*)stack.at(0);
+    long b = *(long*)stack.at(1);
     stack.pop(2);
     stack.push(t);
     stack.push(b);
@@ -150,9 +150,9 @@ void over() {
 }
 
 void over2() {
-    long t = *(long*)stack.at(0);
+    long t = *(long*)stack.at(1);
     stack.pop(2);
-    long d = *(long*)stack.at(0);
+    long d = *(long*)stack.at(1);
     stack.push(t);
     stack.push(d);
 }

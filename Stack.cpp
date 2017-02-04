@@ -22,8 +22,7 @@ void Stack::push(int val) {
 
 void Stack::push(long val) {
     int* st = (int*)stack;
-    long* lt = (long*)st[top];
-    void* ptr = &val;
     top += 2;
-    *lt = *(long*)ptr;
+    long* lt = (long*)&st[top - 1];
+    *lt = val;
 }
