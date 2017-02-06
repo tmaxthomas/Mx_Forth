@@ -46,6 +46,11 @@ void addWord() {
     std::vector<std::string> vec;
     std::cin >> func;
     while(func != ";") {
+        if(func == "(") {
+            while(func.at(func.size() - 1) != ')')
+                std::cin >> func;
+            std::cin >> func;
+        }
         vec.push_back(func);
         std::cin >> func;
     }
@@ -204,7 +209,10 @@ void printS() {
 }
 
 void comment() {
-
+    std::string dump;
+    std::cin >> dump;
+    while(dump.at(dump.size() - 1) != ')')
+        std::cin >> dump;
 }
 
 void number(std::string& str) {
@@ -243,7 +251,7 @@ void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >:
             number(*itr2);
         }
     }
-};
+}
 
 int main() {
     //Generating FORTH environment
@@ -269,8 +277,9 @@ int main() {
     glossary["ROT"] = rot;
     glossary["DROP"] = drop;
     glossary["2DROP"] = drop2;
-    glossary[".S"] = printS;
     glossary["."] = print;
+    glossary[".S"] = printS;
+    glossary["("] = comment;
 
     std::string str;
     while(std::cin) {
