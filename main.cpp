@@ -11,6 +11,9 @@ Stack stack(4096);
 std::map<std::string, void(*)() > glossary;
 std::vector<std::pair<std::string, std::vector<std::string> > > usr_glossary;
 
+void wordParse(std::string& str);
+void phraseParse(std::vector<std::string>&);
+
 void addWord();
 void forget();
 void cr();
@@ -36,9 +39,30 @@ void drop2();
 void print();
 void printS();
 void comment();
+void cond();
 void number(std::string& str);
-void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr);
 
+void wordParse(std::string& str) {
+    auto itr = glossary.find(str);
+    auto itr2 = usr_glossary.rbegin();
+    for(; itr2 != usr_glossary.rend(); itr2++) {
+        if(itr2->first == str)
+            break;
+    }
+    if(itr != glossary.end()) {
+        itr->second();
+    } else if(itr2 != usr_glossary.rend()) {
+        phraseParse(itr2->second);
+    } else {
+        number(str);
+    }
+}
+
+void phraseParse(std::vector<std::string>& str_v) {
+    for(auto vitr = str_v.begin(); vitr != str_v.end(); vitr++) {
+        wordParse(*vitr);
+    }
+}
 
 void addWord() {
     std::string name, func;
@@ -215,6 +239,31 @@ void comment() {
         std::cin >> dump;
 }
 
+void cond(std::vector<std::string>& buf) {
+    std::string buf;
+    if(stack.at(0) > 0) {
+        std::cin >> buf;
+        while(buf != "THEN" && buf != "ELSE") {
+            wordParse(buf);
+            std::cin >> buf;
+        }
+        if(buf == "ELSE") {
+
+        }
+    } else {
+        std::cin >> buf;
+        while(buf != "THEN" && buf != "ELSE")
+            std::cin >> buf;
+        if(buf == "ELSE") {
+            std::cin >> buf;
+            while(buf != "THEN"){
+                wordParse(buf);
+                std::cin >> buf;
+            }
+        }
+    }
+}
+
 void number(std::string& str) {
     if(str.size() == 1) {
         if(str.at(0) >= '0' && str.at(0) <= '9')
@@ -231,24 +280,6 @@ void number(std::string& str) {
             exit(1);
         } else {
             stack.push((int)v);
-        }
-    }
-}
-
-void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr){
-    for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
-        auto itr3 = glossary.find(*itr2);
-        auto itr4 = usr_glossary.rbegin();
-        for(; itr4 != usr_glossary.rend(); itr4++) {
-            if(itr4->first == *itr2)
-                break;
-        }
-        if(itr3 != glossary.end()) {
-            itr3->second();
-        } else if(itr4 != usr_glossary.rend()) {
-            parseFunc(itr4);
-        } else {
-            number(*itr2);
         }
     }
 }
@@ -284,19 +315,7 @@ int main() {
     std::string str;
     while(std::cin) {
         std::cin >> str;
-        auto itr = glossary.find(str);
-        auto itr2 = usr_glossary.rbegin();
-        for(; itr2 != usr_glossary.rend(); itr2++) {
-            if(itr2->first == str)
-                break;
-        }
-        if(itr != glossary.end()) {
-            itr->second();
-        } else if(itr2 != usr_glossary.rend()) {
-            parseFunc(itr2);
-        } else {
-            number(str);
-        }
+        wordParse(str);
     }
     return 0;
 }
