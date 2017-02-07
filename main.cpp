@@ -36,6 +36,7 @@ void drop2();
 void print();
 void printS();
 void comment();
+void cond();
 void number(std::string& str);
 void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr);
 
@@ -232,6 +233,14 @@ void number(std::string& str) {
         } else {
             stack.push((int)v);
         }
+    }
+}
+
+void cond() {
+    if(stack.at(0) > 0) {
+
+    } else {
+
     }
 }
 
