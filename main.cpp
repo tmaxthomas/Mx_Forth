@@ -5,11 +5,12 @@
 #include <stack>
 
 #include "Stack.h"
+#include "Function.h"
 
 Stack stack(4096);
 
 std::map<std::string, void(*)() > glossary;
-std::vector<std::pair<std::string, std::vector<std::string> > > usr_glossary;
+std::vector<std::pair<std::string, Function*> > usr_glossary;
 
 void addWord();
 void forget();

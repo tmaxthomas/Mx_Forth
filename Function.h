@@ -6,9 +6,25 @@
 #define MX_FORTH_FUNCTION_H
 
 
+#include <string>
+
+#include "Stack.h"
+
 class Function {
-    void(*fxn)();
+public:
+    Function() : stack(NULL) {}
+    Function(int(*fxn_)(), Stack* stack_) : fxn(fxn_), stack(stack_) {}
+    int(*fxn)();
     Function** next;
+    Stack* stack;
+    void operator()();
+};
+
+class Number : Function {
+public:
+    Number(std::string str_, Stack* stack_) : str(str_), stack(stack_) {}
+    void operator()();
+    std::string str;
 };
 
 
