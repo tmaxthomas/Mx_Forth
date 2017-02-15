@@ -13,8 +13,8 @@
 class Function {
 public:
     Function() : stack(NULL) {}
-    Function(int(*fxn_)(), Stack* stack_) : fxn(fxn_), stack(stack_) {}
-    Function(Function& old) : fxn(old.fxn), stack(old.stack) {}
+    Function(int(*fxn_)()) : fxn(fxn_) {}
+    Function(Function& old) : fxn(old.fxn) {}
     int(*fxn)();
     Function** next;
     void operator()();

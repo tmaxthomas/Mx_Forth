@@ -265,45 +265,41 @@ void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >:
 
 int main() {
     //Generating FORTH environment
-    glossary[":"] = addWord;
-    glossary["FORGET"] = forget;
-    glossary["CR"] = cr;
-    glossary["SPACES"] = spaces;
-    glossary["SPACE"] = space;
-    glossary["EMIT"] = emit;
-    glossary[".\""] = strPrint;
-    glossary["+"] = add;
-    glossary["-"] = sub;
-    glossary["*"] = mult;
-    glossary["/"] = div;
-    glossary["MOD"] = mod;
-    glossary["/MOD"] = modDiv;
-    glossary["SWAP"] = swap;
-    glossary["2SWAP"] = swap2;
-    glossary["DUP"] = dup;
-    glossary["2DUP"] = dup2;
-    glossary["OVER"] = over;
-    glossary["2OVER"] = over2;
-    glossary["ROT"] = rot;
-    glossary["DROP"] = drop;
-    glossary["2DROP"] = drop2;
-    glossary["."] = print;
-    glossary[".S"] = printS;
-    glossary["("] = comment;
+    glossary.push_back(std::make_pair(":", new Function(addWord)));
+    glossary.push_back(std::make_pair("FORGET", new Function(forget)));
+    glossary.push_back(std::make_pair("CR", new Function(cr)));
+    glossary.push_back(std::make_pair("SPACES", new Function(spaces)));
+    glossary.push_back(std::make_pair("SPACE", new Function(space)));
+    glossary.push_back(std::make_pair("EMIT", new Function(emit)));
+    glossary.push_back(std::make_pair(".\"", new Function(strPrint)));
+    glossary.push_back(std::make_pair("+", new Function(add)));
+    glossary.push_back(std::make_pair("-", new Function(sub)));
+    glossary.push_back(std::make_pair("*", new Function(mult)));
+    glossary.push_back(std::make_pair("/", new Function(div)));
+    glossary.push_back(std::make_pair("MOD", new Function(mod)));
+    glossary.push_back(std::make_pair("/MOD", new Function(modDiv)));
+    glossary.push_back(std::make_pair("SWAP", new Function(swap)));
+    glossary.push_back(std::make_pair("2SWAP", new Function(swap2)));
+    glossary.push_back(std::make_pair("DUP", new Function(dup)));
+    glossary.push_back(std::make_pair("2DUP", new Function(dup2)));
+    glossary.push_back(std::make_pair("OVER", new Function(over)));
+    glossary.push_back(std::make_pair("2OVER", new Function(over2)));
+    glossary.push_back(std::make_pair("ROT", new Function(rot)));
+    glossary.push_back(std::make_pair("DROP", new Function(drop)));
+    glossary.push_back(std::make_pair("DROP2", new Function(drop2)));
+    glossary.push_back(std::make_pair(".", new Function(print)));
+    glossary.push_back(std::make_pair(".S", new Function(printS)));
 
     std::string str;
     while(std::cin) {
         std::cin >> str;
-        auto itr = glossary.find(str);
-        auto itr2 = usr_glossary.rbegin();
-        for(; itr2 != usr_glossary.rend(); itr2++) {
-            if(itr2->first == str)
+        auto itr = glossary.rbegin();
+        for(; itr != glossary.rend(); itr++) {
+            if(itr->first == str)
                 break;
         }
-        if(itr != glossary.end()) {
-            itr->second();
-        } else if(itr2 != usr_glossary.rend()) {
-            parseFunc(itr2);
+        if(itr != glossary.rend()) {
+            itr->second->();
         } else {
             number(str);
         }
