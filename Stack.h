@@ -22,5 +22,7 @@ private:
     void* stack;
 };
 
+static Stack *stack, *return_stack;
+
 
 #endif //MX_FORTH_STACK_H

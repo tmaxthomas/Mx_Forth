@@ -7,9 +7,6 @@
 #include "Stack.h"
 #include "Function.h"
 
-Stack stack(4096);
-Stack return_stack(4096);
-
 std::vector<std::pair<std::string, Function*> > glossary;
 
 void addWord();
@@ -45,9 +42,10 @@ void parseFunc (std::vector<std::pair<std::string, Function*> >::reverse_iterato
 void addWord() {
     std::string name, func;
     std::cin >> name;
-    std::vector<std::string> vec;
+    Function* head, tail;
     std::cin >> func;
     while(func != ";") {
+        //Comment handler
         if(func == "(") {
             while(func.at(func.size() - 1) != ')')
                 std::cin >> func;
@@ -76,9 +74,9 @@ void cr() {
 }
 
 void spaces() {
-    std::string str(*(int*)stack.at(0), ' ');
+    std::string str(*(int*)stack->at(0), ' ');
     std::cout << str;
-    stack.pop(1);
+    stack->pop(1);
 }
 
 void space() {
@@ -86,9 +84,9 @@ void space() {
 }
 
 void emit() {
-    char ch = *(int*)stack.at(0);
+    char ch = *(int*)stack->at(0);
     std::cout << ch;
-    stack.pop(1);
+    stack->pop(1);
 }
 
 void strPrint() {
@@ -99,114 +97,114 @@ void strPrint() {
 }
 
 void add() {
-    int s = *(int*)stack.at(0);
-    stack.pop(1);
-    *(int*)stack.at(0) += s;
+    int s = *(int*)stack->at(0);
+    stack->pop(1);
+    *(int*)stack->at(0) += s;
 }
 
 void sub() {
-    int s = *(int*)stack.at(0);
-    stack.pop(1);
-    *(int*)stack.at(0) -= s;
+    int s = *(int*)stack->at(0);
+    stack->pop(1);
+    *(int*)stack->at(0) -= s;
 }
 
 void mult() {
-    int s = *(int*)stack.at(0);
-    stack.pop(1);
-    *(int*)stack.at(0) *= s;
+    int s = *(int*)stack->at(0);
+    stack->pop(1);
+    *(int*)stack->at(0) *= s;
 }
 
 void div() {
-    int s = *(int*)stack.at(0);
-    stack.pop(1);
-    *(int*)stack.at(0) /= s;
+    int s = *(int*)stack->at(0);
+    stack->pop(1);
+    *(int*)stack->at(0) /= s;
 }
 
 void mod() {
-    int s = *(int*)stack.at(0);
-    stack.pop(1);
-    *(int*)stack.at(0) %= s;
+    int s = *(int*)stack->at(0);
+    stack->pop(1);
+    *(int*)stack->at(0) %= s;
 }
 
 void modDiv() {
-    int m, s = *(int*)stack.at(0);
-    stack.pop(1);
-    m = *(int*)stack.at(0) % s;
-    *(int*)stack.at(0) /= s;
-    stack.push(m);
+    int m, s = *(int*)stack->at(0);
+    stack->pop(1);
+    m = *(int*)stack->at(0) % s;
+    *(int*)stack->at(0) /= s;
+    stack->push(m);
 }
 
 void swap() {
-    int t = *(int*)stack.at(0);
-    stack.pop(1);
-    int b = *(int*)stack.at(0);
-    stack.pop(1);
-    stack.push(t);
-    stack.push(b);
+    int t = *(int*)stack->at(0);
+    stack->pop(1);
+    int b = *(int*)stack->at(0);
+    stack->pop(1);
+    stack->push(t);
+    stack->push(b);
 }
 
 void swap2() {
-    long t = *(long*)stack.at(1);
-    stack.pop(2);
-    long b = *(long*)stack.at(1);
-    stack.pop(2);
-    stack.push(t);
-    stack.push(b);
+    long t = *(long*)stack->at(1);
+    stack->pop(2);
+    long b = *(long*)stack->at(1);
+    stack->pop(2);
+    stack->push(t);
+    stack->push(b);
 }
 
 void dup() {
-    stack.push(*(int*)stack.at(0));
+    stack->push(*(int*)stack->at(0));
 }
 
 void dup2() {
-    stack.push(*(long*)stack.at(1));
+    stack->push(*(long*)stack->at(1));
 }
 
 void over() {
-    int t = *(int*)stack.at(0);
-    stack.pop(1);
-    int d = *(int*)stack.at(0);
-    stack.push(t);
-    stack.push(d);
+    int t = *(int*)stack->at(0);
+    stack->pop(1);
+    int d = *(int*)stack->at(0);
+    stack->push(t);
+    stack->push(d);
 }
 
 void over2() {
-    long t = *(long*)stack.at(1);
-    stack.pop(2);
-    long d = *(long*)stack.at(1);
-    stack.push(t);
-    stack.push(d);
+    long t = *(long*)stack->at(1);
+    stack->pop(2);
+    long d = *(long*)stack->at(1);
+    stack->push(t);
+    stack->push(d);
 }
 
 void rot() {
-    int t = *(int*)stack.at(0);
-    stack.pop(1);
-    int m = *(int*)stack.at(0);
-    stack.pop(1);
-    int b = *(int*)stack.at(0);
-    stack.pop(1);
-    stack.push(m);
-    stack.push(t);
-    stack.push(b);
+    int t = *(int*)stack->at(0);
+    stack->pop(1);
+    int m = *(int*)stack->at(0);
+    stack->pop(1);
+    int b = *(int*)stack->at(0);
+    stack->pop(1);
+    stack->push(m);
+    stack->push(t);
+    stack->push(b);
 }
 
 void drop() {
-    stack.pop(1);
+    stack->pop(1);
 }
 
 void drop2() {
-    stack.pop(2);
+    stack->pop(2);
 }
 
 void print() {
-    std::cout << *(int*)stack.at(0);
-    stack.pop(1);
+    std::cout << *(int*)stack->at(0);
+    stack->pop(1);
 }
 
 void printS() {
     std::list<double> buf;
-    for(int a = 0; a < stack.size(); a++) {
-        std::cout << *(int*)stack.at(a) << " ";
+    for(int a = 0; a < stack->size(); a++) {
+        std::cout << *(int*)stack->at(a) << " ";
     }
 }
 
@@ -220,9 +218,9 @@ void comment() {
 void number(std::string& str) {
     if(str.size() == 1) {
         if(str.at(0) >= '0' && str.at(0) <= '9')
-            stack.push((int)std::stod(str));
+            stack->push((int)std::stod(str));
         else {
-            stack.push(str.at(0));
+            stack->push(str.at(0));
         }
     } else {
         size_t a;
@@ -232,13 +230,13 @@ void number(std::string& str) {
             std::cout << str << " ?";
             exit(1);
         } else {
-            stack.push((int)v);
+            stack->push((int)v);
         }
     }
 }
 
 void cond() {
-    if(stack.at(0) > 0) {
+    if(stack->at(0) > 0) {
 
     } else {
 
