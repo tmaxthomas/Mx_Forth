@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Function.h"
 
-void Function::operator() () {
+void Function::operator()() {
     int idx = fxn();
     if(next) (*next[idx])();
 }

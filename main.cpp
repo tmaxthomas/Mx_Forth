@@ -8,9 +8,9 @@
 #include "Function.h"
 
 Stack stack(4096);
+Stack return_stack(4096);
 
-std::map<std::string, void(*)() > glossary;
-std::vector<std::pair<std::string, Function*> > usr_glossary;
+std::vector<std::pair<std::string, Function*> > glossary;
 
 void addWord();
 void forget();
@@ -39,7 +39,7 @@ void printS();
 void comment();
 void cond();
 void number(std::string& str);
-void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr);
+void parseFunc (std::vector<std::pair<std::string, Function*> >::reverse_iterator itr);
 
 
 void addWord() {
@@ -56,19 +56,19 @@ void addWord() {
         vec.push_back(func);
         std::cin >> func;
     }
-    usr_glossary.push_back(std::make_pair(name, vec));
+    glossary.push_back(std::make_pair(name, vec));
 }
 
 void forget() {
     std::string name;
     std::cin >> name;
-    auto itr = --usr_glossary.end();
-    for(; itr != usr_glossary.begin(); itr--) {
+    auto itr = --glossary.end();
+    for(; itr != glossary.begin(); itr--) {
         if(itr->first == name)
             break;
     }
     if(itr->first == name)
-        usr_glossary.erase(itr, usr_glossary.end());
+        glossary.erase(itr, glossary.end());
 }
 
 void cr() {
@@ -245,10 +245,12 @@ void cond() {
     }
 }
 
+
+//NOTE TO SELF: REWRITE
 void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr){
     for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
         auto itr3 = glossary.find(*itr2);
-        auto itr4 = usr_glossary.rbegin();
+        auto itr4 = glossary.rbegin();
         for(; itr4 != usr_glossary.rend(); itr4++) {
             if(itr4->first == *itr2)
                 break;
