@@ -7,23 +7,25 @@
 
 
 #include <string>
-
 #include "Stack.h"
 
 class Function {
 public:
-    Function() : stack(NULL) {}
-    Function(int(*fxn_)()) : fxn(fxn_) {}
-    Function(Function& old) : fxn(old.fxn) {}
+    Function() : next(NULL) {}
+    Function(int(*fxn_)()) : fxn(fxn_), next(NULL) {}
+    Function(Function* old);
+    ~Function() { delete [] next; }
     int(*fxn)();
     Function** next;
-    void operator()();
+    virtual void run();
 };
 
-class Number : Function {
+class Number : public Function {
 public:
-    Number(std::string str_, Stack* stack_) : str(str_), stack(stack_) {}
-    void operator()();
+    Number(std::string str_) : str(str_) {}
+    Number(Number* old);
+    ~Number() { delete [] next; }
+    void run() override;
     std::string str;
 };
 

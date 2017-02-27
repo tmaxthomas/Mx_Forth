@@ -9,40 +9,44 @@
 
 std::vector<std::pair<std::string, Function*> > glossary;
 
-void addWord();
-void forget();
-void cr();
-void spaces();
-void space();
-void emit();
-void strPrint();
-void add();
-void sub();
-void mult();
-void div();
-void mod();
-void modDiv();
-void swap();
-void swap2();
-void dup();
-void dup2();
-void over();
-void over2();
-void rot();
-void drop();
-void drop2();
-void print();
-void printS();
-void comment();
-void cond();
-void number(std::string& str);
-void parseFunc (std::vector<std::pair<std::string, Function*> >::reverse_iterator itr);
+int addWord();
+int forget();
+int cr();
+int spaces();
+int space();
+int emit();
+int strPrint();
+int add();
+int sub();
+int mult();
+int div();
+int mod();
+int modDiv();
+int swap();
+int swap2();
+int dup();
+int dup2();
+int over();
+int over2();
+int rot();
+int drop();
+int drop2();
+int print();
+int printS();
+int number(std::string& str);
 
+Function* find(std::string& name) {
+    for(auto itr = glossary.rbegin(); itr != glossary.rend(); itr++) {
+        if(itr->first == name)
+            return itr->second;
+    }
+    return NULL;
+}
 
-void addWord() {
+int addWord() {
     std::string name, func;
     std::cin >> name;
-    Function* head, tail;
+    Function *head = NULL, *tail = head;
     std::cin >> func;
     while(func != ";") {
         //Comment handler
@@ -51,13 +55,26 @@ void addWord() {
                 std::cin >> func;
             std::cin >> func;
         }
-        vec.push_back(func);
+        Function* temp;
+        Function* tmp_ptr = find(func);
+        if(tmp_ptr)
+            temp = new Function(tmp_ptr);
+        else
+            temp = new Number(func);
+        if(!head) {
+            head = temp;
+            tail = head;
+        } else {
+            tail->next = &temp;
+            tail = temp;
+        }
         std::cin >> func;
     }
-    glossary.push_back(std::make_pair(name, vec));
+    glossary.push_back(std::make_pair(name, head));
+    return 0;
 }
 
-void forget() {
+int forget() {
     std::string name;
     std::cin >> name;
     auto itr = --glossary.end();
@@ -67,116 +84,134 @@ void forget() {
     }
     if(itr->first == name)
         glossary.erase(itr, glossary.end());
+    return 0;
 }
 
-void cr() {
+int cr() {
     std::cout << "\n";
+    return 0;
 }
 
-void spaces() {
+int spaces() {
     std::string str(*(int*)stack->at(0), ' ');
     std::cout << str;
     stack->pop(1);
+    return 0;
 }
 
-void space() {
+int space() {
     std::cout << " ";
+    return 0;
 }
 
-void emit() {
+int emit() {
     char ch = *(int*)stack->at(0);
     std::cout << ch;
     stack->pop(1);
+    return 0;
 }
 
-void strPrint() {
+int strPrint() {
     char* str = new char[1000];
     std::cin.getline(str, 1000, '"');
     std::cout << str;
     delete str;
+    return 0;
 }
 
-void add() {
+int add() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) += s;
+    return 0;
 }
 
-void sub() {
+int sub() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) -= s;
+    return 0;
 }
 
-void mult() {
+int mult() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) *= s;
+    return 0;
 }
 
-void div() {
+int div() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) /= s;
+    return 0;
 }
 
-void mod() {
+int mod() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) %= s;
+    return 0;
 }
 
-void modDiv() {
+int modDiv() {
     int m, s = *(int*)stack->at(0);
     stack->pop(1);
     m = *(int*)stack->at(0) % s;
     *(int*)stack->at(0) /= s;
     stack->push(m);
+    return 0;
 }
 
-void swap() {
+int swap() {
     int t = *(int*)stack->at(0);
     stack->pop(1);
     int b = *(int*)stack->at(0);
     stack->pop(1);
     stack->push(t);
     stack->push(b);
+    return 0;
 }
 
-void swap2() {
+int swap2() {
     long t = *(long*)stack->at(1);
     stack->pop(2);
     long b = *(long*)stack->at(1);
     stack->pop(2);
     stack->push(t);
     stack->push(b);
+    return 0;
 }
 
-void dup() {
+int dup() {
     stack->push(*(int*)stack->at(0));
+    return 0;
 }
 
-void dup2() {
+int dup2() {
     stack->push(*(long*)stack->at(1));
+    return 0;
 }
 
-void over() {
+int over() {
     int t = *(int*)stack->at(0);
     stack->pop(1);
     int d = *(int*)stack->at(0);
     stack->push(t);
     stack->push(d);
+    return 0;
 }
 
-void over2() {
+int over2() {
     long t = *(long*)stack->at(1);
     stack->pop(2);
     long d = *(long*)stack->at(1);
     stack->push(t);
     stack->push(d);
+    return 0;
 }
 
-void rot() {
+int rot() {
     int t = *(int*)stack->at(0);
     stack->pop(1);
     int m = *(int*)stack->at(0);
@@ -186,36 +221,34 @@ void rot() {
     stack->push(m);
     stack->push(t);
     stack->push(b);
+    return 0;
 }
 
-void drop() {
+int drop() {
     stack->pop(1);
+    return 0;
 }
 
-void drop2() {
+int drop2() {
     stack->pop(2);
+    return 0;
 }
 
-void print() {
+int print() {
     std::cout << *(int*)stack->at(0);
     stack->pop(1);
+    return 0;
 }
 
-void printS() {
+int printS() {
     std::list<double> buf;
     for(int a = 0; a < stack->size(); a++) {
         std::cout << *(int*)stack->at(a) << " ";
     }
+    return 0;
 }
 
-void comment() {
-    std::string dump;
-    std::cin >> dump;
-    while(dump.at(dump.size() - 1) != ')')
-        std::cin >> dump;
-}
-
-void number(std::string& str) {
+int number(std::string& str) {
     if(str.size() == 1) {
         if(str.at(0) >= '0' && str.at(0) <= '9')
             stack->push((int)std::stod(str));
@@ -233,34 +266,7 @@ void number(std::string& str) {
             stack->push((int)v);
         }
     }
-}
-
-void cond() {
-    if(stack->at(0) > 0) {
-
-    } else {
-
-    }
-}
-
-
-//NOTE TO SELF: REWRITE
-void parseFunc (std::vector<std::pair<std::string, std::vector<std::string> > >::reverse_iterator itr){
-    for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
-        auto itr3 = glossary.find(*itr2);
-        auto itr4 = glossary.rbegin();
-        for(; itr4 != usr_glossary.rend(); itr4++) {
-            if(itr4->first == *itr2)
-                break;
-        }
-        if(itr3 != glossary.end()) {
-            itr3->second();
-        } else if(itr4 != usr_glossary.rend()) {
-            parseFunc(itr4);
-        } else {
-            number(*itr2);
-        }
-    }
+    return 0;
 }
 
 int main() {
@@ -293,16 +299,17 @@ int main() {
     std::string str;
     while(std::cin) {
         std::cin >> str;
-        auto itr = glossary.rbegin();
-        for(; itr != glossary.rend(); itr++) {
-            if(itr->first == str)
-                break;
-        }
-        if(itr != glossary.rend()) {
-            itr->second->();
+        Function* func = find(str);
+        if(func) {
+            func->run();
         } else {
             number(str);
         }
     }
+    //Destruction
+    delete stack;
+    delete return_stack;
+    for(auto itr = glossary.begin(); itr != glossary.end(); itr++)
+        delete itr->second;
     return 0;
 }
