@@ -22,7 +22,5 @@ private:
     void* stack;
 };
 
-static Stack *stack = new Stack(4096), *return_stack = new Stack(4096);
-
 
 #endif //MX_FORTH_STACK_H

@@ -14,7 +14,7 @@ public:
     Function() : next(NULL) {}
     Function(int(*fxn_)()) : fxn(fxn_), next(NULL) {}
     Function(Function* old);
-    ~Function() { delete [] next; }
+    virtual ~Function() { delete [] next; }
     int(*fxn)();
     Function** next;
     virtual void run();
@@ -24,7 +24,7 @@ class Number : public Function {
 public:
     Number(std::string str_) : str(str_) {}
     Number(Number* old);
-    ~Number() { delete [] next; }
+    ~Number() override { delete [] next; }
     void run() override;
     std::string str;
 };

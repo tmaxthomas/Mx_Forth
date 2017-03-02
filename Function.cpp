@@ -5,6 +5,8 @@
 #include <iostream>
 #include "Function.h"
 
+extern Stack *stack, *return_stack;
+
 Function::Function(Function* old) : fxn(old->fxn) {
     if(old->next) {
         int size = (sizeof(old->next) / sizeof(old->next[0]));
@@ -44,7 +46,6 @@ void Number::run() {
         }
     }
     if(next){
-        Function* temp = next[0];
-        temp->run();
+        (*next)->run();
     }
 }

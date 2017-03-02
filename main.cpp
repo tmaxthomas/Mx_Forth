@@ -7,6 +7,8 @@
 #include "Stack.h"
 #include "Function.h"
 
+extern Stack *stack, *return_stack;
+
 std::vector<std::pair<std::string, Function*> > glossary;
 
 int addWord();
@@ -65,8 +67,8 @@ int addWord() {
             head = temp;
             tail = head;
         } else {
-            tail->next = &temp;
-            tail = temp;
+            tail->next = new Function*(temp);
+            tail = *tail->next;
         }
         std::cin >> func;
     }
@@ -241,7 +243,6 @@ int print() {
 }
 
 int printS() {
-    std::list<double> buf;
     for(int a = 0; a < stack->size(); a++) {
         std::cout << *(int*)stack->at(a) << " ";
     }
@@ -270,6 +271,9 @@ int number(std::string& str) {
 }
 
 int main() {
+    //Initializing stack
+    stack = new Stack(4096);
+    return_stack = new Stack(4096);
     //Generating FORTH environment
     glossary.push_back(std::make_pair(":", new Function(addWord)));
     glossary.push_back(std::make_pair("FORGET", new Function(forget)));
