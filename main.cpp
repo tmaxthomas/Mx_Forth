@@ -10,7 +10,7 @@
 extern Stack *stack, *return_stack;
 
 std::vector<std::pair<std::string, Function*> > glossary;
-
+//Oh boy, header
 int addWord();
 int forget();
 int cr();
@@ -37,6 +37,7 @@ int print();
 int printS();
 int number(std::string& str);
 
+//Finds words in the glossary
 Function* find(std::string& name) {
     for(auto itr = glossary.rbegin(); itr != glossary.rend(); itr++) {
         if(itr->first == name)
@@ -45,6 +46,7 @@ Function* find(std::string& name) {
     return NULL;
 }
 
+//Adds user-defined words to the glossary
 int addWord() {
     std::string name, func;
     std::cin >> name;
@@ -76,6 +78,7 @@ int addWord() {
     return 0;
 }
 
+//Removes words from the glossary
 int forget() {
     std::string name;
     std::cin >> name;
@@ -88,31 +91,31 @@ int forget() {
         glossary.erase(itr, glossary.end());
     return 0;
 }
-
+//Carriage return
 int cr() {
     std::cout << "\n";
     return 0;
 }
-
+//Prints some number of spaces
 int spaces() {
     std::string str(*(int*)stack->at(0), ' ');
     std::cout << str;
     stack->pop(1);
     return 0;
 }
-
+//Prints a space
 int space() {
     std::cout << " ";
     return 0;
 }
-
+//Prints a character
 int emit() {
     char ch = *(int*)stack->at(0);
     std::cout << ch;
     stack->pop(1);
     return 0;
 }
-
+//Prints a string-NOTE: NEEDS REVISION
 int strPrint() {
     char* str = new char[1000];
     std::cin.getline(str, 1000, '"');
@@ -120,42 +123,42 @@ int strPrint() {
     delete str;
     return 0;
 }
-
+//Polish postfix addition
 int add() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) += s;
     return 0;
 }
-
+//Polish postfix subtraction
 int sub() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) -= s;
     return 0;
 }
-
+//Polist postfix multiplication
 int mult() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) *= s;
     return 0;
 }
-
+//Polish postfix division
 int div() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) /= s;
     return 0;
 }
-
+//Postfix modulo
 int mod() {
     int s = *(int*)stack->at(0);
     stack->pop(1);
     *(int*)stack->at(0) %= s;
     return 0;
 }
-
+//Postfix modulo & division
 int modDiv() {
     int m, s = *(int*)stack->at(0);
     stack->pop(1);
@@ -164,7 +167,7 @@ int modDiv() {
     stack->push(m);
     return 0;
 }
-
+//Swaps top two elements of the stack
 int swap() {
     int t = *(int*)stack->at(0);
     stack->pop(1);
@@ -174,7 +177,7 @@ int swap() {
     stack->push(b);
     return 0;
 }
-
+//Swaps top two elements of the stack for the next two
 int swap2() {
     long t = *(long*)stack->at(1);
     stack->pop(2);
@@ -184,17 +187,17 @@ int swap2() {
     stack->push(b);
     return 0;
 }
-
+//Duplicates the top of the stack
 int dup() {
     stack->push(*(int*)stack->at(0));
     return 0;
 }
-
+//Duplicates the top tow elements of the stack
 int dup2() {
     stack->push(*(long*)stack->at(1));
     return 0;
 }
-
+//Pushes the second element of the stack onto the stack
 int over() {
     int t = *(int*)stack->at(0);
     stack->pop(1);
@@ -203,7 +206,7 @@ int over() {
     stack->push(d);
     return 0;
 }
-
+//Pushes the third and fourth elements of the stack onto the stack
 int over2() {
     long t = *(long*)stack->at(1);
     stack->pop(2);
@@ -212,7 +215,7 @@ int over2() {
     stack->push(d);
     return 0;
 }
-
+//Removes the third element of the stack and pushes it onto the stack
 int rot() {
     int t = *(int*)stack->at(0);
     stack->pop(1);
@@ -225,30 +228,30 @@ int rot() {
     stack->push(b);
     return 0;
 }
-
+//Pops the top of the stack
 int drop() {
     stack->pop(1);
     return 0;
 }
-
+//Pops the top 2 elements of the stack
 int drop2() {
     stack->pop(2);
     return 0;
 }
-
+//Prints and then pops the top of the stack
 int print() {
     std::cout << *(int*)stack->at(0);
     stack->pop(1);
     return 0;
 }
-
+//Prints the contents of the stack
 int printS() {
     for(int a = 0; a < stack->size(); a++) {
         std::cout << *(int*)stack->at(a) << " ";
     }
     return 0;
 }
-
+//Pushes a number onto the stack
 int number(std::string& str) {
     if(str.size() == 1) {
         if(str.at(0) >= '0' && str.at(0) <= '9')
@@ -304,6 +307,7 @@ int main() {
     while(std::cin) {
         std::cin >> str;
         Function* func = find(str);
+        //if the input is a valid word
         if(func) {
             func->run();
         } else {

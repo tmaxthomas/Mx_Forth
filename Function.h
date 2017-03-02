@@ -9,6 +9,8 @@
 #include <string>
 #include "Stack.h"
 
+//Class used in storing user defined functions. User-defined functions are stored as graphs, with elements of class Function (and class Number) at the
+//nodes.
 class Function {
 public:
     Function() : next(NULL) {}
@@ -19,7 +21,7 @@ public:
     Function** next;
     virtual void run();
 };
-
+//Subclass used to deal with pushing numbers onto the stack from within user-defined functions
 class Number : public Function {
 public:
     Number(std::string str_) : str(str_) {}
