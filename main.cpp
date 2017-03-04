@@ -70,10 +70,10 @@ int addWord() {
             Function* if_ = new Function(cond);
             tail->next = new Function*(if_);
             (*(tail->next))->next = new Function*[2];
-            (*(tail->next))->next[0] = new Function(nop);
+            (*(tail->next))->next[1] = new Function(nop);
             if_head = *tail->next;
-            tail = (*(tail->next))->next[0];
-        } else if(func == "ELSE") {
+            tail = (*(tail->next))->next[1];
+        } else if(func == "THEN") {
             if(!if_head){
                 std::cerr << "ERROR: THEN statement without corresponding IF statement\n";
                 return 0;

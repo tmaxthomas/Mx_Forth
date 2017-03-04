@@ -1,4 +1,4 @@
 .idea*
-*.xml
-*.txt
-*.exe
+*.xml*
+*.txt*
+*.exe*
