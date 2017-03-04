@@ -35,6 +35,14 @@ int drop();
 int drop2();
 int print();
 int printS();
+int equals();
+int lessThan();
+int greaterThan();
+int zeroEquals();
+int zeroLessThan();
+int zeroGreaterThan();
+int cond();
+int nop();
 int number(std::string& str);
 
 //Finds words in the glossary
@@ -50,7 +58,7 @@ Function* find(std::string& name) {
 int addWord() {
     std::string name, func;
     std::cin >> name;
-    Function *head = NULL, *tail = head;
+    Function *head = NULL, *tail = head, *if_head = NULL, *loop_head = NULL;
     std::cin >> func;
     while(func != ";") {
         //Comment handler
@@ -58,19 +66,36 @@ int addWord() {
             while(func.at(func.size() - 1) != ')')
                 std::cin >> func;
             std::cin >> func;
-        }
-        Function* temp;
-        Function* tmp_ptr = find(func);
-        if(tmp_ptr)
-            temp = new Function(tmp_ptr);
-        else
-            temp = new Number(func);
-        if(!head) {
-            head = temp;
-            tail = head;
-        } else {
-            tail->next = new Function*(temp);
+        } else if(func == "IF") {
+            Function* if_ = new Function(cond);
+            tail->next = new Function*(if_);
+            (*(tail->next))->next = new Function*[2];
+            (*(tail->next))->next[0] = new Function(nop);
+            if_head = *tail->next;
+            tail = (*(tail->next))->next[0];
+        } else if(func == "ELSE") {
+            if(!if_head){
+                std::cerr << "ERROR: THEN statement without corresponding IF statement\n";
+                return 0;
+            }
+            Function* then = new Function(nop);
+            tail->next = new Function*(then);
+            if_head->next = tail->next;
             tail = *tail->next;
+        } else {
+            Function* temp;
+            Function* tmp_ptr = find(func);
+            if(tmp_ptr)
+                temp = new Function(tmp_ptr);
+            else
+                temp = new Number(func);
+            if(!head) {
+                head = temp;
+                tail = head;
+            } else {
+                tail->next = new Function*(temp);
+                tail = *tail->next;
+            }
         }
         std::cin >> func;
     }
@@ -251,6 +276,68 @@ int printS() {
     }
     return 0;
 }
+int equals(){
+    int a = *(int*)stack->at(0), b = *(int*)stack->at(1);
+    stack->pop(2);
+    if(a == b)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+int lessThan(){
+    int a = *(int*)stack->at(0), b = *(int*)stack->at(1);
+    stack->pop(2);
+    if(a < b)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+int greaterThan(){
+    int a = *(int*)stack->at(0), b = *(int*)stack->at(1);
+    stack->pop(2);
+    if(a > b)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+int zeroEquals(){
+    int a = *(int*)stack->at(0);
+    stack->pop(1);
+    if(a == 0)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+int zeroLessThan(){
+    int a = *(int*)stack->at(0);
+    stack->pop(1);
+    if(0 < a)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+int zeroGreaterThan(){
+    int a = *(int*)stack->at(0);
+    stack->pop(1);
+    if(0 > a)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+//Manages branching for if statements
+int cond() {
+    return *(int*)stack->at(0) != 0;
+}
+//Null operand for structural nodes
+int nop() {
+    return 0;
+}
 //Pushes a number onto the stack
 int number(std::string& str) {
     if(str.size() == 1) {
@@ -302,6 +389,12 @@ int main() {
     glossary.push_back(std::make_pair("DROP2", new Function(drop2)));
     glossary.push_back(std::make_pair(".", new Function(print)));
     glossary.push_back(std::make_pair(".S", new Function(printS)));
+    glossary.push_back(std::make_pair("=", new Function(equals)));
+    glossary.push_back(std::make_pair("<", new Function(lessThan)));
+    glossary.push_back(std::make_pair(">", new Function(greaterThan)));
+    glossary.push_back(std::make_pair("0=", new Function(zeroEquals)));
+    glossary.push_back(std::make_pair("0<", new Function(zeroLessThan)));
+    glossary.push_back(std::make_pair("0>", new Function(zeroGreaterThan)));
 
     std::string str;
     while(std::cin) {
