@@ -58,7 +58,7 @@ Function* find(std::string& name) {
 int addWord() {
     std::string name, func;
     std::cin >> name;
-    Function *head = NULL, *tail = head, *if_head = NULL, *loop_head = NULL;
+    Function *head = NULL, *tail = head, *if_tail = NULL, *else_tail = NULL, *loop_head = NULL;
     std::cin >> func;
     while(func != ";") {
         //Comment handler
@@ -72,18 +72,24 @@ int addWord() {
             tail->next[0] = if_;
             tail->next[0]->next = new Function*[2];
             tail->next[0]->next[1] = new Function(nop);
-            if_head = tail->next[0];
-            tail = if_head->next[1];
+            if_tail = tail->next[0];
+            tail = if_tail->next[1];
+        } else if(func == "ELSE") {
+            else_tail = if_tail;
+            if_tail = tail;
+            else_tail->next[0] = new Function(nop);
+            tail = else_tail->next[0];
         } else if(func == "THEN") {
-            if(!if_head){
+            if(!if_tail){
                 std::cerr << "ERROR: THEN statement without corresponding IF statement\n";
                 return 0;
             }
             Function* then = new Function(nop);
             tail->next = new Function*[1];
             tail->next[0] = then;
-            if_head->next[0] = then;
+            if_tail->next[0] = then;
             tail = tail->next[0];
+            if_tail = NULL;
         } else {
             Function* temp;
             Function* tmp_ptr = find(func);
