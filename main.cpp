@@ -68,20 +68,22 @@ int addWord() {
             std::cin >> func;
         } else if(func == "IF") {
             Function* if_ = new Function(cond);
-            tail->next = new Function*(if_);
-            (*(tail->next))->next = new Function*[2];
-            (*(tail->next))->next[1] = new Function(nop);
-            if_head = *tail->next;
-            tail = (*(tail->next))->next[1];
+            tail->next = new Function*[1];
+            tail->next[0] = if_;
+            tail->next[0]->next = new Function*[2];
+            tail->next[0]->next[1] = new Function(nop);
+            if_head = tail->next[0];
+            tail = if_head->next[1];
         } else if(func == "THEN") {
             if(!if_head){
                 std::cerr << "ERROR: THEN statement without corresponding IF statement\n";
                 return 0;
             }
             Function* then = new Function(nop);
-            tail->next = new Function*(then);
-            if_head->next = tail->next;
-            tail = *tail->next;
+            tail->next = new Function*[1];
+            tail->next[0] = then;
+            if_head->next[0] = then;
+            tail = tail->next[0];
         } else {
             Function* temp;
             Function* tmp_ptr = find(func);
@@ -93,8 +95,9 @@ int addWord() {
                 head = temp;
                 tail = head;
             } else {
-                tail->next = new Function*(temp);
-                tail = *tail->next;
+                tail->next = new Function*[1];
+                tail->next[0] = temp;
+                tail = tail->next[0];
             }
         }
         std::cin >> func;

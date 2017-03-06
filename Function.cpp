@@ -25,7 +25,7 @@ Number::Number(Number* old) : str(old->str) {
 //Call the function pointer, then use its return value to determine what to run next
 void Function::run() {
     int idx = fxn();
-    if(next) (*next[idx]).run();
+    if(next) next[idx]->run();
 }
 //Basically just the number function from main.cpp
 void Number::run() {
