@@ -24,6 +24,18 @@ int mult();
 int div();
 int mod();
 int modDiv();
+int multDiv();
+int multDivMod();
+int add1();
+int sub1();
+int add2();
+int sub2();
+int abs();
+int neg();
+int min();
+int max();
+int lshift();
+int rshift();
 int swap();
 int swap2();
 int dup();
@@ -33,6 +45,10 @@ int over2();
 int rot();
 int drop();
 int drop2();
+int retPush();
+int retPop();
+int retCopy();
+int retCopy3();
 int print();
 int printS();
 int equals();
@@ -80,13 +96,11 @@ int addWord() {
             else_tail->next[0] = new Function(nop);
             tail = else_tail->next[0];
         } else if(func == "THEN") {
-            if(!if_tail){
-                std::cerr << "ERROR: THEN statement without corresponding IF statement\n";
-                return 0;
-            }
             Function* then = new Function(nop);
             tail->next = new Function*[1];
             tail->next[0] = then;
+            if(!if_tail->next)
+                if_tail->next = new Function*[1];
             if_tail->next[0] = then;
             tail = tail->next[0];
             if_tail = NULL;
@@ -201,6 +215,85 @@ int modDiv() {
     stack->push(m);
     return 0;
 }
+
+int multDiv(){
+    long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
+    stack->pop(3);
+    long m = a * b;
+    int d = m / c;
+    stack->push(d);
+    return 0;
+}
+
+int multDivMod(){
+    long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
+    stack->pop(3);
+    long m = a * b;
+    int d = m / c, r = m % c;
+    stack->push(r);
+    stack->push(d);
+    return 0;
+}
+
+int add1() {
+    (*(int*)stack->at(0))++;
+    return 0;
+}
+int sub1() {
+    (*(int*)stack->at(0))--;
+    return 0;
+}
+int add2() {
+    *(int*)stack->at(0) += 2;
+    return 0;
+}
+int sub2() {
+    *(int*)stack->at(0) -= 2;
+    return 0;
+}
+int lshift() {
+    *(int*)stack->at(0) *= 2;
+    return 0;
+}
+int rshift() {
+    *(int*)stack->at(0) /= 2;
+    return 0;
+}
+
+int abs(){
+    *(int*)stack->at(0) = std::abs(*(int*)stack->at(0));
+    return 0;
+}
+
+int neg(){
+    *(int*)stack->at(0) *= -1;
+    return 0;
+}
+
+int min(){
+    int a = *(int*)stack->at(0);
+    stack->pop(1);
+    int b = *(int*)stack->at(0);
+    stack->pop(1);
+    if(a > b)
+        stack->push(b);
+    else
+        stack->push(a);
+    return 0;
+}
+
+int max(){
+    int a = *(int*)stack->at(0);
+    stack->pop(1);
+    int b = *(int*)stack->at(0);
+    stack->pop(1);
+    if(a > b)
+        stack->push(a);
+    else
+        stack->push(b);
+    return 0;
+}
+
 //Swaps top two elements of the stack
 int swap() {
     int t = *(int*)stack->at(0);
@@ -272,6 +365,33 @@ int drop2() {
     stack->pop(2);
     return 0;
 }
+
+int retPush(){
+    int a = *(int*)stack->at(0);
+    stack->pop(1);
+    return_stack->push(a);
+    return 0;
+}
+
+int retPop(){
+    int a = *(int*)return_stack->at(0);
+    return_stack->pop(1);
+    stack->push(a);
+    return 0;
+}
+
+int retCopy(){
+    int a = *(int*)return_stack->at(0);
+    stack->push(a);
+    return 0;
+}
+
+int retCopy3(){
+    int a = *(int*)return_stack->at(2);
+    stack->push(a);
+    return 0;
+}
+
 //Prints and then pops the top of the stack
 int print() {
     std::cout << *(int*)stack->at(0);
@@ -387,6 +507,18 @@ int main() {
     glossary.push_back(std::make_pair("/", new Function(div)));
     glossary.push_back(std::make_pair("MOD", new Function(mod)));
     glossary.push_back(std::make_pair("/MOD", new Function(modDiv)));
+    glossary.push_back(std::make_pair("*/", new Function(multDiv)));
+    glossary.push_back(std::make_pair("*/MOD", new Function(multDivMod)));
+    glossary.push_back(std::make_pair("1+", new Function(add1)));
+    glossary.push_back(std::make_pair("1-", new Function(sub1)));
+    glossary.push_back(std::make_pair("2+", new Function(add2)));
+    glossary.push_back(std::make_pair("2-", new Function(sub2)));
+    glossary.push_back(std::make_pair("2*", new Function(lshift)));
+    glossary.push_back(std::make_pair("2/", new Function(rshift)));
+    glossary.push_back(std::make_pair("ABS", new Function(abs)));
+    glossary.push_back(std::make_pair("NEGATE", new Function(neg)));
+    glossary.push_back(std::make_pair("MIN", new Function(min)));
+    glossary.push_back(std::make_pair("MAX", new Function(max)));
     glossary.push_back(std::make_pair("SWAP", new Function(swap)));
     glossary.push_back(std::make_pair("2SWAP", new Function(swap2)));
     glossary.push_back(std::make_pair("DUP", new Function(dup)));
@@ -396,6 +528,11 @@ int main() {
     glossary.push_back(std::make_pair("ROT", new Function(rot)));
     glossary.push_back(std::make_pair("DROP", new Function(drop)));
     glossary.push_back(std::make_pair("DROP2", new Function(drop2)));
+    glossary.push_back(std::make_pair(">R", new Function(retPush)));
+    glossary.push_back(std::make_pair("R>", new Function(retPop)));
+    glossary.push_back(std::make_pair("I", new Function(retCopy)));
+    glossary.push_back(std::make_pair("R@", new Function(retCopy)));
+    glossary.push_back(std::make_pair("J", new Function(retCopy3)));
     glossary.push_back(std::make_pair(".", new Function(print)));
     glossary.push_back(std::make_pair(".S", new Function(printS)));
     glossary.push_back(std::make_pair("=", new Function(equals)));
