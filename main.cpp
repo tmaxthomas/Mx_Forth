@@ -9,6 +9,7 @@
 
 extern Stack *stack, *return_stack;
 
+std::stack<Function*> if_tail;
 std::vector<std::pair<std::string, Function*> > glossary;
 //Oh boy, header
 int addWord();
@@ -74,7 +75,7 @@ Function* find(std::string& name) {
 int addWord() {
     std::string name, func;
     std::cin >> name;
-    Function *head = NULL, *tail = head, *if_tail = NULL, *else_tail = NULL, *loop_head = NULL;
+    Function *head = NULL, *tail = head;
     std::cin >> func;
     while(func != ";") {
         //Comment handler
@@ -88,22 +89,23 @@ int addWord() {
             tail->next[0] = if_;
             tail->next[0]->next = new Function*[2];
             tail->next[0]->next[1] = new Function(nop);
-            if_tail = tail->next[0];
-            tail = if_tail->next[1];
+            if_tail.push(tail->next[0]);
+            tail = if_tail.top()->next[1];
         } else if(func == "ELSE") {
-            else_tail = if_tail;
-            if_tail = tail;
+            Function* else_tail;
+            else_tail = if_tail.top();
+            if_tail.top() = tail;
             else_tail->next[0] = new Function(nop);
             tail = else_tail->next[0];
         } else if(func == "THEN") {
             Function* then = new Function(nop);
             tail->next = new Function*[1];
             tail->next[0] = then;
-            if(!if_tail->next)
-                if_tail->next = new Function*[1];
-            if_tail->next[0] = then;
+            if(!if_tail.top()->next)
+                if_tail.top()->next = new Function*[1];
+            if_tail.top()->next[0] = then;
             tail = tail->next[0];
-            if_tail = NULL;
+            if_tail.pop();
         } else {
             Function* temp;
             Function* tmp_ptr = find(func);
