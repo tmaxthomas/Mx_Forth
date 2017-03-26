@@ -463,7 +463,9 @@ int zeroGreaterThan(){
 }
 //Manages branching for if statements
 int cond() {
-    return *(int*)stack->at(0) != 0;
+    int a = *(int*)stack->at(0) != 0;
+    stack->pop(1);
+    return a;
 }
 //Null operand for structural nodes
 int nop() {
