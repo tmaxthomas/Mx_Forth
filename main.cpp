@@ -9,7 +9,7 @@
 
 extern Stack *stack, *return_stack;
 
-std::stack<Function*> if_tail;
+std::stack<Function*> if_tail, *do_tail;
 std::vector<std::pair<std::string, Function*> > glossary;
 //Oh boy, header
 int addWord();
@@ -59,6 +59,7 @@ int zeroEquals();
 int zeroLessThan();
 int zeroGreaterThan();
 int cond();
+int doCond();
 int nop();
 int number(std::string& str);
 
@@ -106,6 +107,8 @@ int addWord() {
             if_tail.top()->next[0] = then;
             tail = tail->next[0];
             if_tail.pop();
+        } else if(func == "DO"){
+            Function* do_ = new Function(nop);
         } else {
             Function* temp;
             Function* tmp_ptr = find(func);
@@ -466,6 +469,9 @@ int cond() {
     int a = *(int*)stack->at(0) != 0;
     stack->pop(1);
     return a;
+}
+int doCond() {
+
 }
 //Null operand for structural nodes
 int nop() {
