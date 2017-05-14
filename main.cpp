@@ -232,13 +232,6 @@ void printS() {
     }
 }
 
-void comment() {
-    std::string dump;
-    std::cin >> dump;
-    while(dump.at(dump.size() - 1) != ')')
-        std::cin >> dump;
-}
-
 void cond(std::vector<std::string>& buf) {
     std::string buf;
     if(stack.at(0) > 0) {
@@ -310,7 +303,6 @@ int main() {
     glossary["2DROP"] = drop2;
     glossary["."] = print;
     glossary[".S"] = printS;
-    glossary["("] = comment;
 
     std::string str;
     while(std::cin) {
