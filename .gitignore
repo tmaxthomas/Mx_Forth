@@ -1,5 +1,4 @@
-*.xml
-*.iml
-*.exe
-*.stackdump
 .idea*
+*.xml*
+*.txt*
+*.exe*
