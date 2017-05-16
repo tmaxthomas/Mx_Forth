@@ -9,8 +9,9 @@
 
 extern Stack *stack, *return_stack;
 
-std::stack<Function*> if_tail, *do_tail;
+std::stack<Function*> if_stack, do_stack;
 std::vector<std::pair<std::string, Function*> > glossary;
+
 //Oh boy, header
 int addWord();
 int forget();
@@ -59,7 +60,9 @@ int zeroEquals();
 int zeroLessThan();
 int zeroGreaterThan();
 int cond();
-int doCond();
+int loop();
+int loop_plus();
+int do_();
 int nop();
 int number(std::string& str);
 
@@ -73,6 +76,11 @@ Function* find(std::string& name) {
 }
 
 //Adds user-defined words to the glossary
+
+//WARNING: This code is very obtuse, despite the extensive comments. I shouldn't have used so much C-style code,
+// but what's done is done. I could change to using vectors, and it might make a little bit more sense, but probably not.
+//Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
+//path decider, but messy graph handling.
 int addWord() {
     std::string name, func;
     std::cin >> name;
@@ -84,39 +92,51 @@ int addWord() {
             while(func.at(func.size() - 1) != ')')
                 std::cin >> func;
             std::cin >> func;
-        } else if(func == "IF") {
-            Function* if_ = new Function(cond);
+        } else if(func == "IF") { //Conditional handling, step 1
+            Function* if_ = new Function(cond);         //Allcoate & initialize the if node
             tail->next = new Function*[1];
-            tail->next[0] = if_;
-            tail->next[0]->next = new Function*[2];
-            tail->next[0]->next[1] = new Function(nop);
-            if_tail.push(tail->next[0]);
-            tail = if_tail.top()->next[1];
+            tail->next[0] = if_;                        //Tail points to if
+            tail->next[0]->next = new Function*[2];     //if block branching nodes declaration
+            tail->next[0]->next[1] = new Function(nop); //Dummy node for conditional branch in order to have if head node location
+            if_stack.push(tail->next[0]);                //Push the node onto the conditional stack
+            tail = if_stack.top()->next[1];              //Set tail node
         } else if(func == "ELSE") {
             Function* else_tail;
-            else_tail = if_tail.top();
-            if_tail.top() = tail;
-            else_tail->next[0] = new Function(nop);
-            tail = else_tail->next[0];
+            else_tail = if_stack.top();                  //Grab the top of the conditional stack
+            if_stack.top() = tail;                       //Move the tail
+            else_tail->next[0] = new Function(nop);      //Allocate dummy node
+            tail = else_tail->next[0];                   //Move tail
         } else if(func == "THEN") {
-            Function* then = new Function(nop);
-            tail->next = new Function*[1];
+            Function* then = new Function(nop);          //Another dummy node, to unite the two conditional paths
+            tail->next = new Function*[1];               //Stitch the active tail into the dummy node
             tail->next[0] = then;
-            if(!if_tail.top()->next)
-                if_tail.top()->next = new Function*[1];
-            if_tail.top()->next[0] = then;
+            if(!if_stack.top()->next)                    //Handle possible if/else
+                if_stack.top()->next = new Function*[1];
+            if_stack.top()->next[0] = then;              //Stitch the other tail into the dummy node
             tail = tail->next[0];
-            if_tail.pop();
-        } else if(func == "DO"){
-            Function* do_ = new Function(nop);
+            if_stack.pop();                              //Clean up the conditional stack
+        } else if(func == "DO") {
+            Function* _do = new Function(do_);           //Allocate do function
+            tail->next = new Function*[1];
+            tail->next[0] = _do;                         //Set tail->next
+            tail = tail->next[0];                        //Move tail
+            Function* loop_head = new Function(nop);     //Allocate loop block head
+            tail->next = new Function*[1];
+            tail->next[0] = loop_head;                   //Move tail to loop head
+            do_stack.push(loop_head);                    //Put head on do loop stack
+            tail = tail->next[0];
+        } else if(func == "LOOP") {
+            Function* loop_ = new Function(loop);        //Allocate loop escape checker function
+            tail->next[0] = loop_;                       //Add loop escape checker to loop path
+            loop_->next[1] = do_stack.top();             //Plug loop path into loop head
+            do_stack.pop();                              //Clean up do stack
+            loop_->next[0] = new Function(nop);          //Set up loop escape path
+            tail = loop_->next[0];                       //Move tail
         } else {
             Function* temp;
             Function* tmp_ptr = find(func);
-            if(tmp_ptr)
-                temp = new Function(tmp_ptr);
-            else
-                temp = new Number(func);
-            if(!head) {
+            temp = (Function*)(tmp_ptr ? new Function(tmp_ptr) : new Number(func));   //Number/non-Number handling
+            if(!head) {  //Empty func handling
                 head = temp;
                 tail = head;
             } else {
@@ -470,12 +490,29 @@ int cond() {
     stack->pop(1);
     return a;
 }
-int doCond() {
 
+int do_() {
+    int index = *(int*)stack->at(0);
+    stack->pop(1);
+    int limit = *(int*)stack->at(0);
+    stack->pop(1);
+    return_stack->push(limit);
+    return_stack->push(index);
+    return 0;
+}
+
+int loop() {
+    int index = *(int*)return_stack->at(0);
+    int limit = *(int*)return_stack->at(1);
+    index++;
+    if(index != limit) {
+        *(int*)return_stack->at(0) = index;
+        return 0;
+    } else return 1;
 }
 //Null operand for structural nodes
 int nop() {
-    return 0;
+    return 0; //That's right; it does nothing.
 }
 //Pushes a number onto the stack
 int number(std::string& str) {
