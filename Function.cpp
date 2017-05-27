@@ -10,15 +10,16 @@ extern Stack *stack, *return_stack;
 Function::Function(Function* old) : fxn(old->fxn) {
     if(old->next) {
         int size = (sizeof(old->next) / sizeof(old->next[0]));
-        next = new Function *[size];
+        next = new Function*[size];
         for (int a = 0; a < size; a++) {
             next[a] = new Function(old->next[a]);
         }
     } else
         next = NULL;
 }
+
 //Copy constructor
-Number::Number(Number* old) : str(old->str) {
+Number::Number(Number* old) : Function(), str(old->str) {
     next = new Function*[1];
     next[0] = new Function(old->next[0]);
 }

@@ -13,7 +13,7 @@
 //nodes.
 class Function {
 public:
-    Function() : next(NULL) {}
+    Function() : fxn(NULL), next(NULL) {}
     Function(int(*fxn_)()) : fxn(fxn_), next(NULL) {}
     Function(Function* old);
     virtual ~Function() { delete [] next; }
@@ -24,7 +24,7 @@ public:
 //Subclass used to deal with pushing numbers onto the stack from within user-defined functions
 class Number : public Function {
 public:
-    Number(std::string str_) : str(str_) {}
+    Number(std::string str_) : Function(), str(str_){}
     Number(Number* old);
     ~Number() override { delete [] next; }
     void run() override;

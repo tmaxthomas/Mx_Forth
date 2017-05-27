@@ -143,7 +143,8 @@ int addWord() {
             } else {
                 tail->next = new Function*[1];
                 tail->next[0] = temp;
-                tail = tail->next[0];
+                while(tail->next)                        //Integrate user-defined words properly by skipping over word graph
+                    tail = tail->next[0];
             }
         }
         std::cin >> func;
