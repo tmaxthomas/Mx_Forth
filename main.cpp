@@ -105,8 +105,7 @@ int addWord() {
             else_tail = if_stack.top();                  //Grab the top of the conditional stack
             if_stack.top() = tail;                       //Move the tail
             else_tail->next[0] = new Function(nop);      //Allocate dummy node
-            tail = else_tail->next[0];                   //Move tail
-        } else if(func == "THEN") {
+            tail = else_tail->next[0];
             Function* then = new Function(nop);          //Another dummy node, to unite the two conditional paths
             tail->next = new Function*[1];               //Stitch the active tail into the dummy node
             tail->next[0] = then;
@@ -127,7 +126,9 @@ int addWord() {
             tail = tail->next[0];
         } else if(func == "LOOP") {
             Function* loop_ = new Function(loop);        //Allocate loop escape checker function
+            tail->next = new Function*[1];
             tail->next[0] = loop_;                       //Add loop escape checker to loop path
+            loop_->next = new Function*[2];              //Allocate loop branching
             loop_->next[1] = do_stack.top();             //Plug loop path into loop head
             do_stack.pop();                              //Clean up do stack
             loop_->next[0] = new Function(nop);          //Set up loop escape path
@@ -507,8 +508,8 @@ int loop() {
     index++;
     if(index != limit) {
         *(int*)return_stack->at(0) = index;
-        return 0;
-    } else return 1;
+        return 1;
+    } else return 0;
 }
 //Null operand for structural nodes
 int nop() {
