@@ -12,7 +12,12 @@ Function::Function(Function* old) : fxn(old->fxn) {
         int size = (sizeof(old->next) / sizeof(old->next[0]));
         next = new Function*[size];
         for (int a = 0; a < size; a++) {
-            next[a] = new Function(old->next[a]);
+            Number* old_num = dynamic_cast<Number*>(old->next[a]); //Abusing dynamic_cast for fun and profit
+            if(!old_num)
+                next[a] = new Function(old->next[a]);
+            else
+                next[a] = new Number(old_num);
+
         }
     } else
         next = NULL;

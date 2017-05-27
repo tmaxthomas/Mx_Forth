@@ -138,8 +138,10 @@ int addWord() {
             Function* tmp_ptr = find(func);
             temp = (Function*)(tmp_ptr ? new Function(tmp_ptr) : new Number(func));   //Number/non-Number handling
             if(!head) {  //Empty func handling
-                head = temp;
-                tail = head;
+                head = new Function(nop);  //Prevents Function copy constructor breaking if the first word in a user-defined word is a call to Number
+                head->next = new Function*[1];
+                head->next[0] = temp;
+                tail = head->next[0];
             } else {
                 tail->next = new Function*[1];
                 tail->next[0] = temp;
@@ -609,3 +611,5 @@ int main() {
         delete itr->second;
     return 0;
 }
+
+//TODO: Fix the Function copy constructor to handle copying Number objects correctly, or find some workaround if that fails
