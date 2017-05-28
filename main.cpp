@@ -3,11 +3,14 @@
 #include <vector>
 #include <list>
 #include <stack>
+#include <unordered_map>
 
 #include "Stack.h"
 #include "Function.h"
 
 extern Stack *stack, *return_stack;
+
+std::unordered_map<Function*, Function*> copy_map;
 
 std::stack<Function*> if_stack, do_stack;
 std::vector<std::pair<std::string, Function*> > glossary;
@@ -97,6 +100,7 @@ int addWord() {
             tail->next = new Function*[1];
             tail->next[0] = if_;                        //Tail points to if
             tail->next[0]->next = new Function*[2];     //if block branching nodes declaration
+            tail->next[0]->branches = 2;
             tail->next[0]->next[1] = new Function(nop); //Dummy node for conditional branch in order to have if head node location
             if_stack.push(tail->next[0]);                //Push the node onto the conditional stack
             tail = if_stack.top()->next[1];              //Set tail node
@@ -129,11 +133,13 @@ int addWord() {
             tail->next = new Function*[1];
             tail->next[0] = loop_;                       //Add loop escape checker to loop path
             loop_->next = new Function*[2];              //Allocate loop branching
+            loop_->branches = 2;
             loop_->next[1] = do_stack.top();             //Plug loop path into loop head
             do_stack.pop();                              //Clean up do stack
             loop_->next[0] = new Function(nop);          //Set up loop escape path
             tail = loop_->next[0];                       //Move tail
         } else {
+            copy_map.erase(copy_map.begin(), copy_map.end()); //Clean up the copy constructor map
             Function* temp;
             Function* tmp_ptr = find(func);
             temp = (Function*)(tmp_ptr ? new Function(tmp_ptr) : new Number(func));   //Number/non-Number handling

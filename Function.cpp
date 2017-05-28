@@ -3,21 +3,30 @@
 //
 
 #include <iostream>
+#include <unordered_map>
 #include "Function.h"
 
+extern std::unordered_map<Function*, Function*> copy_map;
+
 extern Stack *stack, *return_stack;
+
 //Copy constructor
 Function::Function(Function* old) : fxn(old->fxn) {
+    copy_map.insert(std::make_pair(old, this));
     if(old->next) {
-        int size = (sizeof(old->next) / sizeof(old->next[0]));
-        next = new Function*[size];
-        for (int a = 0; a < size; a++) {
-            Number* old_num = dynamic_cast<Number*>(old->next[a]); //Abusing dynamic_cast for fun and profit
-            if(!old_num)
-                next[a] = new Function(old->next[a]);
-            else
+        next = new Function*[branches];
+        for (int a = 0; a < branches; a++) {
+            Number *old_num = dynamic_cast<Number*>(old->next[a]); //Abusing dynamic_cast for fun and profit
+            if (!old_num) {
+                std::unordered_map<Function*, Function*>::iterator itr = copy_map.find(old->next[a]);
+                if (itr == copy_map.end()) {
+                    next[a] = new Function(old->next[a]);
+                } else {
+                    next[a] = itr->second;
+                }
+            } else {
                 next[a] = new Number(old_num);
-
+            }
         }
     } else
         next = NULL;

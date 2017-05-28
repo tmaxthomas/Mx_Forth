@@ -5,20 +5,23 @@
 #ifndef MX_FORTH_FUNCTION_H
 #define MX_FORTH_FUNCTION_H
 
-
 #include <string>
+#include <stdint.h>
 #include "Stack.h"
+
+#define byte uint8_t
 
 //Class used in storing user defined functions. User-defined functions are stored as graphs, with elements of class Function (and class Number) at the
 //nodes.
 class Function {
 public:
-    Function() : fxn(NULL), next(NULL) {}
-    Function(int(*fxn_)()) : fxn(fxn_), next(NULL) {}
+    Function() : fxn(NULL), next(NULL), branches(1) {}
+    Function(int(*fxn_)()) : fxn(fxn_), next(NULL), branches(1) {}
     Function(Function* old);
     virtual ~Function() { delete [] next; }
     int(*fxn)();
     Function** next;
+    byte branches;
     virtual void run();
 };
 //Subclass used to deal with pushing numbers onto the stack from within user-defined functions
