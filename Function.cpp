@@ -11,7 +11,7 @@ extern std::unordered_map<Function*, Function*> copy_map;
 extern Stack *stack, *return_stack;
 
 //Copy constructor
-Function::Function(Function* old) : fxn(old->fxn) {
+Function::Function(Function* old) : fxn(old->fxn), branches(old->branches) {
     copy_map.insert(std::make_pair(old, this));
     if(old->next) {
         next = new Function*[branches];
