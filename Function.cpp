@@ -35,7 +35,12 @@ Function::Function(Function* old) : fxn(old->fxn), branches(old->branches) {
 //Copy constructor
 Number::Number(Number* old) : Function(), str(old->str) {
     next = new Function*[1];
-    next[0] = new Function(old->next[0]);
+    //If the next node is also a number
+    Number* old_num = dynamic_cast<Number*>(old->next[0]);
+    if(old_num)
+        next[0] = new Number(old_num);
+    else
+        next[0] = new Function(old->next[0]);
 }
 //Call the function pointer, then use its return value to determine what to run next
 void Function::run() {
