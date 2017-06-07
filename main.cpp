@@ -128,8 +128,12 @@ int addWord() {
             tail->next[0] = loop_head;                   //Move tail to loop head
             do_stack.push(loop_head);                    //Put head on do loop stack
             tail = tail->next[0];
-        } else if(func == "LOOP") {
-            Function* loop_ = new Function(loop);        //Allocate loop escape checker function
+        } else if(func == "LOOP" || func == "+LOOP") {
+            Function* loop_;
+            if(func == "LOOP")
+                loop_ = new Function(loop);              //Allocate loop escape checker function
+            else
+                loop_ = new Function(loop_plus);         //Differentiate between LOOP and +LOOP
             tail->next = new Function*[1];
             tail->next[0] = loop_;                       //Add loop escape checker to loop path
             loop_->next = new Function*[2];              //Allocate loop branching
@@ -520,6 +524,18 @@ int loop() {
         return 1;
     } else return 0;
 }
+
+int loop_plus() {
+    int index = *(int*)return_stack->at(0);
+    int limit = *(int*)return_stack->at(1);
+    int inc = *(int*)stack->at(0);
+    index += inc;
+    if(index != limit) {
+        *(int*)return_stack->at(0) = index;
+        return 1;
+    } else return 0;
+}
+
 //Null operand for structural nodes
 int nop() {
     return 0; //That's right; it does nothing.
@@ -617,5 +633,3 @@ int main() {
         delete itr->second;
     return 0;
 }
-
-//TODO: Fix the Function copy constructor to handle copying Number objects correctly, or find some workaround if that fails
