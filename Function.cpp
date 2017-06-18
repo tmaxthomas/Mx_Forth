@@ -17,15 +17,18 @@ Function::Function(Function* old) : fxn(old->fxn), branches(old->branches) {
         next = new Function*[branches];
         for (int a = 0; a < branches; a++) {
             Number *old_num = dynamic_cast<Number*>(old->next[a]); //Abusing dynamic_cast for fun and profit
-            if (!old_num) {
+            StrPrint *old_strpr = dynamic_cast<StrPrint*>(old->next[a]);
+            if (!old_num && !old_strpr) {
                 std::unordered_map<Function*, Function*>::iterator itr = copy_map.find(old->next[a]);
                 if (itr == copy_map.end()) {
                     next[a] = new Function(old->next[a]);
                 } else {
                     next[a] = itr->second;
                 }
-            } else {
+            } else if (old_num) {
                 next[a] = new Number(old_num);
+            } else {
+                next[a] = new StrPrint(old_strpr);
             }
         }
     } else
@@ -35,10 +38,27 @@ Function::Function(Function* old) : fxn(old->fxn), branches(old->branches) {
 //Copy constructor
 Number::Number(Number* old) : Function(), str(old->str) {
     next = new Function*[1];
-    //If the next node is also a number
     Number* old_num = dynamic_cast<Number*>(old->next[0]);
+    StrPrint* old_strpr = dynamic_cast<StrPrint*>(old->next[0]);
+    //If the next node is a number
     if(old_num)
         next[0] = new Number(old_num);
+    else if(old_strpr) //Or if the next node is a string print
+        next[0] = new StrPrint(old_strpr);
+    else
+        next[0] = new Function(old->next[0]);
+}
+
+//Copy constructor (Aint't this familiar...)
+StrPrint::StrPrint(StrPrint* old) : Function(), str(old->str) {
+    next = new Function*[1];
+    Number* old_num = dynamic_cast<Number*>(old->next[0]);
+    StrPrint* old_strpr = dynamic_cast<StrPrint*>(old->next[0]);
+    //If the next node is a number
+    if(old_num)
+        next[0] = new Number(old_num);
+    else if(old_strpr) //Or if the next node is a string print
+        next[0] = new StrPrint(old_strpr);
     else
         next[0] = new Function(old->next[0]);
 }
@@ -68,4 +88,11 @@ void Number::run() {
     if(next){
         (*next)->run();
     }
+}
+
+//Prints the stored string. Simple enough.
+void StrPrint::run() {
+    std::cout << str;
+    if(next)
+        (*next)->run();
 }

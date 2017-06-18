@@ -13,7 +13,7 @@ extern Stack *stack, *return_stack;
 std::unordered_map<Function*, Function*> copy_map;
 
 std::stack<Function*> if_stack, do_stack;
-std::vector<std::pair<std::string, Function*> > glossary;
+std::list<std::pair<std::string, Function*> > glossary;
 
 //Oh boy, header
 int addWord();
@@ -87,7 +87,8 @@ Function* find(std::string& name) {
 int addWord() {
     std::string name, func;
     std::cin >> name;
-    Function *head = NULL, *tail = head;
+    //Declare a starting null node
+    Function *head = new Function(nop), *tail = head;
     std::cin >> func;
     while(func != ";") {
         //Comment handler
@@ -95,6 +96,15 @@ int addWord() {
             while(func.at(func.size() - 1) != ')')
                 std::cin >> func;
             std::cin >> func;
+        } else if(func == ".\"") { //Handles string printing
+            char* str = new char[1000];
+            std::cin.getline(str, 1000, '"');
+            std::string temp(str);
+            delete str;
+            StrPrint* node = new StrPrint(temp);
+            tail->next = new Function*[1];
+            tail->next[0] = node;
+            tail = node;
         } else if(func == "IF") { //Conditional handling, step 1
             Function* if_ = new Function(cond);         //Allcoate & initialize the if node
             tail->next = new Function*[1];
@@ -147,17 +157,11 @@ int addWord() {
             Function* temp;
             Function* tmp_ptr = find(func);
             temp = (Function*)(tmp_ptr ? new Function(tmp_ptr) : new Number(func));   //Number/non-Number handling
-            if(!head) {  //Empty func handling
-                head = new Function(nop);  //Prevents Function copy constructor breaking if the first word in a user-defined word is a call to Number
-                head->next = new Function*[1];
-                head->next[0] = temp;
-                tail = head->next[0];
-            } else {
-                tail->next = new Function*[1];
-                tail->next[0] = temp;
-                while(tail->next)                        //Integrate user-defined words properly by skipping over word graph
-                    tail = tail->next[0];
-            }
+            tail->next = new Function*[1];
+            tail->next[0] = temp;
+            while(tail->next)                            //Integrate user-defined words properly by skipping over word graph
+                tail = tail->next[0];
+
         }
         std::cin >> func;
     }
@@ -202,7 +206,7 @@ int emit() {
     stack->pop(1);
     return 0;
 }
-//Prints a string-NOTE: NEEDS REVISION
+//Prints a string
 int strPrint() {
     char* str = new char[1000];
     std::cin.getline(str, 1000, '"');
@@ -573,7 +577,7 @@ int main() {
     glossary.push_back(std::make_pair("SPACES", new Function(spaces)));
     glossary.push_back(std::make_pair("SPACE", new Function(space)));
     glossary.push_back(std::make_pair("EMIT", new Function(emit)));
-    glossary.push_back(std::make_pair(".\"", new Function(strPrint)));
+    glossary.push_back(std::make_pair(".\"", new Function(strPrint))); //This is technically in the glossary, but it never gets stored in any Function
     glossary.push_back(std::make_pair("+", new Function(add)));
     glossary.push_back(std::make_pair("-", new Function(sub)));
     glossary.push_back(std::make_pair("*", new Function(mult)));

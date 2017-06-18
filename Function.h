@@ -33,6 +33,15 @@ public:
     void run() override;
     std::string str;
 };
+//Subclass used to deal with printing strings from within user-defined functions
+class StrPrint : public Function {
+public:
+    StrPrint(std::string str_) : Function(), str(str_) {}
+    StrPrint(StrPrint* old);
+    ~StrPrint() override { delete [] next; }
+    void run() override;
+    std::string str;
+};
 
 
 #endif //MX_FORTH_FUNCTION_H
