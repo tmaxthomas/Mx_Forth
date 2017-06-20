@@ -37,30 +37,34 @@ Function::Function(Function* old) : fxn(old->fxn), branches(old->branches) {
 
 //Copy constructor
 Number::Number(Number* old) : Function(), str(old->str) {
-    next = new Function*[1];
-    Number* old_num = dynamic_cast<Number*>(old->next[0]);
-    StrPrint* old_strpr = dynamic_cast<StrPrint*>(old->next[0]);
-    //If the next node is a number
-    if(old_num)
-        next[0] = new Number(old_num);
-    else if(old_strpr) //Or if the next node is a string print
-        next[0] = new StrPrint(old_strpr);
-    else
-        next[0] = new Function(old->next[0]);
+    if(old->next) {
+        next = new Function*[1];
+        Number* old_num = dynamic_cast<Number*>(old->next[0]);
+        StrPrint* old_strpr = dynamic_cast<StrPrint*>(old->next[0]);
+        //If the next node is a number
+        if(old_num)
+            next[0] = new Number(old_num);
+        else if(old_strpr) //Or if the next node is a string print
+            next[0] = new StrPrint(old_strpr);
+        else
+            next[0] = new Function(old->next[0]);
+    }
 }
 
 //Copy constructor (Aint't this familiar...)
 StrPrint::StrPrint(StrPrint* old) : Function(), str(old->str) {
-    next = new Function*[1];
-    Number* old_num = dynamic_cast<Number*>(old->next[0]);
-    StrPrint* old_strpr = dynamic_cast<StrPrint*>(old->next[0]);
-    //If the next node is a number
-    if(old_num)
-        next[0] = new Number(old_num);
-    else if(old_strpr) //Or if the next node is a string print
-        next[0] = new StrPrint(old_strpr);
-    else
-        next[0] = new Function(old->next[0]);
+    if(old->next) {
+        next = new Function*[1];
+        Number* old_num = dynamic_cast<Number*>(old->next[0]);
+        StrPrint* old_strpr = dynamic_cast<StrPrint*>(old->next[0]);
+        //If the next node is a number
+        if(old_num)
+            next[0] = new Number(old_num);
+        else if(old_strpr) //Or if the next node is a string print
+            next[0] = new StrPrint(old_strpr);
+        else
+            next[0] = new Function(old->next[0]);
+    }
 }
 //Call the function pointer, then use its return value to determine what to run next
 void Function::run() {
