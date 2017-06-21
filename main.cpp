@@ -55,6 +55,7 @@ int retPop();
 int retCopy();
 int retCopy3();
 int print();
+int urjprint();
 int printS();
 int equals();
 int lessThan();
@@ -96,18 +97,18 @@ int addWord() {
             while(func.at(func.size() - 1) != ')')
                 std::cin >> func;
             std::cin >> func;
-        } else if(func == ".\"") { //Handles string printing
+        } else if(func == ".\"") {                      //Handles string printing
             char* str = new char[1000];
             std::cin.getline(str, 1000, '"');
             std::string temp(str);
             delete str;
-            while(temp.at(0) == ' ') //Chop off preceding spaces
+            while(temp.at(0) == ' ')                    //Chop off preceding spaces
                 temp.erase(temp.begin());
             StrPrint* node = new StrPrint(temp);
             tail->next = new Function*[1];
             tail->next[0] = node;
             tail = node;
-        } else if(func == "IF") { //Conditional handling, step 1
+        } else if(func == "IF") {                       //Conditional handling, step 1
             Function* if_ = new Function(cond);         //Allcoate & initialize the if node
             tail->next = new Function*[1];
             tail->next[0] = if_;                        //Tail points to if
@@ -130,6 +131,15 @@ int addWord() {
             if_stack.top()->next[0] = then;              //Stitch the other tail into the dummy node
             tail = tail->next[0];
             if_stack.pop();                              //Clean up the conditional stack
+        } else if(func == "THEN") {
+            Function* then = new Function(nop);          //Strucutral merger node allocation
+            tail->next = new Function*[1];
+            tail->next[0] = then;                        //Tie the tail into the node
+            if(!if_stack.top()->next)                    //Make sure the if-branch can be tied into the node
+                if_stack.top()->next = new Function*[1];
+            if_stack.top()->next[0] = then;              //Tie the if_stack tail into the node
+            tail = tail->next[0];
+            if_stack.pop();
         } else if(func == "DO") {
             Function* _do = new Function(do_);           //Allocate do function
             tail->next = new Function*[1];
@@ -443,6 +453,17 @@ int print() {
     stack->pop(1);
     return 0;
 }
+
+int urjprint() {
+    unsigned size = (unsigned)*(int*)stack->at(0);
+    std::string str = std::to_string(*(int*)stack->at(1));
+    stack->pop(2);
+    while(str.size() < size)
+        str.insert(str.begin(), 32); //Pad the string with spaces
+    std::cout << str;
+    return 0;
+}
+
 //Prints the contents of the stack
 int printS() {
     for(int a = 0; a < stack->size(); a++) {
@@ -613,6 +634,7 @@ int main() {
     glossary.push_back(std::make_pair("R@", new Function(retCopy)));
     glossary.push_back(std::make_pair("J", new Function(retCopy3)));
     glossary.push_back(std::make_pair(".", new Function(print)));
+    glossary.push_back(std::make_pair("U.R", new Function(urjprint)));
     glossary.push_back(std::make_pair(".S", new Function(printS)));
     glossary.push_back(std::make_pair("=", new Function(equals)));
     glossary.push_back(std::make_pair("<", new Function(lessThan)));
