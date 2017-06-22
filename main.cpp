@@ -534,9 +534,8 @@ int cond() {
 
 int do_() {
     int index = *(int*)stack->at(0);
-    stack->pop(1);
-    int limit = *(int*)stack->at(0);
-    stack->pop(1);
+    int limit = *(int*)stack->at(1);
+    stack->pop(2);
     return_stack->push(limit);
     return_stack->push(index);
     return 0;
@@ -549,18 +548,34 @@ int loop() {
     if(index != limit) {
         *(int*)return_stack->at(0) = index;
         return 1;
-    } else return 0;
+    } else {
+        return_stack->pop(2);
+        return 0;
+    }
 }
-
+//Why does FORTH have to be incosistent with its loop end condition, anyways?
 int loop_plus() {
     int index = *(int*)return_stack->at(0);
     int limit = *(int*)return_stack->at(1);
     int inc = *(int*)stack->at(0);
     index += inc;
-    if(index != limit) {
-        *(int*)return_stack->at(0) = index;
-        return 1;
-    } else return 0;
+    if(inc < 0) {
+        if(index >= limit) {
+            *(int*)return_stack->at(0) = index;
+            return 1;
+        } else {
+            return_stack->pop(2);
+            return 0;
+        }
+    } else {
+        if(index < limit) {
+            *(int*)return_stack->at(0) = index;
+            return 1;
+        } else {
+            return_stack->pop(2);
+            return 0;
+        }
+    }
 }
 
 //Null operand for structural nodes
