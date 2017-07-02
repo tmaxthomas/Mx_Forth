@@ -13,6 +13,7 @@ extern Stack *stack, *return_stack;
 std::unordered_map<Function*, Function*> copy_map;
 
 std::stack<Function*> if_stack, do_stack;
+std::stack<std::vector<Function*> > leave_stack;
 std::list<std::pair<std::string, Function*> > glossary;
 
 //Oh boy, header
@@ -68,6 +69,7 @@ int loop();
 int loop_plus();
 int do_();
 int nop();
+int leave();
 int number(std::string& str);
 
 //Finds words in the glossary
@@ -102,8 +104,6 @@ int addWord() {
             std::cin.getline(str, 1000, '"');
             std::string temp(str);
             delete str;
-            while(temp.at(0) == ' ')                    //Chop off preceding spaces
-                temp.erase(temp.begin());
             StrPrint* node = new StrPrint(temp);
             tail->next = new Function*[1];
             tail->next[0] = node;
@@ -141,14 +141,25 @@ int addWord() {
             tail = tail->next[0];
             if_stack.pop();
         } else if(func == "DO") {
-            Function* _do = new Function(do_);           //Allocate do function
-            tail->next = new Function*[1];
+            Function *_do = new Function(do_);           //Allocate do function
+            tail->next = new Function *[1];
             tail->next[0] = _do;                         //Set tail->next
             tail = tail->next[0];                        //Move tail
-            Function* loop_head = new Function(nop);     //Allocate loop block head
-            tail->next = new Function*[1];
+            Function *loop_head = new Function(nop);     //Allocate loop block head
+            tail->next = new Function *[1];
             tail->next[0] = loop_head;                   //Move tail to loop head
             do_stack.push(loop_head);                    //Put head on do loop stack
+            tail = tail->next[0];
+            std::vector<Function *> temp;
+            leave_stack.push(temp);                      //Set up leave stack
+        } else if(func == "LEAVE") {
+            Function *_leave = new Function(leave);      //Allocate leave node
+            tail->next = new Function*[1];
+            tail->next[0] = _leave;                      //Set tail->next
+            leave_stack.top().push_back(_leave);         //Push node onto leave stack
+            tail = tail->next[0];
+            tail->next = new Function*[2];               //Set up leave escape pate
+            tail->next[0] = new Function(nop);
             tail = tail->next[0];
         } else if(func == "LOOP" || func == "+LOOP") {
             Function* loop_;
@@ -164,6 +175,11 @@ int addWord() {
             do_stack.pop();                              //Clean up do stack
             loop_->next[0] = new Function(nop);          //Set up loop escape path
             tail = loop_->next[0];                       //Move tail
+            while(!leave_stack.top().empty()) {          //Take care of any leave's
+                leave_stack.top().back()->next[1] = tail;
+                leave_stack.top().pop_back();
+            }
+            leave_stack.pop();
         } else {
             copy_map.erase(copy_map.begin(), copy_map.end()); //Clean up the copy constructor map
             Function* temp;
@@ -481,7 +497,7 @@ int equals(){
     return 0;
 }
 int lessThan(){
-    int a = *(int*)stack->at(0), b = *(int*)stack->at(1);
+    int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
     stack->pop(2);
     if(a < b)
         stack->push((int)0xffffffff);
@@ -490,7 +506,7 @@ int lessThan(){
     return 0;
 }
 int greaterThan(){
-    int a = *(int*)stack->at(0), b = *(int*)stack->at(1);
+    int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
     stack->pop(2);
     if(a > b)
         stack->push((int)0xffffffff);
@@ -582,6 +598,12 @@ int loop_plus() {
 int nop() {
     return 0; //That's right; it does nothing.
 }
+
+//Nop-esque operand to handle loop break pathing
+int leave() {
+    return 1;
+}
+
 //Pushes a number onto the stack
 int number(std::string& str) {
     if(str.size() == 1) {
