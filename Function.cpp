@@ -8,7 +8,7 @@
 
 extern std::unordered_map<Function*, Function*> copy_map;
 
-extern Stack *stack, *return_stack;
+extern Stack *stack;
 
 //Copy constructor
 Function::Function(Function* old) : fxn(old->fxn), branches(old->branches) {
@@ -51,7 +51,7 @@ Number::Number(Number* old) : Function(), str(old->str) {
     }
 }
 
-//Copy constructor (Aint't this familiar...)
+//Copy constructor (Ain't this familiar...)
 StrPrint::StrPrint(StrPrint* old) : Function(), str(old->str) {
     if(old->next) {
         next = new Function*[1];

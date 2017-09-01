@@ -1,20 +1,20 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include <list>
+#include <forward_list>
 #include <stack>
 #include <unordered_map>
 
 #include "Stack.h"
 #include "Function.h"
 
-extern Stack *stack, *return_stack;
+Stack *stack, *return_stack;
 
 std::unordered_map<Function*, Function*> copy_map;
 
 std::stack<Function*> if_stack, do_stack;
 std::stack<std::vector<Function*> > leave_stack;
-std::list<std::pair<std::string, Function*> > glossary;
+std::forward_list<std::pair<std::string, Function*> > glossary;
 
 //Oh boy, header
 int addWord();
@@ -74,7 +74,7 @@ int number(std::string& str);
 
 //Finds words in the glossary
 Function* find(std::string& name) {
-    for(auto itr = glossary.rbegin(); itr != glossary.rend(); itr++) {
+    for(auto itr = glossary.begin(); itr != glossary.end(); itr++) {
         if(itr->first == name)
             return itr->second;
     }
@@ -193,7 +193,7 @@ int addWord() {
         }
         std::cin >> func;
     }
-    glossary.push_back(std::make_pair(name, head));
+    glossary.push_front(std::make_pair(name, head));
     return 0;
 }
 
@@ -201,13 +201,15 @@ int addWord() {
 int forget() {
     std::string name;
     std::cin >> name;
-    auto itr = --glossary.end();
-    for(; itr != glossary.begin(); itr--) {
+    auto itr = glossary.begin();
+    auto erase_itr = itr;
+    for(; itr != glossary.end(); itr++) {
         if(itr->first == name)
             break;
+        if(itr != glossary.begin()) erase_itr++;
     }
     if(itr->first == name)
-        glossary.erase(itr, glossary.end());
+        glossary.erase_after(erase_itr);
     return 0;
 }
 //Carriage return
@@ -607,10 +609,10 @@ int leave() {
 //Pushes a number onto the stack
 int number(std::string& str) {
     if(str.size() == 1) {
-        if(str.at(0) >= '0' && str.at(0) <= '9')
+        if(str[0] >= '0' && str[0] <= '9')
             stack->push((int)std::stod(str));
         else {
-            stack->push(str.at(0));
+            stack->push(str[0]);
         }
     } else {
         size_t a;
@@ -631,64 +633,66 @@ int main() {
     stack = new Stack(4096);
     return_stack = new Stack(4096);
     //Generating FORTH environment
-    glossary.push_back(std::make_pair(":", new Function(addWord)));
-    glossary.push_back(std::make_pair("FORGET", new Function(forget)));
-    glossary.push_back(std::make_pair("CR", new Function(cr)));
-    glossary.push_back(std::make_pair("SPACES", new Function(spaces)));
-    glossary.push_back(std::make_pair("SPACE", new Function(space)));
-    glossary.push_back(std::make_pair("EMIT", new Function(emit)));
-    glossary.push_back(std::make_pair(".\"", new Function(strPrint))); //This is technically in the glossary, but it never gets stored in any Function
-    glossary.push_back(std::make_pair("+", new Function(add)));
-    glossary.push_back(std::make_pair("-", new Function(sub)));
-    glossary.push_back(std::make_pair("*", new Function(mult)));
-    glossary.push_back(std::make_pair("/", new Function(div)));
-    glossary.push_back(std::make_pair("MOD", new Function(mod)));
-    glossary.push_back(std::make_pair("/MOD", new Function(modDiv)));
-    glossary.push_back(std::make_pair("*/", new Function(multDiv)));
-    glossary.push_back(std::make_pair("*/MOD", new Function(multDivMod)));
-    glossary.push_back(std::make_pair("1+", new Function(add1)));
-    glossary.push_back(std::make_pair("1-", new Function(sub1)));
-    glossary.push_back(std::make_pair("2+", new Function(add2)));
-    glossary.push_back(std::make_pair("2-", new Function(sub2)));
-    glossary.push_back(std::make_pair("2*", new Function(lshift)));
-    glossary.push_back(std::make_pair("2/", new Function(rshift)));
-    glossary.push_back(std::make_pair("ABS", new Function(abs)));
-    glossary.push_back(std::make_pair("NEGATE", new Function(neg)));
-    glossary.push_back(std::make_pair("MIN", new Function(min)));
-    glossary.push_back(std::make_pair("MAX", new Function(max)));
-    glossary.push_back(std::make_pair("SWAP", new Function(swap)));
-    glossary.push_back(std::make_pair("2SWAP", new Function(swap2)));
-    glossary.push_back(std::make_pair("DUP", new Function(dup)));
-    glossary.push_back(std::make_pair("2DUP", new Function(dup2)));
-    glossary.push_back(std::make_pair("OVER", new Function(over)));
-    glossary.push_back(std::make_pair("2OVER", new Function(over2)));
-    glossary.push_back(std::make_pair("ROT", new Function(rot)));
-    glossary.push_back(std::make_pair("DROP", new Function(drop)));
-    glossary.push_back(std::make_pair("DROP2", new Function(drop2)));
-    glossary.push_back(std::make_pair(">R", new Function(retPush)));
-    glossary.push_back(std::make_pair("R>", new Function(retPop)));
-    glossary.push_back(std::make_pair("I", new Function(retCopy)));
-    glossary.push_back(std::make_pair("R@", new Function(retCopy)));
-    glossary.push_back(std::make_pair("J", new Function(retCopy3)));
-    glossary.push_back(std::make_pair(".", new Function(print)));
-    glossary.push_back(std::make_pair("U.R", new Function(urjprint)));
-    glossary.push_back(std::make_pair(".S", new Function(printS)));
-    glossary.push_back(std::make_pair("=", new Function(equals)));
-    glossary.push_back(std::make_pair("<", new Function(lessThan)));
-    glossary.push_back(std::make_pair(">", new Function(greaterThan)));
-    glossary.push_back(std::make_pair("0=", new Function(zeroEquals)));
-    glossary.push_back(std::make_pair("0<", new Function(zeroLessThan)));
-    glossary.push_back(std::make_pair("0>", new Function(zeroGreaterThan)));
+    glossary.push_front(std::make_pair(":", new Function(addWord)));
+    glossary.push_front(std::make_pair("FORGET", new Function(forget)));
+    glossary.push_front(std::make_pair("CR", new Function(cr)));
+    glossary.push_front(std::make_pair("SPACES", new Function(spaces)));
+    glossary.push_front(std::make_pair("SPACE", new Function(space)));
+    glossary.push_front(std::make_pair("EMIT", new Function(emit)));
+    glossary.push_front(std::make_pair(".\"", new Function(strPrint))); //This is technically in the glossary, but it never gets stored in any Function
+    glossary.push_front(std::make_pair("+", new Function(add)));
+    glossary.push_front(std::make_pair("-", new Function(sub)));
+    glossary.push_front(std::make_pair("*", new Function(mult)));
+    glossary.push_front(std::make_pair("/", new Function(div)));
+    glossary.push_front(std::make_pair("MOD", new Function(mod)));
+    glossary.push_front(std::make_pair("/MOD", new Function(modDiv)));
+    glossary.push_front(std::make_pair("*/", new Function(multDiv)));
+    glossary.push_front(std::make_pair("*/MOD", new Function(multDivMod)));
+    glossary.push_front(std::make_pair("1+", new Function(add1)));
+    glossary.push_front(std::make_pair("1-", new Function(sub1)));
+    glossary.push_front(std::make_pair("2+", new Function(add2)));
+    glossary.push_front(std::make_pair("2-", new Function(sub2)));
+    glossary.push_front(std::make_pair("2*", new Function(lshift)));
+    glossary.push_front(std::make_pair("2/", new Function(rshift)));
+    glossary.push_front(std::make_pair("ABS", new Function(abs)));
+    glossary.push_front(std::make_pair("NEGATE", new Function(neg)));
+    glossary.push_front(std::make_pair("MIN", new Function(min)));
+    glossary.push_front(std::make_pair("MAX", new Function(max)));
+    glossary.push_front(std::make_pair("SWAP", new Function(swap)));
+    glossary.push_front(std::make_pair("2SWAP", new Function(swap2)));
+    glossary.push_front(std::make_pair("DUP", new Function(dup)));
+    glossary.push_front(std::make_pair("2DUP", new Function(dup2)));
+    glossary.push_front(std::make_pair("OVER", new Function(over)));
+    glossary.push_front(std::make_pair("2OVER", new Function(over2)));
+    glossary.push_front(std::make_pair("ROT", new Function(rot)));
+    glossary.push_front(std::make_pair("DROP", new Function(drop)));
+    glossary.push_front(std::make_pair("DROP2", new Function(drop2)));
+    glossary.push_front(std::make_pair(">R", new Function(retPush)));
+    glossary.push_front(std::make_pair("R>", new Function(retPop)));
+    glossary.push_front(std::make_pair("I", new Function(retCopy)));
+    glossary.push_front(std::make_pair("R@", new Function(retCopy)));
+    glossary.push_front(std::make_pair("J", new Function(retCopy3)));
+    glossary.push_front(std::make_pair(".", new Function(print)));
+    glossary.push_front(std::make_pair("U.R", new Function(urjprint)));
+    glossary.push_front(std::make_pair(".S", new Function(printS)));
+    glossary.push_front(std::make_pair("=", new Function(equals)));
+    glossary.push_front(std::make_pair("<", new Function(lessThan)));
+    glossary.push_front(std::make_pair(">", new Function(greaterThan)));
+    glossary.push_front(std::make_pair("0=", new Function(zeroEquals)));
+    glossary.push_front(std::make_pair("0<", new Function(zeroLessThan)));
+    glossary.push_front(std::make_pair("0>", new Function(zeroGreaterThan)));
 
     std::string str;
     while(std::cin) {
         std::cin >> str;
-        Function* func = find(str);
-        //if the input is a valid word
-        if(func) {
-            func->run();
-        } else {
-            number(str);
+        if(str != "") {
+            Function *func = find(str);
+            //if the input is a valid word
+            if (func) {
+                func->run();
+            } else {
+                number(str);
+            }
         }
     }
     //Destruction
