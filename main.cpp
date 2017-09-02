@@ -4,7 +4,6 @@
 #include <forward_list>
 #include <stack>
 #include <unordered_map>
-#include <cstdlib>
 
 #include "Stack.h"
 #include "Function.h"
@@ -159,7 +158,7 @@ int addWord() {
             tail->next[0] = _leave;                      //Set tail->next
             leave_stack.top().push_back(_leave);         //Push node onto leave stack
             tail = tail->next[0];
-            tail->next = new Function*[2];               //Set up leave escape pate
+            tail->next = new Function*[2];               //Set up leave escape path
             tail->next[0] = new Function(nop);
             tail = tail->next[0];
         } else if(func == "LOOP" || func == "+LOOP") {
@@ -221,7 +220,7 @@ int cr() {
 }
 //Prints some number of spaces
 int spaces() {
-    std::string str(*(int*)stack->at(0), ' ');
+    std::string str((unsigned long)*(int*)stack->at(0), ' ');
     std::cout << str;
     stack->pop(1);
     return 0;
@@ -234,7 +233,7 @@ int space() {
 
 //Prints a character
 int emit() {
-    char ch = *(int*)stack->at(0);
+    char ch = (char)*(int*)stack->at(0);
     std::cout << ch;
     stack->pop(1);
     return 0;
@@ -297,7 +296,7 @@ int multDiv(){
     long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
     stack->pop(3);
     long m = a * b;
-    int d = m / c;
+    int d = (int)(m / c);
     stack->push(d);
     return 0;
 }
@@ -306,7 +305,7 @@ int multDivMod(){
     long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
     stack->pop(3);
     long m = a * b;
-    int d = m / c, r = m % c;
+    int d = (int)(m / c), r = (int)(m % c);
     stack->push(r);
     stack->push(d);
     return 0;
