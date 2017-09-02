@@ -4,6 +4,7 @@
 #include <forward_list>
 #include <stack>
 #include <unordered_map>
+#include <cstdlib>
 
 #include "Stack.h"
 #include "Function.h"
@@ -12,8 +13,6 @@ Stack *stack, *return_stack;
 
 std::unordered_map<Function*, Function*> copy_map;
 
-std::stack<Function*> if_stack, do_stack;
-std::stack<std::vector<Function*> > leave_stack;
 std::forward_list<std::pair<std::string, Function*> > glossary;
 
 //Oh boy, header
@@ -88,6 +87,8 @@ Function* find(std::string& name) {
 //Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
 //path decider, but messy graph handling.
 int addWord() {
+    std::stack<Function*> if_stack, do_stack;
+    std::stack<std::vector<Function*> > leave_stack;
     std::string name, func;
     std::cin >> name;
     //Declare a starting null node
@@ -182,13 +183,14 @@ int addWord() {
             leave_stack.pop();
         } else {
             copy_map.erase(copy_map.begin(), copy_map.end()); //Clean up the copy constructor map
-            Function* temp;
-            Function* tmp_ptr = find(func);
-            temp = (Function*)(tmp_ptr ? new Function(tmp_ptr) : new Number(func));   //Number/non-Number handling
-            tail->next = new Function*[1];
+            Function *temp;
+            Function *tmp_ptr = find(func);
+            temp = (Function *) (tmp_ptr ? new Function(tmp_ptr) : new Number(func));   //Number/non-Number handling
+            tail->next = new Function *[1];
             tail->next[0] = temp;
-            while(tail->next)                            //Integrate user-defined words properly by skipping over word graph
+            while (tail->next)                            //Integrate user-defined words properly by skipping over word graph
                 tail = tail->next[0];
+
 
         }
         std::cin >> func;
@@ -229,6 +231,7 @@ int space() {
     std::cout << " ";
     return 0;
 }
+
 //Prints a character
 int emit() {
     char ch = *(int*)stack->at(0);
@@ -237,6 +240,7 @@ int emit() {
     return 0;
 }
 //Prints a string
+
 int strPrint() {
     char* str = new char[1000];
     std::cin.getline(str, 1000, '"');
@@ -438,7 +442,6 @@ int drop2() {
     stack->pop(2);
     return 0;
 }
-
 int retPush(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
@@ -452,7 +455,6 @@ int retPop(){
     stack->push(a);
     return 0;
 }
-
 int retCopy(){
     int a = *(int*)return_stack->at(0);
     stack->push(a);
@@ -464,14 +466,12 @@ int retCopy3(){
     stack->push(a);
     return 0;
 }
-
 //Prints and then pops the top of the stack
 int print() {
     std::cout << *(int*)stack->at(0);
     stack->pop(1);
     return 0;
 }
-
 int urjprint() {
     unsigned size = (unsigned)*(int*)stack->at(0);
     std::string str = std::to_string(*(int*)stack->at(1));
@@ -571,7 +571,7 @@ int loop() {
         return 0;
     }
 }
-//Why does FORTH have to be incosistent with its loop end condition, anyways?
+//Why does FORTH have to be inconsistent with its loop end condition, anyways?
 int loop_plus() {
     int index = *(int*)return_stack->at(0);
     int limit = *(int*)return_stack->at(1);
@@ -595,17 +595,14 @@ int loop_plus() {
         }
     }
 }
-
 //Null operand for structural nodes
 int nop() {
     return 0; //That's right; it does nothing.
 }
-
 //Nop-esque operand to handle loop break pathing
 int leave() {
     return 1;
 }
-
 //Pushes a number onto the stack
 int number(std::string& str) {
     if(str.size() == 1) {
@@ -629,6 +626,7 @@ int number(std::string& str) {
 }
 
 int main() {
+    system("clear"); //Yes, yes, I know, system is evil. Then again, this isn't production code, so I don't care.
     //Initializing stack
     stack = new Stack(4096);
     return_stack = new Stack(4096);
@@ -681,7 +679,6 @@ int main() {
     glossary.push_front(std::make_pair("0=", new Function(zeroEquals)));
     glossary.push_front(std::make_pair("0<", new Function(zeroLessThan)));
     glossary.push_front(std::make_pair("0>", new Function(zeroGreaterThan)));
-
     std::string str;
     while(std::cin) {
         std::cin >> str;

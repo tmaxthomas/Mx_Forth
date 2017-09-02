@@ -4,7 +4,7 @@
 
 #include "Stack.h"
 
-void* Stack::at(int index) {
+void* Stack::at(int index) const {
     int* st = (int*)stack;
     void* ptr = (void*)&st[top - index]; //Don't even ask why this is necessary. I don't know. Typecasting fucks up big time if I don't do this.
     return ptr;

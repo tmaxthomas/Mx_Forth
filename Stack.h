@@ -10,9 +10,9 @@
 
 class Stack {
 public:
-    Stack(int bytes) : top(-1), stack(malloc(bytes)) {}
+    Stack(size_t bytes) : top(-1), stack(malloc(bytes)) {}
     ~Stack() { free(stack); }
-    void* at(int index);
+    void* at(int index) const;
     void pop(int mag);
     void push(int val);
     void push(long val);
