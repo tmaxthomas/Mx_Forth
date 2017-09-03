@@ -7,19 +7,21 @@
 
 #include <cstdlib>
 
+#define uint unsigned
+
 
 class Stack {
 public:
-    Stack(size_t bytes) : top(-1), stack(malloc(bytes)) {}
+    Stack(size_t bytes) : top(-1), stack(new uint[bytes]) {}
     ~Stack() { free(stack); }
-    void* at(int index) const;
+    uint* at(int index) const;
     void pop(int mag);
     void push(int val);
     void push(long val);
     int size() { return top + 1; }
 private:
     int top; //Site of the top of the stack, counting by intervals of 4 bytes
-    void* stack;
+    uint* stack;
 };
 
 

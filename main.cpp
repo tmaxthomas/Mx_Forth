@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -13,6 +14,8 @@ Stack *stack, *return_stack;
 std::unordered_map<Function*, Function*> copy_map;
 
 std::forward_list<std::pair<std::string, Function*> > glossary;
+
+std::ofstream ostr("debug.txt");
 
 //Oh boy, header
 int addWord();
@@ -562,6 +565,7 @@ int loop() {
     int index = *(int*)return_stack->at(0);
     int limit = *(int*)return_stack->at(1);
     index++;
+    ostr << (index != limit) << "\n";
     if(index != limit) {
         *(int*)return_stack->at(0) = index;
         return 1;
@@ -605,8 +609,10 @@ int leave() {
 //Pushes a number onto the stack
 int number(std::string& str) {
     if(str.size() == 1) {
-        if(str[0] >= '0' && str[0] <= '9')
-            stack->push((int)std::stod(str));
+        if(str[0] >= '0' && str[0] <= '9') {
+            int tmp = (int)std::stod(str);
+            stack->push(tmp);
+        }
         else {
             stack->push(str[0]);
         }

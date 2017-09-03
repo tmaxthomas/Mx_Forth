@@ -4,10 +4,8 @@
 
 #include "Stack.h"
 
-void* Stack::at(int index) const {
-    int* st = (int*)stack;
-    void* ptr = (void*)&st[top - index]; //Don't even ask why this is necessary. I don't know. Typecasting fucks up big time if I don't do this.
-    return ptr;
+uint* Stack::at(int index) const {
+    return stack + (top - index);
 }
 
 void Stack::pop(int mag) {
@@ -21,8 +19,7 @@ void Stack::push(int val) {
 }
 
 void Stack::push(long val) {
-    int* st = (int*)stack;
     top += 2;
-    long* lt = (long*)&st[top - 1];
+    long* lt = (long*)&stack[top - 1];
     *lt = val;
 }
