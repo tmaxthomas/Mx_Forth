@@ -107,6 +107,7 @@ int addWord() {
             std::cin.getline(str, 1000, '"');
             std::string temp(str);
             delete str;
+            temp.erase(temp.begin());                   //Chop off the leading space
             StrPrint* node = new StrPrint(temp);
             tail->next = new Function*[1];
             tail->next[0] = node;

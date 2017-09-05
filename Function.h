@@ -18,7 +18,7 @@ public:
     Function() : fxn(NULL), next(NULL), branches(1) {}
     Function(int(*fxn_)()) : fxn(fxn_), next(NULL), branches(1) {}
     Function(Function* old);
-    virtual ~Function() { delete [] next; }
+    virtual ~Function() { delete next; }
     int(*fxn)();
     Function** next;
     byte branches;

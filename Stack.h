@@ -13,7 +13,7 @@
 class Stack {
 public:
     Stack(size_t bytes) : top(-1), stack(new uint[bytes]) {}
-    ~Stack() { free(stack); }
+    ~Stack() { delete [] stack; }
     uint* at(int index) const;
     void pop(int mag);
     void push(int val);
