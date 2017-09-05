@@ -102,23 +102,23 @@ int addWord() {
             while(func.at(func.size() - 1) != ')')
                 std::cin >> func;
             std::cin >> func;
-        } else if(func == ".\"") {                      //Handles string printing
+        } else if(func == ".\"") {                       //Handles string printing
             char* str = new char[1000];
             std::cin.getline(str, 1000, '"');
             std::string temp(str);
             delete str;
-            temp.erase(temp.begin());                   //Chop off the leading space
+            temp.erase(temp.begin());                    //Chop off the leading space
             StrPrint* node = new StrPrint(temp);
             tail->next = new Function*[1];
             tail->next[0] = node;
             tail = node;
-        } else if(func == "IF") {                       //Conditional handling, step 1
-            Function* if_ = new Function(cond);         //Allcoate & initialize the if node
+        } else if(func == "IF") {                        //Conditional handling, step 1
+            Function* if_ = new Function(cond);          //Allcoate & initialize the if node
             tail->next = new Function*[1];
-            tail->next[0] = if_;                        //Tail points to if
-            tail->next[0]->next = new Function*[2];     //if block branching nodes declaration
+            tail->next[0] = if_;                         //Tail points to if
+            tail->next[0]->next = new Function*[2];      //if block branching nodes declaration
             tail->next[0]->branches = 2;
-            tail->next[0]->next[1] = new Function(nop); //Dummy node for conditional branch in order to have if head node location
+            tail->next[0]->next[1] = new Function(nop);  //Dummy node for conditional branch in order to have if head node location
             if_stack.push(tail->next[0]);                //Push the node onto the conditional stack
             tail = if_stack.top()->next[1];              //Set tail node
         } else if(func == "ELSE") {
@@ -201,8 +201,8 @@ int addWord() {
     glossary.push_front(std::make_pair(name, head));
     return 0;
 }
-
-//Removes words from the glossary
+//TODO: FIX
+//Removes words from the glossary (currently broken)
 int forget() {
     std::string name;
     std::cin >> name;
@@ -242,8 +242,8 @@ int emit() {
     stack->pop(1);
     return 0;
 }
-//Prints a string
 
+//Prints a string
 int strPrint() {
     char* str = new char[1000];
     std::cin.getline(str, 1000, '"');
@@ -295,7 +295,7 @@ int modDiv() {
     stack->push(m);
     return 0;
 }
-
+//Multiplies and then divides, using a long intermediate. Used for fixed-point math.
 int multDiv(){
     long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
     stack->pop(3);
@@ -304,7 +304,7 @@ int multDiv(){
     stack->push(d);
     return 0;
 }
-
+//Multiplies and then divides and returns the remainder, using a long intermediate. Used for fixed-point math.
 int multDivMod(){
     long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
     stack->pop(3);
@@ -314,42 +314,47 @@ int multDivMod(){
     stack->push(d);
     return 0;
 }
-
+//Increments the top of the stack
 int add1() {
     (*(int*)stack->at(0))++;
     return 0;
 }
+//Decrements the top of the stack
 int sub1() {
     (*(int*)stack->at(0))--;
     return 0;
 }
+//Adds 2 to the top of the stack
 int add2() {
     *(int*)stack->at(0) += 2;
     return 0;
 }
+//Subtracts 2 from the top of the stack
 int sub2() {
     *(int*)stack->at(0) -= 2;
     return 0;
 }
+//Leftshifts the top of the stack by 1
 int lshift() {
     *(int*)stack->at(0) *= 2;
     return 0;
 }
+//Rightshifts the top of the stack by 1
 int rshift() {
     *(int*)stack->at(0) /= 2;
     return 0;
 }
-
+//Computes absolute value of the top of the stack
 int abs(){
     *(int*)stack->at(0) = std::abs(*(int*)stack->at(0));
     return 0;
 }
-
+//Negates the top of the stack
 int neg(){
     *(int*)stack->at(0) *= -1;
     return 0;
 }
-
+//Returns minimum of 2 numbers
 int min(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
@@ -361,7 +366,7 @@ int min(){
         stack->push(a);
     return 0;
 }
-
+//Returns maximum of 2 numbers
 int max(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
@@ -445,25 +450,27 @@ int drop2() {
     stack->pop(2);
     return 0;
 }
+//Pushes top of stack onto return stack
 int retPush(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
     return_stack->push(a);
     return 0;
 }
-
+//Pushes top of return stack onto stack
 int retPop(){
     int a = *(int*)return_stack->at(0);
     return_stack->pop(1);
     stack->push(a);
     return 0;
 }
+//Copies top of return stack onto stack
 int retCopy(){
     int a = *(int*)return_stack->at(0);
     stack->push(a);
     return 0;
 }
-
+//Copies 3rd value on return stack onto stack
 int retCopy3(){
     int a = *(int*)return_stack->at(2);
     stack->push(a);
@@ -475,6 +482,7 @@ int print() {
     stack->pop(1);
     return 0;
 }
+//Unsigned right-justified print
 int urjprint() {
     unsigned size = (unsigned)*(int*)stack->at(0);
     std::string str = std::to_string(*(int*)stack->at(1));
@@ -552,7 +560,7 @@ int cond() {
     stack->pop(1);
     return a;
 }
-
+//Initializes definite loops
 int do_() {
     int index = *(int*)stack->at(0);
     int limit = *(int*)stack->at(1);
@@ -561,12 +569,11 @@ int do_() {
     return_stack->push(index);
     return 0;
 }
-
+//Definite loop conditional
 int loop() {
     int index = *(int*)return_stack->at(0);
     int limit = *(int*)return_stack->at(1);
     index++;
-    ostr << (index != limit) << "\n";
     if(index != limit) {
         *(int*)return_stack->at(0) = index;
         return 1;
