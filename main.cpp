@@ -89,7 +89,7 @@ Function* find(std::string& name) {
 //Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
 //path decider, but messy graph handling.
 int addWord() {
-    std::stack<Function*> if_stack, do_stack;
+    std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
     std::stack<std::vector<Function*> > leave_stack;
     std::string name, func;
     std::cin >> name;
@@ -166,24 +166,26 @@ int addWord() {
             tail->next[0] = new Function(nop);
             tail = tail->next[0];
         } else if(func == "LOOP" || func == "+LOOP") {
-            Function* loop_;
-            if(func == "LOOP")
+            Function *loop_;
+            if (func == "LOOP")
                 loop_ = new Function(loop);              //Allocate loop escape checker function
             else
                 loop_ = new Function(loop_plus);         //Differentiate between LOOP and +LOOP
-            tail->next = new Function*[1];
+            tail->next = new Function *[1];
             tail->next[0] = loop_;                       //Add loop escape checker to loop path
-            loop_->next = new Function*[2];              //Allocate loop branching
+            loop_->next = new Function *[2];              //Allocate loop branching
             loop_->branches = 2;
             loop_->next[1] = do_stack.top();             //Plug loop path into loop head
             do_stack.pop();                              //Clean up do stack
             loop_->next[0] = new Function(nop);          //Set up loop escape path
             tail = loop_->next[0];                       //Move tail
-            while(!leave_stack.top().empty()) {          //Take care of any leave's
+            while (!leave_stack.top().empty()) {         //Take care of any leave's
                 leave_stack.top().back()->next[1] = tail;
                 leave_stack.top().pop_back();
             }
             leave_stack.pop();
+        } else if((func == "BEGIN")) {
+            
         } else {
             copy_map.erase(copy_map.begin(), copy_map.end()); //Clean up the copy constructor map
             Function *temp;
