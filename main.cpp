@@ -89,7 +89,7 @@ Function* find(std::string& name) {
 //Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
 //path decider, but messy graph handling.
 int addWord() {
-    std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
+    std::stack<Function*> if_stack, do_stack, begin_stack;
     std::stack<std::vector<Function*> > leave_stack;
     std::string name, func;
     std::cin >> name;
@@ -184,8 +184,22 @@ int addWord() {
                 leave_stack.top().pop_back();
             }
             leave_stack.pop();
-        } else if((func == "BEGIN")) {
-            
+        } else if (func == "BEGIN") {
+            Function *begin = new Function(nop);         //Allocate definite loop head
+            tail->next = new Function *[1];
+            tail->next[0] = begin;                       //Set tail->next
+            begin_stack.push(begin);                     //Push loop head onto stack
+            tail = tail->next[0];                        //Move tail
+        } else if (func == "UNTIL") {
+            Function* until = new Function(cond);        //Allocate until conditional
+            tail->next = new Function*[1];
+            tail->next[0] = until;                       //Set tail->next
+            tail->next = new Function*[2];
+            tail->next[0] = begin_stack.top();           //Point the conditional false path at loop head
+            begin_stack.pop();                           //Clean up loop stack
+            Function* temp = new Function(nop);          //Set up escape tail
+            tail->next[1] = temp;
+            tail = tail->next[1];
         } else {
             copy_map.erase(copy_map.begin(), copy_map.end()); //Clean up the copy constructor map
             Function *temp;
