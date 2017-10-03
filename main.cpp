@@ -171,9 +171,9 @@ int addWord() {
                 loop_ = new Function(loop);              //Allocate loop escape checker function
             else
                 loop_ = new Function(loop_plus);         //Differentiate between LOOP and +LOOP
-            tail->next = new Function *[1];
+            tail->next = new Function*[1];
             tail->next[0] = loop_;                       //Add loop escape checker to loop path
-            loop_->next = new Function *[2];              //Allocate loop branching
+            loop_->next = new Function*[2];              //Allocate loop branching
             loop_->branches = 2;
             loop_->next[1] = do_stack.top();             //Plug loop path into loop head
             do_stack.pop();                              //Clean up do stack
@@ -186,7 +186,7 @@ int addWord() {
             leave_stack.pop();
         } else if (func == "BEGIN") {
             Function *begin = new Function(nop);         //Allocate definite loop head
-            tail->next = new Function *[1];
+            tail->next = new Function*[1];
             tail->next[0] = begin;                       //Set tail->next
             begin_stack.push(begin);                     //Push loop head onto stack
             tail = tail->next[0];                        //Move tail
@@ -194,6 +194,7 @@ int addWord() {
             Function* until = new Function(cond);        //Allocate until conditional
             tail->next = new Function*[1];
             tail->next[0] = until;                       //Set tail->next
+            tail = tail->next[0];                        //Move tail
             tail->next = new Function*[2];
             tail->next[0] = begin_stack.top();           //Point the conditional false path at loop head
             begin_stack.pop();                           //Clean up loop stack
