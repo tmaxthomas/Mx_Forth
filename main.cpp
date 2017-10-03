@@ -215,6 +215,18 @@ int addWord() {
     glossary.push_front(std::make_pair(name, head));
     return 0;
 }
+
+//Word-execution wrapper-executed word pointed to by func
+//Written to help debugging and to avoid stack overflow resulting from excessive recursion
+void run(Function* func) {
+    while(func->next) {
+        int idx = func->run();
+        func = func->next[idx];
+    }
+    func->run();
+}
+
+
 //TODO: FIX
 //Removes words from the glossary (currently broken)
 int forget() {
@@ -714,7 +726,7 @@ int main() {
             Function *func = find(str);
             //if the input is a valid word
             if (func) {
-                func->run();
+                run(func);
             } else {
                 number(str);
             }

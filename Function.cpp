@@ -67,12 +67,12 @@ StrPrint::StrPrint(StrPrint* old) : Function(), str(old->str) {
     }
 }
 //Call the function pointer, then use its return value to determine what to run next
-void Function::run() {
-    int idx = fxn();
-    if(next) next[idx]->run();
+//Yes, it seems pointless, but it's needed due to the way inherited classes use the method.
+int Function::run() {
+    return fxn();
 }
 //Basically just the number function from main.cpp
-void Number::run() {
+int Number::run() {
     if(str.size() == 1) {
         if(str.at(0) >= '0' && str.at(0) <= '9')
             stack->push((int)std::stod(str));
@@ -83,20 +83,17 @@ void Number::run() {
         size_t a;
         double v;
         v = stod(str, &a);
-        if(a < str.size()) {
+        if (a < str.size()) {
             exit(1);
         } else {
-            stack->push((int)v);
+            stack->push((int) v);
         }
     }
-    if(next){
-        (*next)->run();
-    }
+    return 0;
 }
 
 //Prints the stored string. Simple enough.
-void StrPrint::run() {
+int StrPrint::run() {
     std::cout << str;
-    if(next)
-        (*next)->run();
+    return 0;
 }

@@ -22,7 +22,7 @@ public:
     int(*fxn)();
     Function** next;
     byte branches;
-    virtual void run();
+    virtual int run();
 };
 //Subclass used to deal with pushing numbers onto the stack from within user-defined functions
 class Number : public Function {
@@ -30,7 +30,7 @@ public:
     Number(std::string str_) : Function(), str(str_){}
     Number(Number* old);
     ~Number() override { delete [] next; }
-    void run() override;
+    int run() override;
     std::string str;
 };
 //Subclass used to deal with printing strings from within user-defined functions
@@ -39,7 +39,7 @@ public:
     StrPrint(std::string str_) : Function(), str(str_) {}
     StrPrint(StrPrint* old);
     ~StrPrint() override { delete [] next; }
-    void run() override;
+    int run() override;
     std::string str;
 };
 
