@@ -17,9 +17,3 @@ void Stack::push(int val) {
     top++;
     st[top] = val;
 }
-
-void Stack::push(long val) {
-    top += 2;
-    long* lt = (long*)&stack[top - 1];
-    *lt = val;
-}

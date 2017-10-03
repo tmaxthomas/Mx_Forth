@@ -209,8 +209,6 @@ int addWord() {
             tail->next[0] = temp;
             while (tail->next)                            //Integrate user-defined words properly by skipping over word graph
                 tail = tail->next[0];
-
-
         }
         std::cin >> func;
     }
@@ -253,7 +251,7 @@ int space() {
 
 //Prints a character
 int emit() {
-    char ch = (char)*(int*)stack->at(0);
+    char ch = (char)*stack->at(0);
     std::cout << ch;
     stack->pop(1);
     return 0;
@@ -397,9 +395,9 @@ int max(){
 
 //Swaps top two elements of the stack
 int swap() {
-    int t = *(int*)stack->at(0);
+    int t = *stack->at(0);
     stack->pop(1);
-    int b = *(int*)stack->at(0);
+    int b = *stack->at(0);
     stack->pop(1);
     stack->push(t);
     stack->push(b);
@@ -417,19 +415,20 @@ int swap2() {
 }
 //Duplicates the top of the stack
 int dup() {
-    stack->push(*(int*)stack->at(0));
+    stack->push(*stack->at(0));
     return 0;
 }
-//Duplicates the top tow elements of the stack
+//Duplicates the top two elements of the stack
 int dup2() {
-    stack->push(*(long*)stack->at(1));
+    stack->push(*stack->at(1));
+    stack->push(*stack->at(1));
     return 0;
 }
 //Pushes the second element of the stack onto the stack
 int over() {
-    int t = *(int*)stack->at(0);
+    int t = *stack->at(0);
     stack->pop(1);
-    int d = *(int*)stack->at(0);
+    int d = *stack->at(0);
     stack->push(t);
     stack->push(d);
     return 0;
@@ -445,11 +444,11 @@ int over2() {
 }
 //Removes the third element of the stack and pushes it onto the stack
 int rot() {
-    int t = *(int*)stack->at(0);
+    int t = *stack->at(0);
     stack->pop(1);
-    int m = *(int*)stack->at(0);
+    int m = *stack->at(0);
     stack->pop(1);
-    int b = *(int*)stack->at(0);
+    int b = *stack->at(0);
     stack->pop(1);
     stack->push(m);
     stack->push(t);
@@ -468,27 +467,27 @@ int drop2() {
 }
 //Pushes top of stack onto return stack
 int retPush(){
-    int a = *(int*)stack->at(0);
+    int a = *stack->at(0);
     stack->pop(1);
     return_stack->push(a);
     return 0;
 }
 //Pushes top of return stack onto stack
 int retPop(){
-    int a = *(int*)return_stack->at(0);
+    int a = *return_stack->at(0);
     return_stack->pop(1);
     stack->push(a);
     return 0;
 }
 //Copies top of return stack onto stack
 int retCopy(){
-    int a = *(int*)return_stack->at(0);
+    int a = *return_stack->at(0);
     stack->push(a);
     return 0;
 }
 //Copies 3rd value on return stack onto stack
 int retCopy3(){
-    int a = *(int*)return_stack->at(2);
+    int a = *return_stack->at(2);
     stack->push(a);
     return 0;
 }
@@ -500,7 +499,7 @@ int print() {
 }
 //Unsigned right-justified print
 int urjprint() {
-    unsigned size = (unsigned)*(int*)stack->at(0);
+    unsigned size = *stack->at(0);
     std::string str = std::to_string(*(int*)stack->at(1));
     stack->pop(2);
     while(str.size() < size)
@@ -572,14 +571,14 @@ int zeroGreaterThan(){
 }
 //Manages branching for if statements
 int cond() {
-    int a = *(int*)stack->at(0) != 0;
+    int a = *stack->at(0) != 0;
     stack->pop(1);
     return a;
 }
 //Initializes definite loops
 int do_() {
-    int index = *(int*)stack->at(0);
-    int limit = *(int*)stack->at(1);
+    int index = *stack->at(0);
+    int limit = *stack->at(1);
     stack->pop(2);
     return_stack->push(limit);
     return_stack->push(index);

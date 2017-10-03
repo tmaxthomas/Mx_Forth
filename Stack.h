@@ -17,7 +17,6 @@ public:
     uint* at(int index) const;
     void pop(int mag);
     void push(int val);
-    void push(long val);
     int size() { return top + 1; }
 private:
     int top; //Site of the top of the stack, counting by intervals of 4 bytes
