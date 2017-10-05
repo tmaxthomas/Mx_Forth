@@ -1,4 +1,3 @@
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -15,8 +14,6 @@ std::unordered_map<Function*, Function*> copy_map;
 
 std::forward_list<std::pair<std::string, Function*> > glossary;
 
-std::ofstream ostr("debug.txt");
-
 //Oh boy, header
 int addWord();
 int forget();
@@ -28,6 +25,7 @@ int strPrint();
 int add();
 int sub();
 int mult();
+int umult();
 int div();
 int mod();
 int modDiv();
@@ -60,6 +58,7 @@ int retPop();
 int retCopy();
 int retCopy3();
 int print();
+int uprint();
 int urjprint();
 int printS();
 int equals();
@@ -322,6 +321,15 @@ int mult() {
     *(int*)stack->at(0) *= s;
     return 0;
 }
+
+//Polish postfix unsigned multiplication
+int umult() {
+    int s = *stack->at(0);
+    stack->pop(1);
+    *stack->at(0) *= s;
+    return 0;
+}
+
 //Polish postfix division
 int div() {
     int s = *(int*)stack->at(0);
@@ -557,10 +565,18 @@ int print() {
     stack->pop(1);
     return 0;
 }
+
+//Unsigned int print
+int uprint() {
+    std::cout << *stack->at(0);
+    stack->pop(1);
+    return 0;
+}
+
 //Unsigned right-justified print
 int urjprint() {
     unsigned size = *stack->at(0);
-    std::string str = std::to_string(*(int*)stack->at(1));
+    std::string str = std::to_string(*stack->at(1));
     stack->pop(2);
     while(str.size() < size)
         str.insert(str.begin(), 32); //Pad the string with spaces
@@ -731,7 +747,7 @@ int number(std::string& str) {
 }
 
 int main() {
-    system("clear"); //Yes, yes, I know, system is evil. Then again, this isn't production code, so I don't care.
+    system("clear"); //Yes, yes, I know, system() is evil. Then again, this isn't production code, so I don't care.
     //Initializing stack
     stack = new Stack(4096);
     return_stack = new Stack(4096);
@@ -746,6 +762,7 @@ int main() {
     glossary.push_front(std::make_pair("+", new Function(add)));
     glossary.push_front(std::make_pair("-", new Function(sub)));
     glossary.push_front(std::make_pair("*", new Function(mult)));
+    glossary.push_front(std::make_pair("UM*", new Function(umult)));
     glossary.push_front(std::make_pair("/", new Function(div)));
     glossary.push_front(std::make_pair("MOD", new Function(mod)));
     glossary.push_front(std::make_pair("/MOD", new Function(modDiv)));
@@ -779,6 +796,7 @@ int main() {
     glossary.push_front(std::make_pair("R@", new Function(retCopy)));
     glossary.push_front(std::make_pair("J", new Function(retCopy3)));
     glossary.push_front(std::make_pair(".", new Function(print)));
+    glossary.push_front(std::make_pair("U.", new Function(uprint)));
     glossary.push_front(std::make_pair("U.R", new Function(urjprint)));
     glossary.push_front(std::make_pair(".S", new Function(printS)));
     glossary.push_front(std::make_pair("=", new Function(equals)));
