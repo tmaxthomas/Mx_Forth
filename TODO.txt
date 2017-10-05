@@ -1,0 +1,5 @@
+Implement "ok" printing after interactive word exec
+
+Implement ABORT", QUIT
+
+Fix FORGET not working properly
