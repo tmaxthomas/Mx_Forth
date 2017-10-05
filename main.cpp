@@ -65,6 +65,7 @@ int greaterThan();
 int zeroEquals();
 int zeroLessThan();
 int zeroGreaterThan();
+int page();
 int cond();
 int loop();
 int loop_plus();
@@ -600,6 +601,14 @@ int zeroGreaterThan(){
         stack->push(0x00000000);
     return 0;
 }
+
+//Clears the screen the same way the screen is cleared at program start
+//Same logic for using system() applies.
+int page() {
+    system("clear");
+    return 0;
+}
+
 //Manages branching for if statements
 //Branches to 0 if false, or to 1 if true.
 int cond() {
@@ -653,6 +662,7 @@ int loop_plus() {
         }
     }
 }
+
 //Null operand for structural nodes
 int nop() {
     return 0; //That's right; it does nothing.
@@ -739,6 +749,7 @@ int main() {
     glossary.push_front(std::make_pair("0=", new Function(zeroEquals)));
     glossary.push_front(std::make_pair("0<", new Function(zeroLessThan)));
     glossary.push_front(std::make_pair("0>", new Function(zeroGreaterThan)));
+    glossary.push_front(std::make_pair("PAGE", new Function(page)));
     std::string str;
     while(std::cin) {
         std::cin >> str;
