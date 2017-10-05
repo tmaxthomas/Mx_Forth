@@ -89,7 +89,7 @@ Function* find(std::string& name) {
 //Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
 //path decider, but messy graph handling.
 int addWord() {
-    std::stack<Function*> if_stack, do_stack, begin_stack;
+    std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
     std::stack<std::vector<Function*> > leave_stack;
     std::string name, func;
     std::cin >> name;
@@ -201,6 +201,24 @@ int addWord() {
             Function* temp = new Function(nop);          //Set up escape tail
             tail->next[1] = temp;
             tail = tail->next[1];
+        } else if (func == "WHILE") {
+            Function* while_ = new Function(cond);       //Allocate while conditional
+            tail->next = new Function*[1];
+            tail->next[0] = while_;                      //Set tail->next
+            tail = tail->next[0];                        //Move tail->next
+            tail->next = new Function*[2];               //Allocate branching
+            Function* temp = new Function(nop);
+            tail->next[1] = temp;                        //Set up true path
+            temp = new Function(nop);
+            tail->next[0] = temp;                        //Set up false path
+            while_stack.push(temp);                      //Push false path head onto while stack
+            tail = tail->next[1];                        //Move tail
+        } else if (func == "REPEAT") {
+            tail->next = new Function*[1];
+            tail->next[0] = begin_stack.top();           //Plug current tail into loop head
+            begin_stack.pop();                           //Clean up begin_stack
+            tail = while_stack.top();                    //Move current tail to loop escape path
+            while_stack.pop();                           //Clean up while_stack
         } else {
             copy_map.erase(copy_map.begin(), copy_map.end()); //Clean up the copy constructor map
             Function *temp;
@@ -583,6 +601,7 @@ int zeroGreaterThan(){
     return 0;
 }
 //Manages branching for if statements
+//Branches to 0 if false, or to 1 if true.
 int cond() {
     int a = *stack->at(0) != 0;
     stack->pop(1);
