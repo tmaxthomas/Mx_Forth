@@ -43,10 +43,13 @@ int min();
 int max();
 int lshift();
 int rshift();
+int and_();
+int or_();
 int swap();
 int swap2();
 int dup();
 int dup2();
+int dup_if();
 int over();
 int over2();
 int rot();
@@ -66,6 +69,7 @@ int zeroEquals();
 int zeroLessThan();
 int zeroGreaterThan();
 int page();
+int stack_q();
 int cond();
 int loop();
 int loop_plus();
@@ -390,6 +394,23 @@ int rshift() {
     *(int*)stack->at(0) /= 2;
     return 0;
 }
+
+//Binary and operator
+int and_() {
+    int s = *(int*)stack->at(0);
+    stack->pop(1);
+    *(int*)stack->at(0) &= s;
+    return 0;
+}
+
+//Binary or operator
+int or_() {
+    int s = *(int*)stack->at(0);
+    stack->pop(1);
+    *(int*)stack->at(0) |= s;
+    return 0;
+}
+
 //Computes absolute value of the top of the stack
 int abs(){
     *(int*)stack->at(0) = std::abs(*(int*)stack->at(0));
@@ -456,6 +477,13 @@ int dup2() {
     stack->push(*stack->at(1));
     return 0;
 }
+
+int dup_if() {
+    int q = *(int*)stack->at(0);
+    if(q) stack->push(q);
+    return 0;
+}
+
 //Pushes the second element of the stack onto the stack
 int over() {
     int t = *stack->at(0);
@@ -609,6 +637,13 @@ int page() {
     return 0;
 }
 
+//Returns a true flag if the stack is empty, returns false otherwise
+int stack_q() {
+    if(!stack->size()) stack->push((int)0xffffffff);
+    else stack->push(0x00000000);
+    return 0;
+}
+
 //Manages branching for if statements
 //Branches to 0 if false, or to 1 if true.
 int cond() {
@@ -722,6 +757,8 @@ int main() {
     glossary.push_front(std::make_pair("2-", new Function(sub2)));
     glossary.push_front(std::make_pair("2*", new Function(lshift)));
     glossary.push_front(std::make_pair("2/", new Function(rshift)));
+    glossary.push_front(std::make_pair("AND", new Function(and_)));
+    glossary.push_front(std::make_pair("OR", new Function(or_)));
     glossary.push_front(std::make_pair("ABS", new Function(abs)));
     glossary.push_front(std::make_pair("NEGATE", new Function(neg)));
     glossary.push_front(std::make_pair("MIN", new Function(min)));
@@ -730,6 +767,7 @@ int main() {
     glossary.push_front(std::make_pair("2SWAP", new Function(swap2)));
     glossary.push_front(std::make_pair("DUP", new Function(dup)));
     glossary.push_front(std::make_pair("2DUP", new Function(dup2)));
+    glossary.push_front(std::make_pair("?DUP", new Function(dup_if)));
     glossary.push_front(std::make_pair("OVER", new Function(over)));
     glossary.push_front(std::make_pair("2OVER", new Function(over2)));
     glossary.push_front(std::make_pair("ROT", new Function(rot)));
@@ -750,6 +788,7 @@ int main() {
     glossary.push_front(std::make_pair("0<", new Function(zeroLessThan)));
     glossary.push_front(std::make_pair("0>", new Function(zeroGreaterThan)));
     glossary.push_front(std::make_pair("PAGE", new Function(page)));
+    glossary.push_front(std::make_pair("?STACK", new Function(stack_q)));
     std::string str;
     while(std::cin) {
         std::cin >> str;
