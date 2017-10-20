@@ -722,16 +722,22 @@ int nop() {
 int leave() {
     return 1;
 }
+
+bool is_num(std::string& str) {
+    for(int i = 0; i < str.size(); i++)
+        if(str[i] < '0' || str[i] > '9')
+            return false;
+    return true;
+}
+
 //Pushes a number onto the stack
 int number(std::string& str) {
+    if(!is_num) {
+        std::cout << str << " ?";
+        exit(1);
+    }
     if(str.size() == 1) {
-        if(str[0] >= '0' && str[0] <= '9') {
-            int tmp = (int)std::stod(str);
-            stack->push(tmp);
-        }
-        else {
-            stack->push(str[0]);
-        }
+        stack->push(str[0] - '0');
     } else {
         size_t a;
         double v;
