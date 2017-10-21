@@ -1,5 +1,5 @@
 #include <iostream>
-#include <stdio.h>
+#include <sstream>
 #include <map>
 #include <vector>
 #include <forward_list>
@@ -800,14 +800,18 @@ int main() {
         char** buf = NULL;
         size_t* n;
         getline(buf, n, stdin);
-        std::stringstream str_stream(std::string(*buf));
-        if(str != "") {
-            Function *func = find(str);
-            //if the input is a valid word
-            if (func) {
-                run(func);
-            } else {
-                number(str);
+        std::string str(*buf);
+        std::stringstream str_stream(str);
+        while(!str_stream.eof()) {
+            str_stream >> str;
+            if(str != "") {
+                Function *func = find(str);
+                //if the input is a valid word
+                if (func) {
+                    run(func);
+                } else {
+                    number(str);
+                }
             }
         }
     }

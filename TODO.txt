@@ -4,4 +4,6 @@ Implement ABORT", QUIT
 
 Fix FORGET not working properly
 
-Translate to C
+Move I/O to use stdio.h functions
+
+Add file I/O
