@@ -73,22 +73,12 @@ int Function::run() {
 }
 //Basically just the number function from main.cpp
 int Number::run() {
-    if(str.size() == 1) {
-        if(str.at(0) >= '0' && str.at(0) <= '9')
-            stack->push((int)std::stod(str));
-        else {
-            stack->push(str.at(0));
-        }
-    } else {
-        size_t a;
-        double v;
-        v = stod(str, &a);
-        if (a < str.size()) {
-            exit(1);
-        } else {
-            stack->push((int) v);
-        }
+    if(!is_num(str)) {
+        std::cout << str << " ?";
+        exit(1);
     }
+    int n = atoi(str.c_str());
+    stack->push(n);
     return 0;
 }
 
@@ -96,4 +86,12 @@ int Number::run() {
 int StrPrint::run() {
     std::cout << str;
     return 0;
+}
+
+//Number determination helper function
+bool is_num(std::string& str) {
+    for(uint i = 0; i < str.size(); i++)
+        if(str[i] < '0' || str[i] > '9')
+            return false;
+    return true;
 }

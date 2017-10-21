@@ -4,4 +4,4 @@ Implement ABORT", QUIT
 
 Fix FORGET not working properly
 
-Write my own implementation of NUMBER
+Translate to C

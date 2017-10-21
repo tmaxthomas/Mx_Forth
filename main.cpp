@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdio.h>
 #include <map>
 #include <vector>
 #include <forward_list>
@@ -723,32 +724,14 @@ int leave() {
     return 1;
 }
 
-bool is_num(std::string& str) {
-    for(int i = 0; i < str.size(); i++)
-        if(str[i] < '0' || str[i] > '9')
-            return false;
-    return true;
-}
-
 //Pushes a number onto the stack
 int number(std::string& str) {
-    if(!is_num) {
+    if(!is_num(str)) {
         std::cout << str << " ?";
         exit(1);
     }
-    if(str.size() == 1) {
-        stack->push(str[0] - '0');
-    } else {
-        size_t a;
-        double v;
-        v = stod(str, &a);
-        if(a < str.size()) {
-            std::cout << str << " ?";
-            exit(1);
-        } else {
-            stack->push((int)v);
-        }
-    }
+    int n = atoi(str.c_str());
+    stack->push(n);
     return 0;
 }
 
@@ -813,9 +796,11 @@ int main() {
     glossary.push_front(std::make_pair("0>", new Function(zeroGreaterThan)));
     glossary.push_front(std::make_pair("PAGE", new Function(page)));
     glossary.push_front(std::make_pair("?STACK", new Function(stack_q)));
-    std::string str;
     while(std::cin) {
-        std::cin >> str;
+        char** buf = NULL;
+        size_t* n;
+        getline(buf, n, stdin);
+        std::stringstream str_stream(std::string(*buf));
         if(str != "") {
             Function *func = find(str);
             //if the input is a valid word

@@ -43,5 +43,6 @@ public:
     std::string str;
 };
 
+bool is_num(std::string& str);
 
 #endif //MX_FORTH_FUNCTION_H
