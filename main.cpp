@@ -9,6 +9,9 @@
 #include "Stack.h"
 #include "Function.h"
 
+//Global boolean flags for program state management
+bool ABORT = false, BYE = false;
+
 Stack *stack, *return_stack;
 
 std::unordered_map<Function*, Function*> copy_map;
@@ -293,6 +296,7 @@ int emit() {
     return 0;
 }
 
+//TODO:Fix
 //Prints a string
 int strPrint() {
     char* str = new char[1000];
@@ -562,26 +566,27 @@ int retCopy3(){
 }
 //Prints and then pops the top of the stack
 int print() {
-    std::cout << *(int*)stack->at(0);
+    printf("%d", *(int*)stack->at(0));
     stack->pop(1);
     return 0;
 }
 
 //Unsigned int print
 int uprint() {
-    std::cout << *stack->at(0);
+    printf("%u", *stack->at(0));
     stack->pop(1);
     return 0;
 }
 
 //Unsigned right-justified print
 int urjprint() {
-    unsigned size = *stack->at(0);
-    std::string str = std::to_string(*stack->at(1));
+    uint size = *stack->at(0);
+    uint data =  *stack->at(1);
+    uint num_spaces = size - data/10;
     stack->pop(2);
-    while(str.size() < size)
-        str.insert(str.begin(), 32); //Pad the string with spaces
-    std::cout << str;
+    for(uint i = 0; i < num_spaces; i++)
+        printf(" ");
+    printf("%u", data);
     return 0;
 }
 
@@ -747,7 +752,6 @@ int main() {
     glossary.push_front(std::make_pair("SPACES", new Function(spaces)));
     glossary.push_front(std::make_pair("SPACE", new Function(space)));
     glossary.push_front(std::make_pair("EMIT", new Function(emit)));
-    glossary.push_front(std::make_pair(".\"", new Function(strPrint))); //This is technically in the glossary, but it never gets stored in any Function
     glossary.push_front(std::make_pair("+", new Function(add)));
     glossary.push_front(std::make_pair("-", new Function(sub)));
     glossary.push_front(std::make_pair("*", new Function(mult)));
@@ -796,24 +800,42 @@ int main() {
     glossary.push_front(std::make_pair("0>", new Function(zeroGreaterThan)));
     glossary.push_front(std::make_pair("PAGE", new Function(page)));
     glossary.push_front(std::make_pair("?STACK", new Function(stack_q)));
-    while(std::cin) {
-        char** buf = NULL;
-        size_t* n;
-        getline(buf, n, stdin);
-        std::string str(*buf);
-        std::stringstream str_stream(str);
-        while(!str_stream.eof()) {
-            str_stream >> str;
-            if(str != "") {
-                Function *func = find(str);
-                //if the input is a valid word
-                if (func) {
-                    run(func);
-                } else {
-                    number(str);
-                }
-            }
+
+    //Utility macro for getting char-delimited substrings of C strings
+#   define GetSubstring(term) tmp_idx = idx; for (i = 0; *tmp_idx != term && *tmp_idx != '\n'; i++) tmp_idx++; \
+                              tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
+                              tmp_buf[i] = 0; idx = tmp_idx
+
+
+
+    while(!BYE) {
+        printf("#F> ");
+        char* buf = NULL;
+        size_t n = 0;
+        getline(&buf, &n, stdin);
+        char* idx = buf;
+        while(*idx != '\n') {
+            while (*idx == ' ') idx++;
+            char *tmp_buf;
+            size_t i;
+            char *tmp_idx;
+            GetSubstring(' ');
+            std::string str(tmp_buf);
+            Function* func = find(str);
+            if(str == "BYE")
+                BYE = true;
+            else if(str == ".\"") {
+                idx++;
+                GetSubstring('"');
+                printf(tmp_buf);
+            } else if (func)
+                run(func);
+            else
+                number(str);
+            free(tmp_buf);
         }
+        free(buf);
+        if(!BYE && !ABORT) printf(" ok\n\n");
     }
     //Destruction
     delete stack;
