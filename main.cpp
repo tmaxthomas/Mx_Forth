@@ -806,8 +806,6 @@ int main() {
                               tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
                               tmp_buf[i] = 0; idx = tmp_idx
 
-
-
     while(!BYE) {
         printf("#F> ");
         char* buf = NULL;
@@ -827,6 +825,7 @@ int main() {
             else if(str == ".\"") {
                 idx++;
                 GetSubstring('"');
+                idx++;
                 printf(tmp_buf);
             } else if (func)
                 run(func);
