@@ -1,6 +1,4 @@
-#include <iostream>
-#include <sstream>
-#include <map>
+#include <stdio.h>
 #include <vector>
 #include <forward_list>
 #include <stack>
@@ -8,6 +6,11 @@
 
 #include "Stack.h"
 #include "Function.h"
+
+//Utility macro for getting char-delimited substrings of C strings
+#define GetSubstring(term) tmp_idx = idx; for (i = 0; *tmp_idx != term && *tmp_idx != '\n'; i++) tmp_idx++; \
+                           tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
+                           tmp_buf[i] = 0; idx = tmp_idx; idx++;
 
 //Global boolean flags for program state management
 bool ABORT = false, BYE = false;
@@ -19,13 +22,10 @@ std::unordered_map<Function*, Function*> copy_map;
 std::forward_list<std::pair<std::string, Function*> > glossary;
 
 //Oh boy, header
-int addWord();
-int forget();
 int cr();
 int spaces();
 int space();
 int emit();
-int strPrint();
 int add();
 int sub();
 int mult();
@@ -96,27 +96,27 @@ Function* find(std::string& name) {
 // but what's done is done. I could change to using vectors, and it might make a little bit more sense, but probably not.
 //Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
 //path decider, but messy graph handling.
-int addWord() {
+int add_word(char* idx) {
     std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
     std::stack<std::vector<Function*> > leave_stack;
-    std::string name, func;
-    std::cin >> name;
+    char *tmp_buf;
+    size_t i;
+    char *tmp_idx;
+    GetSubstring(' ');
+    std::string name(tmp_buf), func = "";
+    free(tmp_buf);
     //Declare a starting null node
     Function *head = new Function(nop), *tail = head;
-    std::cin >> func;
+
     while(func != ";") {
+        GetSubstring(' ');
+        func = std::string(tmp_buf);
         //Comment handler
         if(func == "(") {
-            while(func.at(func.size() - 1) != ')')
-                std::cin >> func;
-            std::cin >> func;
+            GetSubstring(')');
         } else if(func == ".\"") {                       //Handles string printing
-            char* str = new char[1000];
-            std::cin.getline(str, 1000, '"');
-            std::string temp(str);
-            delete str;
-            temp.erase(temp.begin());                    //Chop off the leading space
-            StrPrint* node = new StrPrint(temp);
+            GetSubstring('"');
+            StrPrint* node = new StrPrint(tmp_buf);
             tail->next = new Function*[1];
             tail->next[0] = node;
             tail = node;
@@ -237,7 +237,6 @@ int addWord() {
             while (tail->next)                            //Integrate user-defined words properly by skipping over word graph
                 tail = tail->next[0];
         }
-        std::cin >> func;
     }
     glossary.push_front(std::make_pair(name, head));
     return 0;
@@ -253,58 +252,32 @@ void run(Function* func) {
     func->run();
 }
 
-
-//TODO: FIX
-//Removes words from the glossary (currently broken)
-int forget() {
-    std::string name;
-    std::cin >> name;
-    auto itr = glossary.begin();
-    auto erase_itr = itr;
-    for(; itr != glossary.end(); itr++) {
-        if(itr->first == name)
-            break;
-        if(itr != glossary.begin()) erase_itr++;
-    }
-    if(itr->first == name)
-        glossary.erase_after(erase_itr);
-    return 0;
-}
 //Carriage return
 int cr() {
-    std::cout << "\n";
+    printf("\n");
     return 0;
 }
 //Prints some number of spaces
 int spaces() {
     std::string str((unsigned long)*(int*)stack->at(0), ' ');
-    std::cout << str;
+    printf(str.c_str());
     stack->pop(1);
     return 0;
 }
 //Prints a space
 int space() {
-    std::cout << " ";
+    printf(" ");
     return 0;
 }
 
 //Prints a character
 int emit() {
     char ch = (char)*stack->at(0);
-    std::cout << ch;
+    printf("%c", ch);
     stack->pop(1);
     return 0;
 }
 
-//TODO:Fix
-//Prints a string
-int strPrint() {
-    char* str = new char[1000];
-    std::cin.getline(str, 1000, '"');
-    std::cout << str;
-    delete str;
-    return 0;
-}
 //Polish postfix addition
 int add() {
     int s = *(int*)stack->at(0);
@@ -593,7 +566,7 @@ int urjprint() {
 //Prints the contents of the stack
 int printS() {
     for(int a = 0; a < stack->size(); a++) {
-        std::cout << *(int*)stack->at(a) << " ";
+        printf(" %d", *(int*)stack->at(a));
     }
     return 0;
 }
@@ -732,7 +705,7 @@ int leave() {
 //Pushes a number onto the stack
 int number(std::string& str) {
     if(!is_num(str)) {
-        std::cout << str << " ?";
+        printf("%s ?", str.c_str());
         exit(1);
     }
     int n = atoi(str.c_str());
@@ -746,8 +719,6 @@ int main() {
     stack = new Stack(4096);
     return_stack = new Stack(4096);
     //Generating FORTH environment
-    glossary.push_front(std::make_pair(":", new Function(addWord)));
-    glossary.push_front(std::make_pair("FORGET", new Function(forget)));
     glossary.push_front(std::make_pair("CR", new Function(cr)));
     glossary.push_front(std::make_pair("SPACES", new Function(spaces)));
     glossary.push_front(std::make_pair("SPACE", new Function(space)));
@@ -801,18 +772,13 @@ int main() {
     glossary.push_front(std::make_pair("PAGE", new Function(page)));
     glossary.push_front(std::make_pair("?STACK", new Function(stack_q)));
 
-    //Utility macro for getting char-delimited substrings of C strings
-#   define GetSubstring(term) tmp_idx = idx; for (i = 0; *tmp_idx != term && *tmp_idx != '\n'; i++) tmp_idx++; \
-                              tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
-                              tmp_buf[i] = 0; idx = tmp_idx
-
     while(!BYE) {
         printf("#F> ");
         char* buf = NULL;
         size_t n = 0;
         getline(&buf, &n, stdin);
         char* idx = buf;
-        while(*idx != '\n') {
+        while(*idx != '\000' && *idx != '\n') {
             while (*idx == ' ') idx++;
             char *tmp_buf;
             size_t i;
@@ -823,10 +789,10 @@ int main() {
             if(str == "BYE")
                 BYE = true;
             else if(str == ".\"") {
-                idx++;
                 GetSubstring('"');
-                idx++;
                 printf(tmp_buf);
+            } else if(str == ":") {
+                add_word(idx);
             } else if (func)
                 run(func);
             else

@@ -5,8 +5,8 @@
 #ifndef MX_FORTH_FUNCTION_H
 #define MX_FORTH_FUNCTION_H
 
-#include <string>
 #include <stdint.h>
+#include <cstring>
 #include "Stack.h"
 
 #define byte uint8_t
@@ -36,11 +36,11 @@ public:
 //Subclass used to deal with printing strings from within user-defined functions
 class StrPrint : public Function {
 public:
-    StrPrint(std::string str_) : Function(), str(str_) {}
+    StrPrint(char* str_) : Function() {strcpy(str, str_);}
     StrPrint(StrPrint* old);
     ~StrPrint() override { delete [] next; }
     int run() override;
-    std::string str;
+    char* str;
 };
 
 bool is_num(std::string& str);

@@ -1,5 +1,9 @@
 Implement ABORT", QUIT
 
-Fix FORGET not working properly
+Re-implement FORGET
 
 Add file I/O
+
+Re-do function calls to allow for recursion
+
+Fix add
