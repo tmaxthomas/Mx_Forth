@@ -1,4 +1,4 @@
-Implement ABORT", QUIT
+Implement ABORT"
 
 Re-implement FORGET
 

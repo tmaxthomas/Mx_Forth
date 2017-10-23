@@ -13,7 +13,7 @@
                            tmp_buf[i] = 0; idx = tmp_idx; idx++;
 
 //Global boolean flags for program state management
-bool ABORT = false, BYE = false;
+bool ABORT = false, BYE = false, QUIT = false;
 
 Stack *stack, *return_stack;
 
@@ -72,6 +72,7 @@ int zeroEquals();
 int zeroLessThan();
 int zeroGreaterThan();
 int page();
+int quit();
 int stack_q();
 int cond();
 int loop();
@@ -632,6 +633,12 @@ int page() {
     return 0;
 }
 
+//Sets up the interpreter to not print ok
+int quit() {
+    QUIT = true;
+    return 0;
+}
+
 //Returns a true flag if the stack is empty, returns false otherwise
 int stack_q() {
     if(!stack->size()) stack->push((int)0xffffffff);
@@ -770,6 +777,7 @@ int main() {
     glossary.push_front(std::make_pair("0<", new Function(zeroLessThan)));
     glossary.push_front(std::make_pair("0>", new Function(zeroGreaterThan)));
     glossary.push_front(std::make_pair("PAGE", new Function(page)));
+    glossary.push_front(std::make_pair("QUIT", new Function(quit)));
     glossary.push_front(std::make_pair("?STACK", new Function(stack_q)));
 
     while(!BYE) {
@@ -800,7 +808,9 @@ int main() {
             free(tmp_buf);
         }
         free(buf);
-        if(!BYE && !ABORT) printf(" ok\n\n");
+        if(!BYE && !ABORT && !QUIT) printf(" ok");
+        if(QUIT) QUIT = false;
+        printf("\n\n");
     }
     //Destruction
     delete stack;
