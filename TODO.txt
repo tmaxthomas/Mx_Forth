@@ -5,5 +5,3 @@ Re-implement FORGET
 Add file I/O
 
 Re-do function calls to allow for recursion
-
-Fix add

@@ -97,7 +97,7 @@ Function* find(std::string& name) {
 // but what's done is done. I could change to using vectors, and it might make a little bit more sense, but probably not.
 //Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
 //path decider, but messy graph handling.
-int add_word(char* idx) {
+char* add_word(char* idx) {
     std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
     std::stack<std::vector<Function*> > leave_stack;
     char *tmp_buf;
@@ -108,10 +108,10 @@ int add_word(char* idx) {
     free(tmp_buf);
     //Declare a starting null node
     Function *head = new Function(nop), *tail = head;
+    GetSubstring(' ');
+    func = std::string(tmp_buf);
 
     while(func != ";") {
-        GetSubstring(' ');
-        func = std::string(tmp_buf);
         //Comment handler
         if(func == "(") {
             GetSubstring(')');
@@ -238,9 +238,11 @@ int add_word(char* idx) {
             while (tail->next)                            //Integrate user-defined words properly by skipping over word graph
                 tail = tail->next[0];
         }
+        GetSubstring(' ');
+        func = std::string(tmp_buf);
     }
     glossary.push_front(std::make_pair(name, head));
-    return 0;
+    return idx;
 }
 
 //Word-execution wrapper-executed word pointed to by func
@@ -800,7 +802,7 @@ int main() {
                 GetSubstring('"');
                 printf(tmp_buf);
             } else if(str == ":") {
-                add_word(idx);
+                idx = add_word(idx);
             } else if (func)
                 run(func);
             else
