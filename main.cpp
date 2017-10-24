@@ -73,6 +73,7 @@ int zeroLessThan();
 int zeroGreaterThan();
 int page();
 int quit();
+int abort_();
 int stack_q();
 int cond();
 int loop();
@@ -635,6 +636,13 @@ int page() {
     return 0;
 }
 
+//Aborts the program
+int abort_() {
+    ABORT = true;
+    stack->clear();
+    return 0;
+}
+
 //Sets up the interpreter to not print ok
 int quit() {
     QUIT = true;
@@ -715,7 +723,7 @@ int leave() {
 int number(std::string& str) {
     if(!is_num(str)) {
         printf("%s ?", str.c_str());
-        exit(1);
+        abort_();
     }
     int n = atoi(str.c_str());
     stack->push(n);
@@ -812,6 +820,7 @@ int main() {
         free(buf);
         if(!BYE && !ABORT && !QUIT) printf(" ok");
         if(QUIT) QUIT = false;
+        if(ABORT) ABORT = false;
         printf("\n\n");
     }
     //Destruction
