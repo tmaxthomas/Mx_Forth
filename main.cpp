@@ -8,14 +8,19 @@
 #include "Function.h"
 
 //Utility macro for getting char-delimited substrings of C strings
-#define GetSubstring(term) tmp_idx = idx; for (i = 0; *tmp_idx != term && *tmp_idx != '\n'; i++) tmp_idx++; \
+#define GetSubstring(term) tmp_idx = idx; for (i = 0; *tmp_idx != term && *tmp_idx != '\n' && *tmp_idx != '\r'; i++) tmp_idx++; \
                            tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
-                           tmp_buf[i] = 0; idx = tmp_idx; idx++;
+                           tmp_buf[i] = 0; idx = tmp_idx; idx++
+
+//Utiity macro for reading from a file/stream
+#define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); char* idx = buf
 
 //Global boolean flags for program state management
 bool ABORT = false, BYE = false, QUIT = false;
 
 Stack *stack, *return_stack;
+
+FILE* curr_file = NULL;
 
 std::unordered_map<Function*, Function*> copy_map;
 
@@ -81,7 +86,7 @@ int loop_plus();
 int do_();
 int nop();
 int leave();
-int number(std::string& str);
+void number(std::string& str);
 
 //Finds words in the glossary
 Function* find(std::string& name) {
@@ -640,7 +645,7 @@ int page() {
 int abort_() {
     ABORT = true;
     stack->clear();
-    return 0;
+    throw 1;
 }
 
 //Sets up the interpreter to not print ok
@@ -720,14 +725,51 @@ int leave() {
 }
 
 //Pushes a number onto the stack
-int number(std::string& str) {
+void number(std::string& str) {
     if(!is_num(str)) {
-        printf("%s ?", str.c_str());
+        printf("%s ?\n", str.c_str());
         abort_();
+        return;
     }
     int n = atoi(str.c_str());
     stack->push(n);
-    return 0;
+}
+
+//The terminal text interpreter
+void text_interpreter(char* idx) {
+    while(*idx != '\0' && *idx != '\n' && *idx != '\r') {
+        while (*idx == ' ') idx++;
+        char *tmp_buf;
+        size_t i;
+        char *tmp_idx;
+        GetSubstring(' ');
+        std::string str(tmp_buf);
+        free(tmp_buf);
+        Function *func = find(str);
+        if (str == "BYE")
+            BYE = true;
+        else if (str == ".\"") {
+            GetSubstring('"');
+            printf(tmp_buf);
+            free(tmp_buf);
+        } else if (str == ":")
+            idx = add_word(idx);
+        else if (str == "INCLUDE") {
+            char r = 'r';
+            GetSubstring(' ');
+            curr_file = fopen(tmp_buf, &r);
+            //Hopefully this works...
+            while(!feof(curr_file)) {
+                ReadInput(curr_file);
+                text_interpreter(idx);
+                free(buf);
+            }
+            free(tmp_buf);
+        } else if (func)
+            run(func);
+        else
+            number(str);
+    }
 }
 
 int main() {
@@ -792,36 +834,15 @@ int main() {
 
     while(!BYE) {
         printf("#F> ");
-        char* buf = NULL;
-        size_t n = 0;
-        getline(&buf, &n, stdin);
-        char* idx = buf;
-        while(*idx != '\000' && *idx != '\n') {
-            while (*idx == ' ') idx++;
-            char *tmp_buf;
-            size_t i;
-            char *tmp_idx;
-            GetSubstring(' ');
-            std::string str(tmp_buf);
-            Function* func = find(str);
-            if(str == "BYE")
-                BYE = true;
-            else if(str == ".\"") {
-                GetSubstring('"');
-                printf(tmp_buf);
-            } else if(str == ":") {
-                idx = add_word(idx);
-            } else if (func)
-                run(func);
-            else
-                number(str);
-            free(tmp_buf);
-        }
+        ReadInput(stdin);
+        try {
+            text_interpreter(idx);
+        } catch(int) {} //Abort catching
         free(buf);
-        if(!BYE && !ABORT && !QUIT) printf(" ok");
+        if(!BYE && !ABORT && !QUIT) printf(" ok\n");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;
-        printf("\n\n");
+        printf("\n");
     }
     //Destruction
     delete stack;

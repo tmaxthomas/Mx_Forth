@@ -1,7 +1,9 @@
-Implement ABORT"
+Finish implementing ABORT" in-word embedding
 
 Re-implement FORGET
 
 Add file I/O
 
 Re-do function calls to allow for recursion
+
+Add variables

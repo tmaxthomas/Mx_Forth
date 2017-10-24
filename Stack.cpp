@@ -9,3 +9,10 @@ void Stack::push(int val) {
     top++;
     st[top] = val;
 }
+
+void Stack::pop(int mag) {
+    if(top > -1)
+        top -= mag;
+    else
+        abort_();
+}
