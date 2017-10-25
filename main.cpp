@@ -27,11 +27,19 @@ std::unordered_map<Function*, Function*> copy_map;
 
 std::list<std::pair<std::string, Function*> > glossary;
 
-//Oh boy, header
+//Proper header is used for each embeddable FORTH word to A: help with organization, and B: keep dependencies straight
+
+//Output words
 int cr();
 int spaces();
 int space();
 int emit();
+int print();
+int uprint();
+int urjprint();
+int printS();
+
+//Math words
 int add();
 int sub();
 int mult();
@@ -49,10 +57,22 @@ int abs();
 int neg();
 int min();
 int max();
+
+//Bithacking words
 int lshift();
 int rshift();
+
+//Logic words
 int and_();
 int or_();
+int equals();
+int lessThan();
+int greaterThan();
+int zeroEquals();
+int zeroLessThan();
+int zeroGreaterThan();
+
+//Stack structure words
 int swap();
 int swap2();
 int dup();
@@ -63,30 +83,28 @@ int over2();
 int rot();
 int drop();
 int drop2();
+
+//Return stack access words
 int retPush();
 int retPop();
 int retCopy();
 int retCopy3();
-int print();
-int uprint();
-int urjprint();
-int printS();
-int equals();
-int lessThan();
-int greaterThan();
-int zeroEquals();
-int zeroLessThan();
-int zeroGreaterThan();
-int page();
-int quit();
-int abort_();
-int stack_q();
+
+//Structural (branching) words
 int cond();
 int loop();
 int loop_plus();
 int do_();
 int nop();
 int leave();
+
+//Misc. words
+int page();
+int quit();
+int abort_();
+int stack_q();
+
+
 void number(std::string& str);
 
 //Finds words in the glossary
@@ -598,6 +616,8 @@ int printS() {
     }
     return 0;
 }
+
+
 int equals(){
     int a = *(int*)stack->at(0), b = *(int*)stack->at(1);
     stack->pop(2);
@@ -607,6 +627,8 @@ int equals(){
         stack->push(0x00000000);
     return 0;
 }
+
+
 int lessThan(){
     int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
     stack->pop(2);
@@ -616,6 +638,8 @@ int lessThan(){
         stack->push(0x00000000);
     return 0;
 }
+
+
 int greaterThan(){
     int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
     stack->pop(2);
@@ -625,6 +649,8 @@ int greaterThan(){
         stack->push(0x00000000);
     return 0;
 }
+
+
 int zeroEquals(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
@@ -634,6 +660,8 @@ int zeroEquals(){
         stack->push(0x00000000);
     return 0;
 }
+
+
 int zeroLessThan(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
@@ -643,6 +671,8 @@ int zeroLessThan(){
         stack->push(0x00000000);
     return 0;
 }
+
+
 int zeroGreaterThan(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
@@ -657,6 +687,7 @@ int zeroGreaterThan(){
 //Same logic for using system() applies.
 int page() {
     system("clear");
+    QUIT = true; //Avoid printing 'ok' after clearing the terminal, because it looks weird
     return 0;
 }
 
@@ -696,6 +727,7 @@ int do_() {
     return_stack->push(index);
     return 0;
 }
+
 //Definite loop conditional
 int loop() {
     int index = *(int*)return_stack->at(0);
@@ -709,6 +741,7 @@ int loop() {
         return 0;
     }
 }
+
 //Why does FORTH have to be inconsistent with its loop end condition, anyways?
 int loop_plus() {
     int index = *(int*)return_stack->at(0);
@@ -738,6 +771,7 @@ int loop_plus() {
 int nop() {
     return 0; //That's right; it does nothing.
 }
+
 //Nop-esque operand to handle loop break pathing
 int leave() {
     return 1;
@@ -797,11 +831,12 @@ void text_interpreter(char* idx) {
 }
 
 int main() {
-    system("clear"); //Yes, yes, I know, system() is evil. Then again, this isn't production code, so I don't care.
-    //Initializing stack
+    //Initialize the stack & return stack
     stack = new Stack(4096);
     return_stack = new Stack(4096);
-    //Generating FORTH environment
+
+    //Build the glossary
+    //Note to self: Learn how to metaprogram so's you can embed all this in the executable
     glossary.push_back(std::make_pair("CR", new Function(cr)));
     glossary.push_back(std::make_pair("SPACES", new Function(spaces)));
     glossary.push_back(std::make_pair("SPACE", new Function(space)));
@@ -856,22 +891,27 @@ int main() {
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));
     glossary.push_back(std::make_pair("?STACK", new Function(stack_q)));
 
+    //Loop until terminal exit command is issued
     while(!BYE) {
         printf("#F> ");
         ReadInput(stdin);
+        //Try and do something, and catch the abort if it throws
         try {
             text_interpreter(idx);
         } catch(int) {} //Abort catching
+
         free(buf);
         if(!BYE && !ABORT && !QUIT) printf(" ok\n");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;
         printf("\n");
     }
-    //Destruction
+
+    //Clean up the environment (no, not that kind, the other kind)
     delete stack;
     delete return_stack;
     for(auto itr = glossary.begin(); itr != glossary.end(); itr++)
         delete itr->second;
+
     return 0;
 }
