@@ -2,7 +2,7 @@ Finish implementing ABORT" in-word embedding
 
 Re-implement FORGET
 
-Add file I/O
+Fix INCLUDE
 
 Re-do function calls to allow for recursion
 

@@ -758,13 +758,16 @@ void text_interpreter(char* idx) {
             char r = 'r';
             GetSubstring(' ');
             curr_file = fopen(tmp_buf, &r);
-            //Hopefully this works...
-            while(!feof(curr_file)) {
-                ReadInput(curr_file);
-                text_interpreter(idx);
+            char* buf = NULL;
+            size_t n = 0;
+            while(getline(&buf, &n, curr_file) > 0) {
+                char* f_idx = buf;
+                text_interpreter(f_idx);
                 free(buf);
+                buf = NULL;
             }
             free(tmp_buf);
+            fclose(curr_file);
         } else if (func)
             run(func);
         else
