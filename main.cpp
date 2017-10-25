@@ -13,6 +13,7 @@
                            tmp_buf[i] = 0; idx = tmp_idx; idx++
 
 //Utiity macro for reading from a file/stream
+//I may remove this later, as it's only used in 1 place
 #define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); char* idx = buf
 
 //Global boolean flags for program state management
@@ -95,6 +96,19 @@ Function* find(std::string& name) {
             return itr->second;
     }
     return NULL;
+}
+
+//FORGET word for dictionary cleanup
+char* forget(char* idx) {
+    char *tmp_buf, *tmp_idx;
+    size_t i;
+    GetSubstring(' ');
+    std::string name(tmp_buf);
+    free(tmp_buf);
+    auto itr = glossary.begin();
+    for(; itr != glossary.end(); itr++) {
+        
+    }
 }
 
 //Adds user-defined words to the glossary
