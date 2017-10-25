@@ -1,5 +1,3 @@
-Finish implementing ABORT" in-word embedding
-
 Re-do function calls to allow for recursion
 
 Add variables
