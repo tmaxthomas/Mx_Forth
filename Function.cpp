@@ -66,6 +66,8 @@ StrPrint::StrPrint(StrPrint* old) : Function(), str(old->str) {
             next[0] = new Function(old->next[0]);
     }
 }
+
+
 //Call the function pointer, then use its return value to determine what to run next
 //Yes, it seems pointless, but it's needed due to the way inherited classes use the method.
 int Function::run() {
@@ -85,6 +87,13 @@ int Number::run() {
 //Prints the stored string. Simple enough.
 int StrPrint::run() {
     std::cout << str;
+    return 0;
+}
+
+//Prints the stored string and aborts
+int Abort::run() {
+    std::cout << str;
+    abort_();
     return 0;
 }
 

@@ -18,7 +18,7 @@ public:
     Function() : fxn(NULL), next(NULL), branches(1) {}
     Function(int(*fxn_)()) : fxn(fxn_), next(NULL), branches(1) {}
     Function(Function* old);
-    virtual ~Function() { delete next; }
+    virtual ~Function() { delete [] next; }
     int(*fxn)();
     Function** next;
     byte branches;
@@ -29,16 +29,21 @@ class Number : public Function {
 public:
     Number(std::string str_) : Function(), str(str_){}
     Number(Number* old);
-    ~Number() override { delete [] next; }
     int run() override;
     std::string str;
 };
 //Subclass used to deal with printing strings from within user-defined functions
 class StrPrint : public Function {
 public:
-    StrPrint(char* str_) : Function() {strcpy(str, str_);}
+    StrPrint(char* str_) : Function(), str((char*) malloc(strlen(str_))) {strcpy(str, str_);}
     StrPrint(StrPrint* old);
-    ~StrPrint() override { delete [] next; }
+    int run() override;
+    char* str;
+};
+
+class Abort : public Function {
+public:
+    Abort(char* str_) : Function(), str((char*) malloc(strlen(str_))) { strcpy(str, str_); }
     int run() override;
     char* str;
 };

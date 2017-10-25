@@ -160,8 +160,14 @@ char* add_word(char* idx) {
             GetSubstring(')');
         } else if(func == ".\"") {                       //Handles string printing
             GetSubstring('"');
-            StrPrint* node = new StrPrint(tmp_buf);
-            tail->next = new Function*[1];
+            StrPrint *node = new StrPrint(tmp_buf);
+            tail->next = new Function *[1];
+            tail->next[0] = node;
+            tail = node;
+        } else if(func == "ABORT\"") {                   //Handles ABORT"
+            GetSubstring('"');
+            Abort *node = new Abort(tmp_buf);
+            tail->next = new Function *[1];
             tail->next[0] = node;
             tail = node;
         } else if(func == "IF") {                        //Conditional handling, step 1
@@ -281,6 +287,7 @@ char* add_word(char* idx) {
             while (tail->next)                            //Integrate user-defined words properly by skipping over word graph
                 tail = tail->next[0];
         }
+        while (*idx == ' ') idx++;                        //Take care of loose/excess spaces
         GetSubstring(' ');
         func = std::string(tmp_buf);
     }
@@ -525,6 +532,7 @@ int over() {
     stack->push(d);
     return 0;
 }
+
 //Pushes the third and fourth elements of the stack onto the stack
 int over2() {
     long t = *(long*)stack->at(1);
@@ -534,6 +542,7 @@ int over2() {
     stack->push(d);
     return 0;
 }
+
 //Removes the third element of the stack and pushes it onto the stack
 int rot() {
     int t = *stack->at(0);
@@ -547,16 +556,19 @@ int rot() {
     stack->push(b);
     return 0;
 }
+
 //Pops the top of the stack
 int drop() {
     stack->pop(1);
     return 0;
 }
+
 //Pops the top 2 elements of the stack
 int drop2() {
     stack->pop(2);
     return 0;
 }
+
 //Pushes top of stack onto return stack
 int retPush(){
     int a = *stack->at(0);
@@ -564,6 +576,7 @@ int retPush(){
     return_stack->push(a);
     return 0;
 }
+
 //Pushes top of return stack onto stack
 int retPop(){
     int a = *return_stack->at(0);
@@ -571,18 +584,21 @@ int retPop(){
     stack->push(a);
     return 0;
 }
+
 //Copies top of return stack onto stack
 int retCopy(){
     int a = *return_stack->at(0);
     stack->push(a);
     return 0;
 }
+
 //Copies 3rd value on return stack onto stack
 int retCopy3(){
     int a = *return_stack->at(2);
     stack->push(a);
     return 0;
 }
+
 //Prints and then pops the top of the stack
 int print() {
     printf("%d", *(int*)stack->at(0));
@@ -780,7 +796,7 @@ int leave() {
 //Pushes a number onto the stack
 void number(std::string& str) {
     if(!is_num(str)) {
-        printf("%s ?\n", str.c_str());
+        printf("%s ?", str.c_str());
         abort_();
         return;
     }
@@ -901,10 +917,11 @@ int main() {
         } catch(int) {} //Abort catching
 
         free(buf);
-        if(!BYE && !ABORT && !QUIT) printf(" ok\n");
+        //Newline printing and flag resetting
+        if(!BYE && !ABORT && !QUIT) printf(" ok");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;
-        printf("\n");
+        if(!BYE) printf("\n\n");
     }
 
     //Clean up the environment (no, not that kind, the other kind)
