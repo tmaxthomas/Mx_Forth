@@ -15,13 +15,17 @@ extern Stack *stack;
 int Function::run() {
     return fxn();
 }
+
+Number::Number(std::string str) {
+    if(!is_num(str)) {
+        printf("%s ?", str.c_str());
+        abort_();
+    }
+    n = atoi(str.c_str());
+}
+
 //Basically just the number function from main.cpp
 int Number::run() {
-    if(!is_num(str)) {
-        std::cout << str << " ?";
-        exit(1);
-    }
-    int n = atoi(str.c_str());
     stack->push(n);
     return 0;
 }

@@ -26,10 +26,10 @@ public:
 //Subclass used to deal with pushing numbers onto the stack from within user-defined functions
 class Number : public Function {
 public:
-    Number(std::string str_) : Function(), str(str_){}
+    Number(std::string str);
     //Number(Number* old);
     int run() override;
-    std::string str;
+    int n;
 };
 //Subclass used to deal with printing strings from within user-defined functions
 class StrPrint : public Function {
