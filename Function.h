@@ -15,20 +15,19 @@
 //nodes.
 class Function {
 public:
-    Function() : fxn(NULL), next(NULL), branches(1) {}
-    Function(int(*fxn_)()) : fxn(fxn_), next(NULL), branches(1) {}
-    Function(Function* old);
+    Function() : fxn(NULL), next(NULL) {}
+    Function(int(*fxn_)()) : fxn(fxn_), next(NULL) {}
+    Function(Function* old) : fxn(old->fxn), next(NULL) {}
     virtual ~Function() { delete [] next; }
     int(*fxn)();
     Function** next;
-    byte branches;
     virtual int run();
 };
 //Subclass used to deal with pushing numbers onto the stack from within user-defined functions
 class Number : public Function {
 public:
     Number(std::string str_) : Function(), str(str_){}
-    Number(Number* old);
+    //Number(Number* old);
     int run() override;
     std::string str;
 };
@@ -36,7 +35,7 @@ public:
 class StrPrint : public Function {
 public:
     StrPrint(char* str_) : Function(), str((char*) malloc(strlen(str_))) {strcpy(str, str_);}
-    StrPrint(StrPrint* old);
+    //StrPrint(StrPrint* old);
     int run() override;
     char* str;
 };
@@ -46,6 +45,13 @@ public:
     Abort(char* str_) : Function(), str((char*) malloc(strlen(str_))) { strcpy(str, str_); }
     int run() override;
     char* str;
+};
+
+class UsrFunc : public Function {
+public:
+    UsrFunc(Function* head_) : Function(), head(head_) {}
+    Function* head;
+    int run() override;
 };
 
 bool is_num(std::string& str);

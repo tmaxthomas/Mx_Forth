@@ -8,9 +8,9 @@
 #include "Function.h"
 
 //Utility macro for getting char-delimited substrings of C strings
-#define GetSubstring(term) tmp_idx = idx; for (i = 0; *tmp_idx != term && *tmp_idx != '\n' && *tmp_idx != '\r'; i++) tmp_idx++; \
+#define GetSubstring(boolean) tmp_idx = idx; for (i = 0; !(boolean); i++) tmp_idx++; \
                            tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
-                           tmp_buf[i] = 0; idx = tmp_idx; idx++
+                           tmp_buf[i] = 0; idx = tmp_idx; if (*idx) idx++
 
 //Utiity macro for reading from a file/stream
 //I may remove this later, as it's only used in 1 place
@@ -22,8 +22,6 @@ bool ABORT = false, BYE = false, QUIT = false;
 Stack *stack, *return_stack;
 
 FILE* curr_file = NULL;
-
-std::unordered_map<Function*, Function*> copy_map;
 
 std::list<std::pair<std::string, Function*> > glossary;
 
@@ -106,6 +104,7 @@ int stack_q();
 
 
 void number(std::string& str);
+bool is_whitespace(char c);
 
 //Finds words in the glossary
 Function* find(std::string& name) {
@@ -120,7 +119,7 @@ Function* find(std::string& name) {
 char* forget(char* idx) {
     char *tmp_buf, *tmp_idx;
     size_t i;
-    GetSubstring(' ');
+    GetSubstring(is_whitespace(*tmp_idx));
     std::string name(tmp_buf);
     free(tmp_buf);
 
@@ -146,26 +145,26 @@ char* add_word(char* idx) {
     char *tmp_buf;
     size_t i;
     char *tmp_idx;
-    GetSubstring(' ');
+    GetSubstring(is_whitespace(*tmp_idx));
     std::string name(tmp_buf), func = "";
     free(tmp_buf);
     //Declare a starting null node
     Function *head = new Function(nop), *tail = head;
-    GetSubstring(' ');
+    GetSubstring(is_whitespace(*tmp_idx));
     func = std::string(tmp_buf);
 
     while(func != ";") {
         //Comment handler
         if(func == "(") {
-            GetSubstring(')');
+            GetSubstring(*tmp_idx == ')');
         } else if(func == ".\"") {                       //Handles string printing
-            GetSubstring('"');
+            GetSubstring(*tmp_idx == '"');
             StrPrint *node = new StrPrint(tmp_buf);
             tail->next = new Function *[1];
             tail->next[0] = node;
             tail = node;
         } else if(func == "ABORT\"") {                   //Handles ABORT"
-            GetSubstring('"');
+            GetSubstring(*tmp_idx == '"');
             Abort *node = new Abort(tmp_buf);
             tail->next = new Function *[1];
             tail->next[0] = node;
@@ -175,7 +174,6 @@ char* add_word(char* idx) {
             tail->next = new Function*[1];
             tail->next[0] = if_;                         //Tail points to if
             tail->next[0]->next = new Function*[2];      //if block branching nodes declaration
-            tail->next[0]->branches = 2;
             tail->next[0]->next[1] = new Function(nop);  //Dummy node for conditional branch in order to have if head node location
             if_stack.push(tail->next[0]);                //Push the node onto the conditional stack
             tail = if_stack.top()->next[1];              //Set tail node
@@ -232,7 +230,6 @@ char* add_word(char* idx) {
             tail->next = new Function*[1];
             tail->next[0] = loop_;                       //Add loop escape checker to loop path
             loop_->next = new Function*[2];              //Allocate loop branching
-            loop_->branches = 2;
             loop_->next[1] = do_stack.top();             //Plug loop path into loop head
             do_stack.pop();                              //Clean up do stack
             loop_->next[0] = new Function(nop);          //Set up loop escape path
@@ -272,23 +269,26 @@ char* add_word(char* idx) {
             while_stack.push(temp);                      //Push false path head onto while stack
             tail = tail->next[1];                        //Move tail
         } else if (func == "REPEAT") {
-            tail->next = new Function*[1];
+            tail->next = new Function *[1];
             tail->next[0] = begin_stack.top();           //Plug current tail into loop head
             begin_stack.pop();                           //Clean up begin_stack
             tail = while_stack.top();                    //Move current tail to loop escape path
             while_stack.pop();                           //Clean up while_stack
+        } else if (func == name) {                       //Allow for recursive calls
+            tail->next = new Function*[1];
+            tail->next[0] = (Function*) new UsrFunc(head);
+            tail = tail->next[0];
         } else {
-            copy_map.erase(copy_map.begin(), copy_map.end()); //Clean up the copy constructor map
             Function *temp;
             Function *tmp_ptr = find(func);
-            temp = (Function *) (tmp_ptr ? new Function(tmp_ptr) : new Number(func));   //Number/non-Number handling
+            //Figure out what the heck kind of thing we're dealing with
+            temp = (Function *) (tmp_ptr ? (tmp_ptr->next ? new UsrFunc(tmp_ptr) : new Function(tmp_ptr)) : new Number(func));
             tail->next = new Function *[1];
             tail->next[0] = temp;
-            while (tail->next)                            //Integrate user-defined words properly by skipping over word graph
-                tail = tail->next[0];
+            tail = tail->next[0];
         }
-        while (*idx == ' ') idx++;                        //Take care of loose/excess spaces
-        GetSubstring(' ');
+        while (is_whitespace(*idx)) idx++;                        //Take care of loose/excess whitespace
+        GetSubstring(is_whitespace(*tmp_idx));
         func = std::string(tmp_buf);
     }
     glossary.push_back(std::make_pair(name, head));
@@ -804,37 +804,44 @@ void number(std::string& str) {
     stack->push(n);
 }
 
-//The terminal text interpreter
+inline bool is_whitespace(char c) {
+    return c == '\t' || c == '\n' || c == '\r' || c == ' ' || c == '\0';
+}
+
+//The terminal/file text interpreter
 void text_interpreter(char* idx) {
-    while(*idx != '\0' && *idx != '\n' && *idx != '\r') {
-        while (*idx == ' ') idx++;
+    while(*idx != '\0') {
+        while (is_whitespace(*idx)) idx++;
         char *tmp_buf;
         size_t i;
         char *tmp_idx;
-        GetSubstring(' ');
+        GetSubstring(is_whitespace(*tmp_idx));
         std::string str(tmp_buf);
         free(tmp_buf);
         Function *func = find(str);
         if (str == "BYE")
             BYE = true;
         else if (str == ".\"") {
-            GetSubstring('"');
+            GetSubstring(*tmp_idx == '"');
             printf(tmp_buf);
             free(tmp_buf);
         } else if (str == ":")
             idx = add_word(idx);
         else if (str == "INCLUDE") {
             char r = 'r';
-            GetSubstring(' ');
+            GetSubstring(is_whitespace(*tmp_idx));
+
             curr_file = fopen(tmp_buf, &r);
-            char *buf = NULL;
-            size_t n = 0;
-            while (getline(&buf, &n, curr_file) > 0) {
-                char *f_idx = buf;
-                text_interpreter(f_idx);
-                free(buf);
-                buf = NULL;
-            }
+            fseek(curr_file, 0, SEEK_END);
+            size_t n = (size_t) ftell(curr_file);
+            rewind(curr_file);
+
+            char* buf = (char*) malloc(n + 1);
+            fread(buf, n, 1, curr_file);
+            buf[n] = '\0';
+            text_interpreter(buf);
+            free(buf);
+
             free(tmp_buf);
             fclose(curr_file);
         } else if (str == "FORGET")
