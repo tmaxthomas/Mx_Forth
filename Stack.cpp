@@ -5,9 +5,14 @@
 #include "Stack.h"
 
 void Stack::push(int val) {
-    int* st = (int*)stack;
     top++;
-    st[top] = val;
+    *(int*)(stack + top) = val;
+}
+
+void Stack::push(int64_t val) {
+    top++;
+    *(int64_t*)(stack + top) = val;
+    top++;
 }
 
 void Stack::pop(int mag) {

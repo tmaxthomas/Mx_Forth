@@ -6,6 +6,7 @@
 #define MX_FORTH_STACK_H
 
 #include <cstdlib>
+#include <cstdint>
 
 #define uint unsigned
 
@@ -17,6 +18,7 @@ public:
     uint* at(int index) const { return stack + (top - index); }
     void pop(int mag);
     void push(int val);
+    void push(int64_t val);
     void clear() { top = -1; }
     int size() { return top + 1; }
 private:

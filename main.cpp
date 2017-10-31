@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <vector>
 #include <list>
 #include <stack>
@@ -17,7 +18,7 @@
 #define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); char* idx = buf
 
 //Global boolean flags for program state management
-bool ABORT = false, BYE = false, QUIT = false;
+bool ABORT = false, BYE = false, QUIT = false, S_UND = false;
 
 Stack *stack, *return_stack;
 
@@ -37,7 +38,7 @@ int uprint();
 int urjprint();
 int printS();
 
-//Math words
+//Integer math words
 int add();
 int sub();
 int mult();
@@ -497,9 +498,9 @@ int swap() {
 }
 //Swaps top two elements of the stack for the next two
 int swap2() {
-    long t = *(long*)stack->at(1);
+    int64_t t = *(int64_t*)stack->at(1);
     stack->pop(2);
-    long b = *(long*)stack->at(1);
+    int64_t b = *(int64_t*)stack->at(1);
     stack->pop(2);
     stack->push(t);
     stack->push(b);
@@ -507,13 +508,12 @@ int swap2() {
 }
 //Duplicates the top of the stack
 int dup() {
-    stack->push(*stack->at(0));
+    stack->push(*(int*)stack->at(0));
     return 0;
 }
 //Duplicates the top two elements of the stack
 int dup2() {
-    stack->push(*stack->at(1));
-    stack->push(*stack->at(1));
+    stack->push(*(int64_t*)stack->at(1));
     return 0;
 }
 
@@ -535,11 +535,8 @@ int over() {
 
 //Pushes the third and fourth elements of the stack onto the stack
 int over2() {
-    long t = *(long*)stack->at(1);
-    stack->pop(2);
-    long d = *(long*)stack->at(1);
+    int64_t t = *(int64_t*)stack->at(1);
     stack->push(t);
-    stack->push(d);
     return 0;
 }
 
@@ -601,6 +598,10 @@ int retCopy3(){
 
 //Prints and then pops the top of the stack
 int print() {
+    if(stack->size() == 0) {
+        S_UND = true;
+        abort_();
+    }
     printf("%d", *(int*)stack->at(0));
     stack->pop(1);
     return 0;
@@ -608,6 +609,10 @@ int print() {
 
 //Unsigned int print
 int uprint() {
+    if(stack->size() == 0) {
+        S_UND = true;
+        abort_();
+    }
     printf("%u", *stack->at(0));
     stack->pop(1);
     return 0;
@@ -615,6 +620,10 @@ int uprint() {
 
 //Unsigned right-justified print
 int urjprint() {
+    if(stack->size() == 0) {
+        S_UND = true;
+        abort_();
+    }
     uint size = *stack->at(0);
     uint data =  *stack->at(1);
     uint num_spaces = size - data/10;
@@ -925,9 +934,11 @@ int main() {
 
         free(buf);
         //Newline printing and flag resetting
-        if(!BYE && !ABORT && !QUIT) printf(" ok");
+        if(S_UND) printf(" stack underflow");
+        if(!BYE && !ABORT && !QUIT && !S_UND) printf(" ok");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;
+        if(S_UND) S_UND = false;
         if(!BYE) printf("\n\n");
     }
 
