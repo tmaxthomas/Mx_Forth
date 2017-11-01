@@ -35,12 +35,16 @@ int space();
 int emit();
 int print();
 int uprint();
+int dprint();
 int urjprint();
+int drjprint();
 int printS();
 
 //Integer math words
 int add();
+int Dadd();
 int sub();
+int Dsub();
 int mult();
 int umult();
 int div();
@@ -54,8 +58,11 @@ int add2();
 int sub2();
 int abs();
 int neg();
+int Dneg();
 int min();
+int Dmin();
 int max();
+int Dmax();
 
 //Bithacking words
 int lshift();
@@ -65,9 +72,13 @@ int rshift();
 int and_();
 int or_();
 int equals();
+int Dequals();
 int lessThan();
+int DlessThan();
+int DUlessThan();
 int greaterThan();
 int zeroEquals();
+int DzeroEquals();
 int zeroLessThan();
 int zeroGreaterThan();
 
@@ -339,6 +350,14 @@ int add() {
     *(int*)stack->at(0) += s;
     return 0;
 }
+
+int Dadd() {
+    int64_t s = *(int64_t*)stack->at(1);
+    stack->pop(2);
+    *(int64_t*)stack->at(1) += s;
+    return 0;
+}
+
 //Polish postfix subtraction
 int sub() {
     int s = *(int*)stack->at(0);
@@ -346,6 +365,14 @@ int sub() {
     *(int*)stack->at(0) -= s;
     return 0;
 }
+
+int Dsub() {
+    int64_t s = *(int64_t*)stack->at(1);
+    stack->pop(2);
+    *(int64_t*)stack->at(1) -= s;
+    return 0;
+}
+
 //Polist postfix multiplication
 int mult() {
     int s = *(int*)stack->at(0);
@@ -357,8 +384,9 @@ int mult() {
 //Polish postfix unsigned multiplication
 int umult() {
     int s = *stack->at(0);
-    stack->pop(1);
-    *stack->at(0) *= s;
+    int m = *stack->at(1);
+    stack->pop(2);
+    stack->push((int64_t)s*m);
     return 0;
 }
 
@@ -461,6 +489,12 @@ int neg(){
     *(int*)stack->at(0) *= -1;
     return 0;
 }
+
+int Dneg() {
+    *(int64_t*)stack->at(1) *= -1;
+    return 0;
+}
+
 //Returns minimum of 2 numbers
 int min(){
     int a = *(int*)stack->at(0);
@@ -473,12 +507,37 @@ int min(){
         stack->push(a);
     return 0;
 }
+
+int Dmin(){
+    int64_t a = *(int64_t*)stack->at(1);
+    stack->pop(2);
+    int64_t b = *(int64_t*)stack->at(1);
+    stack->pop(2);
+    if(a > b)
+        stack->push(b);
+    else
+        stack->push(a);
+    return 0;
+}
+
 //Returns maximum of 2 numbers
 int max(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
     int b = *(int*)stack->at(0);
     stack->pop(1);
+    if(a > b)
+        stack->push(a);
+    else
+        stack->push(b);
+    return 0;
+}
+
+int Dmax(){
+    int64_t a = *(int64_t*)stack->at(1);
+    stack->pop(2);
+    int64_t b = *(int64_t*)stack->at(1);
+    stack->pop(2);
     if(a > b)
         stack->push(a);
     else
@@ -598,10 +657,6 @@ int retCopy3(){
 
 //Prints and then pops the top of the stack
 int print() {
-    if(stack->size() == 0) {
-        S_UND = true;
-        abort_();
-    }
     printf("%d", *(int*)stack->at(0));
     stack->pop(1);
     return 0;
@@ -609,21 +664,20 @@ int print() {
 
 //Unsigned int print
 int uprint() {
-    if(stack->size() == 0) {
-        S_UND = true;
-        abort_();
-    }
     printf("%u", *stack->at(0));
     stack->pop(1);
     return 0;
 }
 
+//Double length integer print
+int dprint() {
+    printf("%ld", *(int64_t*)stack->at(1));
+    stack->pop(2);
+    return 0;
+}
+
 //Unsigned right-justified print
 int urjprint() {
-    if(stack->size() == 0) {
-        S_UND = true;
-        abort_();
-    }
     uint size = *stack->at(0);
     uint data =  *stack->at(1);
     uint num_spaces = size - data/10;
@@ -631,6 +685,17 @@ int urjprint() {
     for(uint i = 0; i < num_spaces; i++)
         printf(" ");
     printf("%u", data);
+    return 0;
+}
+
+int drjprint() {
+    uint size = *stack->at(0);
+    int64_t data = *(int64_t*)stack->at(2);
+    int64_t num_spaces = size - data/10;
+    stack->pop(3);
+    for(int64_t i = 0; i < num_spaces; i++)
+        printf(" ");
+    printf("%ld", data);
     return 0;
 }
 
@@ -653,6 +718,15 @@ int equals(){
     return 0;
 }
 
+int Dequals() {
+    int64_t a = *(int64_t*)stack->at(1), b = *(int64_t*)stack->at(3);
+    stack->pop(4);
+    if(a == b)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
 
 int lessThan(){
     int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
@@ -664,6 +738,25 @@ int lessThan(){
     return 0;
 }
 
+int DlessThan() {
+    int64_t a = *(int64_t*)stack->at(1), b = *(int64_t*)stack->at(3);
+    stack->pop(4);
+    if(a < b)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+
+int DUlessThan() {
+    uint64_t a = *(uint64_t*)stack->at(1), b = *(uint64_t*)stack->at(3);
+    stack->pop(4);
+    if(a < b)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
 
 int greaterThan(){
     int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
@@ -679,6 +772,16 @@ int greaterThan(){
 int zeroEquals(){
     int a = *(int*)stack->at(0);
     stack->pop(1);
+    if(a == 0)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+
+int DzeroEquals(){
+    int64_t a = *(int64_t*)stack->at(1);
+    stack->pop(2);
     if(a == 0)
         stack->push((int)0xffffffff);
     else
@@ -874,7 +977,9 @@ int main() {
     glossary.push_back(std::make_pair("SPACE", new Function(space)));
     glossary.push_back(std::make_pair("EMIT", new Function(emit)));
     glossary.push_back(std::make_pair("+", new Function(add)));
+    glossary.push_back(std::make_pair("D+", new Function(Dadd)));
     glossary.push_back(std::make_pair("-", new Function(sub)));
+    glossary.push_back(std::make_pair("D-", new Function(Dsub)));
     glossary.push_back(std::make_pair("*", new Function(mult)));
     glossary.push_back(std::make_pair("UM*", new Function(umult)));
     glossary.push_back(std::make_pair("/", new Function(div)));
@@ -892,8 +997,11 @@ int main() {
     glossary.push_back(std::make_pair("OR", new Function(or_)));
     glossary.push_back(std::make_pair("ABS", new Function(abs)));
     glossary.push_back(std::make_pair("NEGATE", new Function(neg)));
+    glossary.push_back(std::make_pair("DNEGATE", new Function(Dneg)));
     glossary.push_back(std::make_pair("MIN", new Function(min)));
+    glossary.push_back(std::make_pair("DMIN", new Function(Dmin)));
     glossary.push_back(std::make_pair("MAX", new Function(max)));
+    glossary.push_back(std::make_pair("DMAX", new Function(Dmax)));
     glossary.push_back(std::make_pair("SWAP", new Function(swap)));
     glossary.push_back(std::make_pair("2SWAP", new Function(swap2)));
     glossary.push_back(std::make_pair("DUP", new Function(dup)));
@@ -911,12 +1019,18 @@ int main() {
     glossary.push_back(std::make_pair("J", new Function(retCopy3)));
     glossary.push_back(std::make_pair(".", new Function(print)));
     glossary.push_back(std::make_pair("U.", new Function(uprint)));
+    glossary.push_back(std::make_pair("D.", new Function(dprint)));
     glossary.push_back(std::make_pair("U.R", new Function(urjprint)));
+    glossary.push_back(std::make_pair("D.R", new Function(drjprint)));
     glossary.push_back(std::make_pair(".S", new Function(printS)));
     glossary.push_back(std::make_pair("=", new Function(equals)));
+    glossary.push_back(std::make_pair("D=", new Function(Dequals)));
     glossary.push_back(std::make_pair("<", new Function(lessThan)));
+    glossary.push_back(std::make_pair("D<", new Function(DlessThan)));
+    glossary.push_back(std::make_pair("DU<", new Function(DUlessThan)));
     glossary.push_back(std::make_pair(">", new Function(greaterThan)));
     glossary.push_back(std::make_pair("0=", new Function(zeroEquals)));
+    glossary.push_back(std::make_pair("D0=", new Function(DzeroEquals)));
     glossary.push_back(std::make_pair("0<", new Function(zeroLessThan)));
     glossary.push_back(std::make_pair("0>", new Function(zeroGreaterThan)));
     glossary.push_back(std::make_pair("PAGE", new Function(page)));

@@ -10,12 +10,11 @@
 
 #define uint unsigned
 
-
 class Stack {
 public:
     Stack(size_t bytes) : top(-1), stack(new uint[bytes]) {}
     ~Stack() { delete [] stack; }
-    uint* at(int index) const { return stack + (top - index); }
+    uint* at(int index) const;
     void pop(int mag);
     void push(int val);
     void push(int64_t val);
