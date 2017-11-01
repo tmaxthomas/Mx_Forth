@@ -50,6 +50,7 @@ int umult();
 int div();
 int mod();
 int modDiv();
+int UmodDiv();
 int multDiv();
 int multDivMod();
 int add1();
@@ -74,6 +75,7 @@ int or_();
 int equals();
 int Dequals();
 int lessThan();
+int UlessThan();
 int DlessThan();
 int DUlessThan();
 int greaterThan();
@@ -413,6 +415,16 @@ int modDiv() {
     stack->push(m);
     return 0;
 }
+
+int UmodDiv() {
+    uint m, s = *stack->at(0);
+    stack->pop(1);
+    m = *stack->at(0) % s;
+    *stack->at(0) /= s;
+    stack->push(m);
+    return 0;
+}
+
 //Multiplies and then divides, using a long intermediate. Used for fixed-point math.
 int multDiv(){
     long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
@@ -738,6 +750,16 @@ int lessThan(){
     return 0;
 }
 
+int UlessThan(){
+    uint a = *stack->at(1), b = *stack->at(0);
+    stack->pop(2);
+    if(a < b)
+        stack->push((int)0xffffffff);
+    else
+        stack->push(0x00000000);
+    return 0;
+}
+
 int DlessThan() {
     int64_t a = *(int64_t*)stack->at(1), b = *(int64_t*)stack->at(3);
     stack->pop(4);
@@ -985,6 +1007,7 @@ int main() {
     glossary.push_back(std::make_pair("/", new Function(div)));
     glossary.push_back(std::make_pair("MOD", new Function(mod)));
     glossary.push_back(std::make_pair("/MOD", new Function(modDiv)));
+    glossary.push_back(std::make_pair("UM/MOD", new Function(UmodDiv)));
     glossary.push_back(std::make_pair("*/", new Function(multDiv)));
     glossary.push_back(std::make_pair("*/MOD", new Function(multDivMod)));
     glossary.push_back(std::make_pair("1+", new Function(add1)));
@@ -1026,6 +1049,7 @@ int main() {
     glossary.push_back(std::make_pair("=", new Function(equals)));
     glossary.push_back(std::make_pair("D=", new Function(Dequals)));
     glossary.push_back(std::make_pair("<", new Function(lessThan)));
+    glossary.push_back(std::make_pair("U<", new Function(UlessThan)));
     glossary.push_back(std::make_pair("D<", new Function(DlessThan)));
     glossary.push_back(std::make_pair("DU<", new Function(DUlessThan)));
     glossary.push_back(std::make_pair(">", new Function(greaterThan)));

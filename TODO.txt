@@ -1,3 +1,5 @@
 Add variables
 
 Add support for text-formatting words
+
+Add unsigned/mixed-length ops
