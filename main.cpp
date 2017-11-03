@@ -59,7 +59,6 @@ int UmodDiv();
 int SmodDiv();
 int FmodDiv();
 int multDiv();
-int MmultDiv();
 int multDivMod();
 int add1();
 int sub1();
@@ -117,6 +116,12 @@ int loop_plus();
 int do_();
 int nop();
 int leave();
+
+//Variable/constant words
+int store();
+int plus_store();
+int fetch();
+int query();
 
 //Misc. words
 int page();
@@ -877,6 +882,35 @@ int zeroGreaterThan(){
     return 0;
 }
 
+int store() {
+    int* ptr = (int*)*stack->at(0);
+    int n = *(int*)stack->at(1);
+    stack->pop(2);
+    *ptr = n;
+    return 0;
+}
+
+int plus_store() {
+    int* ptr = (int*)*stack->at(0);
+    int n = *(int*)stack->at(1);
+    stack->pop(2);
+    *ptr += n;
+    return 0;
+}
+
+int fetch() {
+    int* ptr = (int*)*stack->at(0);
+    stack->pop(1);
+    stack->push(*ptr);
+    return 0;
+}
+
+int query() {
+    fetch();
+    print();
+    return 0;
+}
+
 //Clears the screen the same way the screen is cleared at program start
 //Same logic for using system() applies.
 int page() {
@@ -1001,7 +1035,10 @@ void text_interpreter(char* idx) {
             free(tmp_buf);
         } else if (str == ":")
             idx = add_word(idx);
-        else if (str == "INCLUDE") {
+        else if(str == "VARIABLE") {
+            GetSubstring(isspace(*tmp_idx));
+            glossary.push_back(std::make_pair(tmp_buf, new Number((int) new int)));
+        } else if (str == "INCLUDE") {
             char r = 'r';
             GetSubstring(isspace(*tmp_idx));
 
@@ -1101,6 +1138,10 @@ int main() {
     glossary.push_back(std::make_pair("D0=", new Function(DzeroEquals)));
     glossary.push_back(std::make_pair("0<", new Function(zeroLessThan)));
     glossary.push_back(std::make_pair("0>", new Function(zeroGreaterThan)));
+    glossary.push_back(std::make_pair("!", new Function(store)));
+    glossary.push_back(std::make_pair("+!", new Function(plus_store)));
+    glossary.push_back(std::make_pair("@", new Function(fetch)));
+    glossary.push_back(std::make_pair("?", new Function(query)));
     glossary.push_back(std::make_pair("PAGE", new Function(page)));
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));
     glossary.push_back(std::make_pair("?STACK", new Function(stack_q)));

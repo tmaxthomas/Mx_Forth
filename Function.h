@@ -23,14 +23,17 @@ public:
     Function** next;
     virtual int run();
 };
+
 //Subclass used to deal with pushing numbers onto the stack from within user-defined functions
 class Number : public Function {
 public:
     Number(std::string str);
+    Number(int num) : n(num) {}
     //Number(Number* old);
     int run() override;
     int n;
 };
+
 //Subclass used to deal with printing strings from within user-defined functions
 class StrPrint : public Function {
 public:
