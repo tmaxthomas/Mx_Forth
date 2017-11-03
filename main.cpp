@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include <stdint.h>
+#include <math.h>
+#include <ctype.h>
+
 #include <vector>
 #include <list>
 #include <stack>
@@ -15,7 +17,8 @@
 
 //Utiity macro for reading from a file/stream
 //I may remove this later, as it's only used in 1 place
-#define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); char* idx = buf
+#define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); char* idx = buf; \
+                        for(int i = 0; idx[i]; i++) idx[i] = toupper(idx[i])
 
 //Global boolean flags for program state management
 bool ABORT = false, BYE = false, QUIT = false, S_UND = false;
@@ -43,15 +46,20 @@ int printS();
 //Integer math words
 int add();
 int Dadd();
+int Madd();
 int sub();
 int Dsub();
 int mult();
 int umult();
+int Mmult();
 int div();
 int mod();
 int modDiv();
 int UmodDiv();
+int SmodDiv();
+int FmodDiv();
 int multDiv();
+int MmultDiv();
 int multDivMod();
 int add1();
 int sub1();
@@ -118,7 +126,7 @@ int stack_q();
 
 
 void number(std::string& str);
-bool is_whitespace(char c);
+void number(std::string& str);
 
 //Finds words in the glossary
 Function* find(std::string& name) {
@@ -133,7 +141,7 @@ Function* find(std::string& name) {
 char* forget(char* idx) {
     char *tmp_buf, *tmp_idx;
     size_t i;
-    GetSubstring(is_whitespace(*tmp_idx));
+    GetSubstring(isspace(*tmp_idx));
     std::string name(tmp_buf);
     free(tmp_buf);
 
@@ -159,12 +167,12 @@ char* add_word(char* idx) {
     char *tmp_buf;
     size_t i;
     char *tmp_idx;
-    GetSubstring(is_whitespace(*tmp_idx));
+    GetSubstring(isspace(*tmp_idx));
     std::string name(tmp_buf), func = "";
     free(tmp_buf);
     //Declare a starting null node
     Function *head = new Function(nop), *tail = head;
-    GetSubstring(is_whitespace(*tmp_idx));
+    GetSubstring(isspace(*tmp_idx));
     func = std::string(tmp_buf);
 
     while(func != ";") {
@@ -301,8 +309,8 @@ char* add_word(char* idx) {
             tail->next[0] = temp;
             tail = tail->next[0];
         }
-        while (is_whitespace(*idx)) idx++;                        //Take care of loose/excess whitespace
-        GetSubstring(is_whitespace(*tmp_idx));
+        while (isspace(*idx)) idx++;                        //Take care of loose/excess whitespace
+        GetSubstring(isspace(*tmp_idx));
         func = std::string(tmp_buf);
     }
     glossary.push_back(std::make_pair(name, head));
@@ -360,6 +368,13 @@ int Dadd() {
     return 0;
 }
 
+int Madd() {
+    int n = *(int*)stack->at(0);
+    stack->pop(2);
+    *(int64_t*)stack->at(1) += (int64_t)n;
+    return 0;
+}
+
 //Polish postfix subtraction
 int sub() {
     int s = *(int*)stack->at(0);
@@ -387,6 +402,14 @@ int mult() {
 int umult() {
     int s = *stack->at(0);
     int m = *stack->at(1);
+    stack->pop(2);
+    stack->push((int64_t)s*m);
+    return 0;
+}
+
+int Mmult() {
+    int s = *(int*)stack->at(0);
+    int m = *(int*)stack->at(1);
     stack->pop(2);
     stack->push((int64_t)s*m);
     return 0;
@@ -421,19 +444,40 @@ int UmodDiv() {
     stack->pop(1);
     m = *stack->at(0) % s;
     *stack->at(0) /= s;
-    stack->push(m);
+    //Pointer hackery to get an unsigned int pushed onto the stack
+    stack->push(*(int*)&m);
+    return 0;
+}
+
+
+int SmodDiv() {
+    int n = *(int*)stack->at(0);
+    int64_t s = *(int64_t*)stack->at(2);
+    stack->pop(3);
+    stack->push((int) s % n);
+    stack->push((int) round((float) s / n ));
+    return 0;
+}
+
+int FmodDiv() {
+    int n = *(int*)stack->at(0);
+    int64_t s = *(int64_t*)stack->at(2);
+    stack->pop(3);
+    stack->push((int) s % n);
+    stack->push((int) s / n);
     return 0;
 }
 
 //Multiplies and then divides, using a long intermediate. Used for fixed-point math.
 int multDiv(){
-    long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
+    int64_t a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
     stack->pop(3);
-    long m = a * b;
+    int64_t m = a * b;
     int d = (int)(m / c);
     stack->push(d);
     return 0;
 }
+
 //Multiplies and then divides and returns the remainder, using a long intermediate. Used for fixed-point math.
 int multDivMod(){
     long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
@@ -938,18 +982,14 @@ void number(std::string& str) {
     stack->push(n);
 }
 
-inline bool is_whitespace(char c) {
-    return c == '\t' || c == '\n' || c == '\r' || c == ' ' || c == '\0';
-}
-
 //The terminal/file text interpreter
 void text_interpreter(char* idx) {
     while(*idx != '\0') {
-        while (is_whitespace(*idx)) idx++;
+        while (isspace(*idx)) idx++;
         char *tmp_buf;
         size_t i;
         char *tmp_idx;
-        GetSubstring(is_whitespace(*tmp_idx));
+        GetSubstring(isspace(*tmp_idx));
         std::string str(tmp_buf);
         free(tmp_buf);
         Function *func = find(str);
@@ -963,7 +1003,7 @@ void text_interpreter(char* idx) {
             idx = add_word(idx);
         else if (str == "INCLUDE") {
             char r = 'r';
-            GetSubstring(is_whitespace(*tmp_idx));
+            GetSubstring(isspace(*tmp_idx));
 
             curr_file = fopen(tmp_buf, &r);
             fseek(curr_file, 0, SEEK_END);
@@ -1000,14 +1040,18 @@ int main() {
     glossary.push_back(std::make_pair("EMIT", new Function(emit)));
     glossary.push_back(std::make_pair("+", new Function(add)));
     glossary.push_back(std::make_pair("D+", new Function(Dadd)));
+    glossary.push_back(std::make_pair("M+", new Function(Madd)));
     glossary.push_back(std::make_pair("-", new Function(sub)));
     glossary.push_back(std::make_pair("D-", new Function(Dsub)));
     glossary.push_back(std::make_pair("*", new Function(mult)));
     glossary.push_back(std::make_pair("UM*", new Function(umult)));
+    glossary.push_back(std::make_pair("M*", new Function(Mmult)));
     glossary.push_back(std::make_pair("/", new Function(div)));
     glossary.push_back(std::make_pair("MOD", new Function(mod)));
     glossary.push_back(std::make_pair("/MOD", new Function(modDiv)));
     glossary.push_back(std::make_pair("UM/MOD", new Function(UmodDiv)));
+    glossary.push_back(std::make_pair("SM/REM", new Function(SmodDiv)));
+    glossary.push_back(std::make_pair("FM/MOD", new Function(FmodDiv)));
     glossary.push_back(std::make_pair("*/", new Function(multDiv)));
     glossary.push_back(std::make_pair("*/MOD", new Function(multDivMod)));
     glossary.push_back(std::make_pair("1+", new Function(add1)));
@@ -1088,3 +1132,7 @@ int main() {
 
     return 0;
 }
+
+//UNSUPPORTED FEATURES:
+
+//M*/ is not supported due to C/C++'s lack of support for 128 bit integers for 32 bit applications

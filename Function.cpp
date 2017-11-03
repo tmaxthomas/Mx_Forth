@@ -55,7 +55,7 @@ int UsrFunc::run() {
 //Number determination helper function
 bool is_num(std::string& str) {
     for(uint i = 0; i < str.size(); i++)
-        if(str[i] < '0' || str[i] > '9')
+        if((str[i] < '0' || str[i] > '9') && str[i] != ',')
             return false;
     return true;
 }

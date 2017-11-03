@@ -2,4 +2,4 @@ Add variables
 
 Add support for text-formatting words
 
-Add unsigned/mixed-length ops
+Add support for comma-indicates-double parsing
