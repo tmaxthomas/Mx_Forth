@@ -28,10 +28,11 @@ public:
 class Number : public Function {
 public:
     Number(std::string str);
-    Number(int num) : n(num) {}
+    Number(int num, uint size) : n(num), arr_size(size) {}
     //Number(Number* old);
     int run() override;
     int n;
+    uint arr_size;
 };
 
 //Subclass used to deal with printing strings from within user-defined functions

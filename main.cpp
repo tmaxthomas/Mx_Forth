@@ -119,8 +119,10 @@ int leave();
 
 //Variable/constant words
 int store();
+int store2();
 int plus_store();
 int fetch();
+int fetch2();
 int query();
 
 //Misc. words
@@ -732,7 +734,7 @@ int uprint() {
 
 //Double length integer print
 int dprint() {
-    printf("%ld", *(int64_t*)stack->at(1));
+    printf("%lld", *(int64_t*)stack->at(1));
     stack->pop(2);
     return 0;
 }
@@ -756,7 +758,7 @@ int drjprint() {
     stack->pop(3);
     for(int64_t i = 0; i < num_spaces; i++)
         printf(" ");
-    printf("%ld", data);
+    printf("%lld", data);
     return 0;
 }
 
@@ -890,6 +892,14 @@ int store() {
     return 0;
 }
 
+int store2() {
+    int64_t* ptr = (int64_t*)*stack->at(0);
+    int64_t n = *(int64_t*)stack->at(2);
+    stack->pop(3);
+    *ptr = n;
+    return 0;
+}
+
 int plus_store() {
     int* ptr = (int*)*stack->at(0);
     int n = *(int*)stack->at(1);
@@ -900,6 +910,13 @@ int plus_store() {
 
 int fetch() {
     int* ptr = (int*)*stack->at(0);
+    stack->pop(1);
+    stack->push(*ptr);
+    return 0;
+}
+
+int fetch2() {
+    int64_t* ptr = (int64_t*)*stack->at(0);
     stack->pop(1);
     stack->push(*ptr);
     return 0;
@@ -1017,6 +1034,7 @@ void number(std::string& str) {
 }
 
 //The terminal/file text interpreter
+//Parses words (like :, VARIABLE) that can't be put into definitions
 void text_interpreter(char* idx) {
     while(*idx != '\0') {
         while (isspace(*idx)) idx++;
@@ -1037,7 +1055,18 @@ void text_interpreter(char* idx) {
             idx = add_word(idx);
         else if(str == "VARIABLE") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Number((int) new int)));
+            glossary.push_back(std::make_pair(tmp_buf, new Number((int) new int, 1)));
+        } else if(str == "2VARIABLE") {
+            GetSubstring(isspace(*tmp_idx));
+            glossary.push_back(std::make_pair(tmp_buf, new Number((int) new int64_t, 2)));
+        } else if(str == "CONSTANT") {
+            GetSubstring(isspace(*tmp_idx));
+            glossary.push_back(std::make_pair(tmp_buf, new Number(*(int *) stack->at(0), 1)));
+            stack->pop(1);
+        } else if(str == "2CONSTANT") {
+            GetSubstring(isspace(*tmp_idx));
+            glossary.push_back(std::make_pair(tmp_buf, new Number(*(int64_t*)stack->at(1), 2)));
+            stack->pop(2);
         } else if (str == "INCLUDE") {
             char r = 'r';
             GetSubstring(isspace(*tmp_idx));
@@ -1139,8 +1168,10 @@ int main() {
     glossary.push_back(std::make_pair("0<", new Function(zeroLessThan)));
     glossary.push_back(std::make_pair("0>", new Function(zeroGreaterThan)));
     glossary.push_back(std::make_pair("!", new Function(store)));
+    glossary.push_back(std::make_pair("2!", new Function(store2)));
     glossary.push_back(std::make_pair("+!", new Function(plus_store)));
     glossary.push_back(std::make_pair("@", new Function(fetch)));
+    glossary.push_back(std::make_pair("2@", new Function(fetch2)));
     glossary.push_back(std::make_pair("?", new Function(query)));
     glossary.push_back(std::make_pair("PAGE", new Function(page)));
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));

@@ -16,7 +16,7 @@ int Function::run() {
     return fxn();
 }
 
-Number::Number(std::string str) {
+Number::Number(std::string str) : arr_size(0) {
     if(!is_num(str)) {
         printf("%s ?", str.c_str());
         abort_();
