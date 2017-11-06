@@ -36,7 +36,7 @@ public:
 //Subclass used to deal with all variables, arrays, and single-length constants
 class Var : public Number {
 public:
-    Var(int n_, size_t s_) : Number::n(n_), s(s_) {}
+    Var(int n_, size_t s_);
     size_t s;
 };
 

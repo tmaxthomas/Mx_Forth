@@ -29,6 +29,8 @@ int Number::run() {
     return 0;
 }
 
+Var::Var(int n_, size_t s_) : Number::n(n_), s(s_) {}
+
 int DoubleConst::run() {
     stack->push(n64);
     return 0;
