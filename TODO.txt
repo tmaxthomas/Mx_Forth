@@ -1,4 +1,4 @@
-Add variables
+Add arrays; fix variables
 
 Add support for text-formatting words
 

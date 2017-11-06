@@ -1055,17 +1055,17 @@ void text_interpreter(char* idx) {
             idx = add_word(idx);
         else if(str == "VARIABLE") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Number((int) new int, 1)));
+            glossary.push_back(std::make_pair(tmp_buf, new Var((int) new int, 1)));
         } else if(str == "2VARIABLE") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Number((int) new int64_t, 2)));
+            glossary.push_back(std::make_pair(tmp_buf, new Var((int) new int64_t, 2)));
         } else if(str == "CONSTANT") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Number(*(int *) stack->at(0), 1)));
+            glossary.push_back(std::make_pair(tmp_buf, new Var(*(int *) stack->at(0), 1)));
             stack->pop(1);
         } else if(str == "2CONSTANT") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Number(*(int64_t*)stack->at(1), 2)));
+            glossary.push_back(std::make_pair(tmp_buf, new DoubleConst(*(int64_t*)stack->at(1))));
             stack->pop(2);
         } else if (str == "INCLUDE") {
             char r = 'r';

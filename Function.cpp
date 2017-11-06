@@ -16,7 +16,7 @@ int Function::run() {
     return fxn();
 }
 
-Number::Number(std::string str) : arr_size(0) {
+Number::Number(std::string str) {
     if(!is_num(str)) {
         printf("%s ?", str.c_str());
         abort_();
@@ -24,21 +24,25 @@ Number::Number(std::string str) : arr_size(0) {
     n = atoi(str.c_str());
 }
 
-//Basically just the number function from main.cpp
 int Number::run() {
     stack->push(n);
     return 0;
 }
 
+int DoubleConst::run() {
+    stack->push(n64);
+    return 0;
+}
+
 //Prints the stored string. Simple enough.
 int StrPrint::run() {
-    std::cout << str;
+    printf(str);
     return 0;
 }
 
 //Prints the stored string and aborts
 int Abort::run() {
-    std::cout << str;
+    printf(str);
     abort_();
     return 0;
 }
