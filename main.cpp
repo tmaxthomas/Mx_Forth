@@ -120,11 +120,16 @@ int leave();
 //Variable/constant words
 int store();
 int store2();
+int c_store();
 int plus_store();
 int fetch();
 int fetch2();
+int c_fetch();
 int query();
 int cells();
+int fill();
+int erase();
+int dump();
 
 //Misc. words
 int page();
@@ -133,7 +138,6 @@ int abort_();
 int stack_q();
 
 
-void number(std::string& str);
 void number(std::string& str);
 
 //Finds words in the glossary
@@ -721,21 +725,21 @@ int retCopy3(){
 
 //Prints and then pops the top of the stack
 int print() {
-    printf("%d", *(int*)stack->at(0));
+    printf("%d ", *(int*)stack->at(0));
     stack->pop(1);
     return 0;
 }
 
 //Unsigned int print
 int uprint() {
-    printf("%u", *stack->at(0));
+    printf("%u ", *stack->at(0));
     stack->pop(1);
     return 0;
 }
 
 //Double length integer print
 int dprint() {
-    printf("%lld", *(int64_t*)stack->at(1));
+    printf("%lld ", *(int64_t*)stack->at(1));
     stack->pop(2);
     return 0;
 }
@@ -759,14 +763,14 @@ int drjprint() {
     stack->pop(3);
     for(int64_t i = 0; i < num_spaces; i++)
         printf(" ");
-    printf("%lld", data);
+    printf("%lld ", data);
     return 0;
 }
 
 //Prints the contents of the stack
 int printS() {
     for(int a = 0; a < stack->size(); a++) {
-        printf(" %d", *(int*)stack->at(a));
+        printf("%d ", *(int*)stack->at(a));
     }
     return 0;
 }
@@ -901,6 +905,14 @@ int store2() {
     return 0;
 }
 
+int c_store() {
+    char *ptr = (char *) *stack->at(0);
+    char n = *(char *) stack->at(1);
+    stack->pop(2);
+    *ptr = n;
+    return 0;
+}
+
 int plus_store() {
     int* ptr = (int*)*stack->at(0);
     int n = *(int*)stack->at(1);
@@ -923,6 +935,13 @@ int fetch2() {
     return 0;
 }
 
+int c_fetch() {
+    char* ptr = (char*)*stack->at(0);
+    stack->pop(1);
+    stack->push((int)*ptr);
+    return 0;
+}
+
 int query() {
     fetch();
     print();
@@ -931,6 +950,30 @@ int query() {
 
 int cells() {
     *stack->at(0) *= 4;
+    return 0;
+}
+
+int fill() {
+    char b = *(char*)stack->at(0);
+    int n = *(int*)stack->at(1);
+    char* addr = (char*)*stack->at(2);
+    stack->pop(3);
+    for(int i = 0; i < n; i++)
+        addr[i] = b;
+    return 0;
+}
+
+int erase() {
+    stack->push(0);
+    return fill();
+}
+
+int dump() {
+    uint c = *stack->at(0);
+    int* addr = (int*)stack->at(1);
+    stack->pop(2);
+    for(uint i = 0; i < c; i++)
+        if(i % 4 == 0) printf("%d ", addr[i / 4]);
     return 0;
 }
 
@@ -1035,8 +1078,20 @@ void number(std::string& str) {
         abort_();
         return;
     }
-    int n = atoi(str.c_str());
-    stack->push(n);
+    bool db = false;
+    for(size_t i = 0; i < str.size(); i++)
+        if(str[i] == ',') {
+            db = true;
+            str.erase(i, 1);
+        }
+
+    if(db) {
+        int64_t n = atol(str.c_str());
+        stack->push(n);
+    } else {
+        int n = atoi(str.c_str());
+        stack->push(n);
+    }
 }
 
 //The terminal/file text interpreter
@@ -1187,11 +1242,16 @@ int main() {
     glossary.push_back(std::make_pair("0>", new Function(zeroGreaterThan)));
     glossary.push_back(std::make_pair("!", new Function(store)));
     glossary.push_back(std::make_pair("2!", new Function(store2)));
+    glossary.push_back(std::make_pair("C!", new Function(c_store)));
     glossary.push_back(std::make_pair("+!", new Function(plus_store)));
     glossary.push_back(std::make_pair("@", new Function(fetch)));
     glossary.push_back(std::make_pair("2@", new Function(fetch2)));
+    glossary.push_back(std::make_pair("C@", new Function(c_fetch)));
     glossary.push_back(std::make_pair("?", new Function(query)));
     glossary.push_back(std::make_pair("CELLS", new Function(cells)));
+    glossary.push_back(std::make_pair("FILL", new Function(fill)));
+    glossary.push_back(std::make_pair("ERASE", new Function(erase)));
+    glossary.push_back(std::make_pair("DUMP", new Function(dump)));
     glossary.push_back(std::make_pair("PAGE", new Function(page)));
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));
     glossary.push_back(std::make_pair("?STACK", new Function(stack_q)));
@@ -1208,7 +1268,7 @@ int main() {
         free(buf);
         //Newline printing and flag resetting
         if(S_UND) printf(" stack underflow");
-        if(!BYE && !ABORT && !QUIT && !S_UND) printf(" ok");
+        if(!BYE && !ABORT && !QUIT && !S_UND) printf("ok");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;
         if(S_UND) S_UND = false;

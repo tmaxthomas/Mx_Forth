@@ -1,7 +1,5 @@
-Add arrays; fix variables
+Implement CREATE, ,
 
 Add support for text-formatting words
-
-Add support for comma-indicates-double parsing
 
 Add support for multiple bases (if at all possible)
