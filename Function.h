@@ -36,7 +36,7 @@ public:
 //Subclass used to deal with all variables, arrays, and single-length constants
 class Var : public Number {
 public:
-    Var(int n_, size_t s_);
+    Var(int n_, size_t s_) : s(s_) { n = n_; }
     size_t s;
 };
 

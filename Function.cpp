@@ -29,8 +29,6 @@ int Number::run() {
     return 0;
 }
 
-Var::Var(int n_, size_t s_) : Number::n(n_), s(s_) {}
-
 int DoubleConst::run() {
     stack->push(n64);
     return 0;
@@ -61,7 +59,7 @@ int UsrFunc::run() {
 //Number determination helper function
 bool is_num(std::string& str) {
     for(uint i = 0; i < str.size(); i++)
-        if((str[i] < '0' || str[i] > '9') && str[i] != ',')
+        if((str[i] < '0' || str[i] > '9') && str[i] != ',' && (i == 0 && str[i] != '-'))
             return false;
     return true;
 }

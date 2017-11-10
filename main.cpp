@@ -124,6 +124,7 @@ int plus_store();
 int fetch();
 int fetch2();
 int query();
+int cells();
 
 //Misc. words
 int page();
@@ -928,6 +929,11 @@ int query() {
     return 0;
 }
 
+int cells() {
+    *stack->at(0) *= 4;
+    return 0;
+}
+
 //Clears the screen the same way the screen is cleared at program start
 //Same logic for using system() applies.
 int page() {
@@ -1055,18 +1061,31 @@ void text_interpreter(char* idx) {
             idx = add_word(idx);
         else if(str == "VARIABLE") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Var((int) new int, 1)));
+            glossary.push_back(std::make_pair(tmp_buf, new Var((int) malloc(4), 4)));
         } else if(str == "2VARIABLE") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Var((int) new int64_t, 2)));
+            glossary.push_back(std::make_pair(tmp_buf, new Var((int) malloc(4), 4)));
         } else if(str == "CONSTANT") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Var(*(int *) stack->at(0), 1)));
+            glossary.push_back(std::make_pair(tmp_buf, new Var(*(int *) stack->at(0), 4)));
             stack->pop(1);
         } else if(str == "2CONSTANT") {
             GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new DoubleConst(*(int64_t*)stack->at(1))));
+            glossary.push_back(std::make_pair(tmp_buf, new DoubleConst(*(int64_t *) stack->at(1))));
             stack->pop(2);
+        } else if(str == "ALLOT") {
+            Var* v = dynamic_cast<Var*>(glossary.back().second);
+
+            if(!v) {
+                printf("illegal allot");
+                abort_();
+            } else {
+                uint size = *stack->at(0);
+                stack->pop(1);
+                v->n = (int)realloc((void*)v->n, v->s + size);
+                v->s += size;
+            }
+
         } else if (str == "INCLUDE") {
             char r = 'r';
             GetSubstring(isspace(*tmp_idx));
@@ -1099,7 +1118,6 @@ int main() {
     return_stack = new Stack(4096);
 
     //Build the glossary
-    //Note to self: Learn how to metaprogram so's you can embed all this in the executable
     glossary.push_back(std::make_pair("CR", new Function(cr)));
     glossary.push_back(std::make_pair("SPACES", new Function(spaces)));
     glossary.push_back(std::make_pair("SPACE", new Function(space)));
@@ -1173,6 +1191,7 @@ int main() {
     glossary.push_back(std::make_pair("@", new Function(fetch)));
     glossary.push_back(std::make_pair("2@", new Function(fetch2)));
     glossary.push_back(std::make_pair("?", new Function(query)));
+    glossary.push_back(std::make_pair("CELLS", new Function(cells)));
     glossary.push_back(std::make_pair("PAGE", new Function(page)));
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));
     glossary.push_back(std::make_pair("?STACK", new Function(stack_q)));
