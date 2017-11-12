@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <ctype.h>
+#include <stdint.h>
 
 #include <vector>
 #include <list>
@@ -10,6 +11,9 @@
 #include "Stack.h"
 #include "Function.h"
 
+//Global file stream index pointer
+char* idx;
+
 //Utility macro for getting char-delimited substrings of C strings
 #define GetSubstring(boolean) tmp_idx = idx; for (i = 0; !(boolean); i++) tmp_idx++; \
                            tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
@@ -17,15 +21,17 @@
 
 //Utiity macro for reading from a file/stream
 //I may remove this later, as it's only used in 1 place
-#define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); char* idx = buf; \
+#define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); idx = buf; \
                         for(int i = 0; idx[i]; i++) idx[i] = toupper(idx[i])
+
+//Utility macro for variable creation
+#define MakeVar(type) GetSubstring(isspace(*tmp_idx)); Function *f = new Function(nop); f->next = new Function*[1]; \
+                      f->next[0] = new type; glossary.push_back(std::make_pair(tmp_buf, f))
 
 //Global boolean flags for program state management
 bool ABORT = false, BYE = false, QUIT = false, S_UND = false;
 
 Stack *stack, *return_stack;
-
-FILE* curr_file = NULL;
 
 std::list<std::pair<std::string, Function*> > glossary;
 
@@ -131,6 +137,10 @@ int fill();
 int erase();
 int dump();
 
+//Reflectine words
+int tick();
+int execute();
+
 //Misc. words
 int page();
 int quit();
@@ -150,7 +160,7 @@ Function* find(std::string& name) {
 }
 
 //FORGET word for dictionary cleanup
-char* forget(char* idx) {
+void forget() {
     char *tmp_buf, *tmp_idx;
     size_t i;
     GetSubstring(isspace(*tmp_idx));
@@ -163,8 +173,6 @@ char* forget(char* idx) {
 
     if(itr != glossary.end())
         glossary.erase(itr, glossary.end());
-
-    return idx;
 }
 
 //Adds user-defined words to the glossary
@@ -173,7 +181,7 @@ char* forget(char* idx) {
 // but what's done is done. I could change to using vectors, and it might make a little bit more sense, but probably not.
 //Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
 //path decider, but messy graph handling.
-char* add_word(char* idx) {
+void add_word() {
     std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
     std::stack<std::vector<Function*> > leave_stack;
     char *tmp_buf;
@@ -326,10 +334,9 @@ char* add_word(char* idx) {
         func = std::string(tmp_buf);
     }
     glossary.push_back(std::make_pair(name, head));
-    return idx;
 }
 
-//Word-execution wrapper-executed word pointed to by func
+//Word-execution wrapper - executed word pointed to by func
 //Written to help debugging and to avoid stack overflow resulting from excessive recursion
 void run(Function* func) {
     while(func->next) {
@@ -977,6 +984,22 @@ int dump() {
     return 0;
 }
 
+int tick() {
+    char *tmp_buf, *tmp_idx;
+    size_t i;
+    GetSubstring(isspace(*idx));
+    std::string str(tmp_buf);
+    Function* func = find(str);
+    stack->push((int) func);
+    return 0;
+}
+
+int execute() {
+    Function* func = (Function*)*stack->at(0);
+    run(func);
+    return 0;
+}
+
 //Clears the screen the same way the screen is cleared at program start
 //Same logic for using system() applies.
 int page() {
@@ -1096,7 +1119,8 @@ void number(std::string& str) {
 
 //The terminal/file text interpreter
 //Parses words (like :, VARIABLE) that can't be put into definitions
-void text_interpreter(char* idx) {
+//Yes, this shadows the global idx*
+void text_interpreter() {
     while(*idx != '\0') {
         while (isspace(*idx)) idx++;
         char *tmp_buf;
@@ -1113,37 +1137,52 @@ void text_interpreter(char* idx) {
             printf(tmp_buf);
             free(tmp_buf);
         } else if (str == ":")
-            idx = add_word(idx);
-        else if(str == "VARIABLE") {
-            GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Var((int) malloc(4), 4)));
+            add_word();
+        else if (str == "VARIABLE") {
+            MakeVar(Var((int) malloc(4), 4));
         } else if(str == "2VARIABLE") {
-            GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Var((int) malloc(4), 4)));
+            MakeVar(Var((int) malloc(8), 8));
         } else if(str == "CONSTANT") {
-            GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new Var(*(int *) stack->at(0), 4)));
+            MakeVar(Var(*(int *) stack->at(0), 4));
             stack->pop(1);
         } else if(str == "2CONSTANT") {
-            GetSubstring(isspace(*tmp_idx));
-            glossary.push_back(std::make_pair(tmp_buf, new DoubleConst(*(int64_t *) stack->at(1))));
+            MakeVar(DoubleConst(*(int64_t*)stack->at(1)));
             stack->pop(2);
+        } else if(str == "CREATE") {
+            GetSubstring(isspace(*tmp_idx));
+            glossary.push_back(std::make_pair(tmp_buf, new Var(0, 0)));
         } else if(str == "ALLOT") {
-            Var* v = dynamic_cast<Var*>(glossary.back().second);
-
-            if(!v) {
-                printf("illegal allot");
-                abort_();
-            } else {
+            Var *v = dynamic_cast<Var *>(glossary.back().second);
+            if(v) {
                 uint size = *stack->at(0);
                 stack->pop(1);
-                v->n = (int)realloc((void*)v->n, v->s + size);
+                v->n = (int) realloc((void *) v->n, v->s + size);
                 v->s += size;
             }
-
+        } else if(str == ",") {
+            Var *v = dynamic_cast<Var *>(glossary.back().second);
+            if (v) {
+                int n = *(int *) stack->at(0);
+                stack->pop(1);
+                v->n = (int) realloc((void *) v->n, v->s + 4);
+                int *pt = (int *) (v->n + v->s);
+                *pt = n;
+                v->s += 4;
+            }
+        } else if(str == "C,") {
+            Var *v = dynamic_cast<Var *>(glossary.back().second);
+            if(v) {
+                char c = *(char*) stack->at(0);
+                stack->pop(1);
+                v->n = (int) realloc((void *) v->n, v->s + 1);
+                char *pt = (char *) (v->n + v->s);
+                *pt = c;
+                v->s += 1;
+            }
         } else if (str == "INCLUDE") {
             char r = 'r';
             GetSubstring(isspace(*tmp_idx));
+            FILE* curr_file;
 
             curr_file = fopen(tmp_buf, &r);
             fseek(curr_file, 0, SEEK_END);
@@ -1153,13 +1192,17 @@ void text_interpreter(char* idx) {
             char* buf = (char*) malloc(n + 1);
             fread(buf, n, 1, curr_file);
             buf[n] = '\0';
-            text_interpreter(buf);
+            //Shuffle *idx around to make the text interpreter work
+            char* idx_ = idx;
+            idx = buf;
+            text_interpreter();
             free(buf);
+            idx = idx_;
 
             free(tmp_buf);
             fclose(curr_file);
         } else if (str == "FORGET")
-            idx = forget(idx);
+            forget();
         else if (func)
             run(func);
         else
@@ -1252,6 +1295,8 @@ int main() {
     glossary.push_back(std::make_pair("FILL", new Function(fill)));
     glossary.push_back(std::make_pair("ERASE", new Function(erase)));
     glossary.push_back(std::make_pair("DUMP", new Function(dump)));
+    glossary.push_back(std::make_pair("'", new Function(tick)));
+    glossary.push_back(std::make_pair("EXECUTE", new Function(execute)));
     glossary.push_back(std::make_pair("PAGE", new Function(page)));
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));
     glossary.push_back(std::make_pair("?STACK", new Function(stack_q)));
@@ -1262,7 +1307,7 @@ int main() {
         ReadInput(stdin);
         //Try and do something, and catch the abort if it throws
         try {
-            text_interpreter(idx);
+            text_interpreter();
         } catch(int) {} //Abort catching
 
         free(buf);

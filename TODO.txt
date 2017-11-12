@@ -1,5 +1,5 @@
-Implement CREATE, ,
-
 Add support for text-formatting words
 
 Add support for multiple bases (if at all possible)
+
+Implement ', ['], and EXECUTE
