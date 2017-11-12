@@ -20,7 +20,6 @@ public:
     void push(int64_t val);
     void clear() { top = -1; }
     int size() { return top + 1; }
-private:
     int top; //Site of the top of the stack, counting by intervals of 4 bytes
     uint* stack;
 };

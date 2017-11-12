@@ -36,7 +36,7 @@ bool ABORT = false, BYE = false, QUIT = false, S_UND = false, PAGE = false;
 
 Stack *stack, *return_stack;
 
-std::list<std::pair<std::string, Function*> > glossary;
+std::vector<std::pair<std::string, Function*> > glossary;
 
 //Proper header is used for each embeddable FORTH word to A: help with organization, and B: keep dependencies straight
 
@@ -139,14 +139,16 @@ int cells();
 int fill();
 int erase();
 int dump();
+int sp_at();
 
-//Reflectine words
+//Reflective words
 int tick();
 int execute();
 
 //Misc. words
 int page();
 int quit();
+int exit();
 int abort_();
 int stack_q();
 
@@ -323,6 +325,17 @@ void add_word() {
             tail->next = new Function*[1];
             tail->next[0] = (Function*) new UsrFunc(head);
             tail = tail->next[0];
+        } else if (func == "[']") {
+            GetSubstring(isspace(*tmp_idx));
+            std::string str(tmp_buf);
+            Function* ptr = find(str);
+            tail->next = new Function *[1];
+            tail->next[0] = (Function*) new Var((int) ptr, 4);
+            tail = tail->next[0];
+        } else if (func == "EXIT") {                     //I would have put this in the dictionary, but it's compile-only
+            tail->next = new Function *[1];
+            tail->next[0] = new Function(exit);
+            tail = tail->next[0];
         } else {
             Function *temp;
             Function *tmp_ptr = find(func);
@@ -344,7 +357,8 @@ void add_word() {
 void run(Function* func) {
     while(func->next) {
         int idx = func->run();
-        func = func->next[idx];
+        if(idx == -1) return;
+        else func = func->next[idx];
     }
     func->run();
 }
@@ -1104,6 +1118,13 @@ int dump() {
 }
 
 // ( -- addr )
+//Pushes the address of the top of the stack onto the stack_q
+int sp_at() {
+    stack->push((int) stack->at(0));
+    return 0;
+}
+
+// ( -- addr )
 // Pushes the exectuion address of the next word in the input stream onto the stack
 int tick() {
     char *tmp_buf, *tmp_idx;
@@ -1142,10 +1163,11 @@ int abort_() {
 }
 
 // ( -- )
-//Sets up the interpreter to not print ok
+//Sets up the interpreter to not print ok, among other things
 int quit() {
     QUIT = true;
-    return 0;
+    return_stack->clear();
+    return -1;
 }
 
 // ( -- f )
@@ -1154,6 +1176,12 @@ int stack_q() {
     if(!stack->size()) stack->push((int)0xffffffff);
     else stack->push(0x00000000);
     return 0;
+}
+
+// ( -- )
+// Compiled only-used to trigger termination of word execution
+int exit() {
+    return -1;
 }
 
 // --------------------------------------------------------------
@@ -1444,6 +1472,8 @@ int main() {
     glossary.push_back(std::make_pair("PAGE", new Function(page)));
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));
     glossary.push_back(std::make_pair("?STACK", new Function(stack_q)));
+    glossary.push_back(std::make_pair("SP@", new Function(sp_at)));
+    glossary.push_back(std::make_pair("SP0", new Var((int) (stack->stack - 1), 4)));
 
     //Loop until terminal exit command is issued
     while(!BYE) {
@@ -1474,6 +1504,12 @@ int main() {
     return 0;
 }
 
-//UNSUPPORTED FEATURES:
+//UNSUPPORTED FORTH FEATURES:
 
 //M*/ is not supported due to C/C++'s lack of support for 128 bit integers for 32 bit applications
+
+//User variables pertaining to memory locations in the FORTH system are not supported,
+//due to lacking meaningful return values
+
+//BASE is not supported due to C++'s lack of support for printing signed integers in multiple bases,
+//and lack of support for arbitrary-base printing in general
