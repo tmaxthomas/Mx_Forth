@@ -3,6 +3,7 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <string.h>
 
 // C++ imports
 #include <vector>
@@ -14,8 +15,8 @@
 #include "Stack.h"
 #include "Function.h"
 
-//Global file stream index pointer
-char* idx;
+//Global file stream index pointers
+char *idx, *buf;
 
 //Utility macro for getting char-delimited substrings of C strings
 #define GetSubstring(boolean) tmp_idx = idx; for (i = 0; !(boolean); i++) tmp_idx++; \
@@ -24,7 +25,7 @@ char* idx;
 
 //Utiity macro for reading from a file/stream
 //I may remove this later, as it's only used in 1 place
-#define ReadInput(file) char* buf = NULL; size_t n = 0; getline(&buf, &n, file); idx = buf; \
+#define ReadInput(file) buf = NULL; size_t n = 0; getline(&buf, &n, file); idx = buf; \
                         for(int i = 0; idx[i]; i++) idx[i] = toupper(idx[i])
 
 //Utility macro for variable creation
@@ -51,6 +52,10 @@ int dprint();
 int urjprint();
 int drjprint();
 int printS();
+int type();
+
+//String manip WORDS
+int trailing();
 
 //Integer math words
 int add();
@@ -139,7 +144,11 @@ int cells();
 int fill();
 int erase();
 int dump();
+
+//Low-level memory access words
 int sp_at();
+int tib();
+int pound_tib();
 
 //Reflective words
 int tick();
@@ -392,6 +401,66 @@ int emit() {
     char ch = (char)*stack->at(0);
     printf("%c", ch);
     stack->pop(1);
+    return 0;
+}
+
+// ( n -- )
+//Prints and pops the top of the stack, followed by a space
+int print() {
+    printf("%d ", *(int*)stack->at(0));
+    stack->pop(1);
+    return 0;
+}
+
+// ( u -- )
+//Unsigned int print
+int uprint() {
+    printf("%u ", *stack->at(0));
+    stack->pop(1);
+    return 0;
+}
+
+// ( d -- )
+//Double length integer print
+int dprint() {
+    printf("%lld ", *(int64_t*)stack->at(1));
+    stack->pop(2);
+    return 0;
+}
+// ( u1 u2 -- )
+//Unsigned right-justified print
+int urjprint() {
+    uint size = *stack->at(0);
+    uint data =  *stack->at(1);
+    uint num_spaces = size - (uint) floor(log10((float)data));
+    stack->pop(2);
+    for(uint i = 0; i < num_spaces; i++)
+        printf(" ");
+    printf("%u", data);
+    return 0;
+}
+
+// ( addr u -- )
+int type() {
+    uint u = *stack->at(0);
+    char* str = (char*)*stack->at(1);
+    stack->pop(2);
+    char* p_buf = new char[u];
+    memcpy(p_buf, str, u);
+    printf(p_buf);
+    delete p_buf;
+    return 0;
+}
+
+// ( addr u1 -- addr u2 )
+int trailing() {
+    uint u = *stack->at(0);
+    char* str = (char*)*stack->at(1);
+    stack->pop(1);
+    //Creatively (ab)using for loops for fun and profit
+    for(; str[u-1] != ' '; u--);
+    str[u] = '\0';
+    stack->push((int) u);
     return 0;
 }
 
@@ -820,42 +889,6 @@ int retCopy3(){
     return 0;
 }
 
-// ( n -- )
-//Prints and pops the top of the stack, followed by a space
-int print() {
-    printf("%d ", *(int*)stack->at(0));
-    stack->pop(1);
-    return 0;
-}
-
-// ( u -- )
-//Unsigned int print
-int uprint() {
-    printf("%u ", *stack->at(0));
-    stack->pop(1);
-    return 0;
-}
-
-// ( d -- )
-//Double length integer print
-int dprint() {
-    printf("%lld ", *(int64_t*)stack->at(1));
-    stack->pop(2);
-    return 0;
-}
-// ( u1 u2 -- )
-//Unsigned right-justified print
-int urjprint() {
-    uint size = *stack->at(0);
-    uint data =  *stack->at(1);
-    uint num_spaces = size - (uint) floor(log10((float)data));
-    stack->pop(2);
-    for(uint i = 0; i < num_spaces; i++)
-        printf(" ");
-    printf("%u", data);
-    return 0;
-}
-
 // ( d u -- )
 // Double-length right-justified print
 int drjprint() {
@@ -1121,6 +1154,20 @@ int dump() {
 //Pushes the address of the top of the stack onto the stack_q
 int sp_at() {
     stack->push((int) stack->at(0));
+    return 0;
+}
+
+// ( -- addr )
+//Pushes the address of the start of the trminal input buffer onto the stack
+int tib() {
+    stack->push((int) buf);
+    return 0;
+}
+
+// ( -- u )
+//Pushes the length of the terminal input buffer onto the stack
+int pound_tib() {
+    stack->push((int) strlen(buf));
     return 0;
 }
 
@@ -1392,6 +1439,14 @@ int main() {
     glossary.push_back(std::make_pair("SPACES", new Function(spaces)));
     glossary.push_back(std::make_pair("SPACE", new Function(space)));
     glossary.push_back(std::make_pair("EMIT", new Function(emit)));
+    glossary.push_back(std::make_pair(".", new Function(print)));
+    glossary.push_back(std::make_pair("U.", new Function(uprint)));
+    glossary.push_back(std::make_pair("D.", new Function(dprint)));
+    glossary.push_back(std::make_pair("U.R", new Function(urjprint)));
+    glossary.push_back(std::make_pair("D.R", new Function(drjprint)));
+    glossary.push_back(std::make_pair(".S", new Function(printS)));
+    glossary.push_back(std::make_pair("TYPE", new Function(type)));
+    glossary.push_back(std::make_pair("-TRAILING", new Function(trailing)));
     glossary.push_back(std::make_pair("+", new Function(add)));
     glossary.push_back(std::make_pair("D+", new Function(Dadd)));
     glossary.push_back(std::make_pair("M+", new Function(Madd)));
@@ -1438,12 +1493,6 @@ int main() {
     glossary.push_back(std::make_pair("I", new Function(retCopy)));
     glossary.push_back(std::make_pair("R@", new Function(retCopy)));
     glossary.push_back(std::make_pair("J", new Function(retCopy3)));
-    glossary.push_back(std::make_pair(".", new Function(print)));
-    glossary.push_back(std::make_pair("U.", new Function(uprint)));
-    glossary.push_back(std::make_pair("D.", new Function(dprint)));
-    glossary.push_back(std::make_pair("U.R", new Function(urjprint)));
-    glossary.push_back(std::make_pair("D.R", new Function(drjprint)));
-    glossary.push_back(std::make_pair(".S", new Function(printS)));
     glossary.push_back(std::make_pair("=", new Function(equals)));
     glossary.push_back(std::make_pair("D=", new Function(Dequals)));
     glossary.push_back(std::make_pair("<", new Function(lessThan)));
@@ -1473,6 +1522,8 @@ int main() {
     glossary.push_back(std::make_pair("QUIT", new Function(quit)));
     glossary.push_back(std::make_pair("?STACK", new Function(stack_q)));
     glossary.push_back(std::make_pair("SP@", new Function(sp_at)));
+    glossary.push_back(std::make_pair("TIB", new Function(tib)));
+    glossary.push_back(std::make_pair("#TIB", new Function(pound_tib)));
     glossary.push_back(std::make_pair("SP0", new Var((int) (stack->stack - 1), 4)));
 
     //Loop until terminal exit command is issued
