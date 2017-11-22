@@ -15,12 +15,13 @@
 //nodes.
 class Function {
 public:
-    Function() : fxn(NULL), next(NULL) {}
-    Function(int(*fxn_)()) : fxn(fxn_), next(NULL) {}
-    Function(Function* old) : fxn(old->fxn), next(NULL) {}
+    Function() : fxn(NULL), next(NULL), size(0) {}
+    Function(int(*fxn_)()) : fxn(fxn_), next(NULL), size(0) {}
+    Function(Function* old) : fxn(old->fxn), next(NULL), size(0) {}
     virtual ~Function() { delete [] next; }
     int(*fxn)();
     Function** next;
+    int size;
     virtual int run();
 };
 

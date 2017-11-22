@@ -9,7 +9,8 @@
 #include <vector>
 #include <list>
 #include <stack>
-#include <unordered_map>
+#include <queue>
+#include <unordered_set>
 
 // .h file imports
 #include "Stack.h"
@@ -28,8 +29,11 @@ char *idx, *buf;
 #define ReadInput(file) buf = NULL; size_t n = 0; getline(&buf, &n, file); idx = buf; \
                         for(int i = 0; idx[i]; i++) idx[i] = toupper(idx[i])
 
+//Utility macro for Function next array allocation
+#define FuncAlloc(func, num) func->next = new Function *[num]; func->size = num
+
 //Utility macro for variable creation
-#define MakeVar(type) GetSubstring(isspace(*tmp_idx)); Function *f = new Function(nop); f->next = new Function*[1]; \
+#define MakeVar(type) GetSubstring(isspace(*tmp_idx)); Function *f = new Function(nop); FuncAlloc(f, 1); \
                       f->next[0] = new type; glossary.push_back(std::make_pair(tmp_buf, f))
 
 //Global boolean flags for program state management
@@ -173,6 +177,23 @@ Function* find(std::string& name) {
     return NULL;
 }
 
+//Safely deletes a word, preventing segfaults and memory leaks
+void delete_word(Function* word) {
+    std::queue<Function*> to_delete;
+    std::unordered_set<Function*> deleted;
+    to_delete.push(word);
+    while(!to_delete.empty()) {
+        Function* next = to_delete.front();
+        to_delete.pop();
+        if(next)
+            for(int i = 0; i < next->size; i++)
+                if(deleted.find(next->next[i]) == deleted.end())
+                    to_delete.push(next->next[i]);
+        delete next;
+        deleted.insert(next);
+    }
+}
+
 //FORGET word for dictionary cleanup
 void forget() {
     char *tmp_buf, *tmp_idx;
@@ -185,16 +206,17 @@ void forget() {
     for(; itr != glossary.end(); itr++)
         if((*itr).first == name) break;
 
-    if(itr != glossary.end())
+    if(itr != glossary.end()) {
+        for(auto itr2 = itr; itr2 != glossary.end(); itr2++)
+            delete_word((*itr2).second);
         glossary.erase(itr, glossary.end());
+    }
 }
 
 //Adds user-defined words to the glossary
 
-//WARNING: This code is very obtuse, despite the extensive comments. I shouldn't have used so much C-style code,
-// but what's done is done. I could change to using vectors, and it might make a little bit more sense, but probably not.
-//Graphs are rarely clean to implement, especially due to how I built the path decider into everything. It makes for a clean
-//path decider, but messy graph handling.
+//WARNING: This code is very obtuse, despite the extensive comments. This program is necessarily
+//full of crazy pointer math, and this is no exception.
 void add_word() {
     std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
     std::stack<std::vector<Function*> > leave_stack;
@@ -216,20 +238,20 @@ void add_word() {
         } else if(func == ".\"") {                       //Handles string printing
             GetSubstring(*tmp_idx == '"');
             StrPrint *node = new StrPrint(tmp_buf);
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = node;
             tail = node;
         } else if(func == "ABORT\"") {                   //Handles ABORT"
             GetSubstring(*tmp_idx == '"');
             Abort *node = new Abort(tmp_buf);
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = node;
             tail = node;
         } else if(func == "IF") {                        //Conditional handling, step 1
             Function* if_ = new Function(cond);          //Allcoate & initialize the if node
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = if_;                         //Tail points to if
-            tail->next[0]->next = new Function*[2];      //if block branching nodes declaration
+            FuncAlloc(tail->next[0], 2);                 //if block branching nodes declaration
             tail->next[0]->next[1] = new Function(nop);  //Dummy node for conditional branch in order to have if head node location
             if_stack.push(tail->next[0]);                //Push the node onto the conditional stack
             tail = if_stack.top()->next[1];              //Set tail node
@@ -240,29 +262,29 @@ void add_word() {
             else_tail->next[0] = new Function(nop);      //Allocate dummy node
             tail = else_tail->next[0];
             Function* then = new Function(nop);          //Another dummy node, to unite the two conditional paths
-            tail->next = new Function*[1];               //Stitch the active tail into the dummy node
+            FuncAlloc(tail, 1);                          //Stitch the active tail into the dummy node
             tail->next[0] = then;
             if(!if_stack.top()->next)                    //Handle possible if/else
-                if_stack.top()->next = new Function*[1];
+                FuncAlloc(if_stack.top(), 1);
             if_stack.top()->next[0] = then;              //Stitch the other tail into the dummy node
             tail = tail->next[0];
             if_stack.pop();                              //Clean up the conditional stack
         } else if(func == "THEN") {
             Function* then = new Function(nop);          //Strucutral merger node allocation
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = then;                        //Tie the tail into the node
             if(!if_stack.top()->next)                    //Make sure the if-branch can be tied into the node
-                if_stack.top()->next = new Function*[1];
+                FuncAlloc(if_stack.top(), 1);
             if_stack.top()->next[0] = then;              //Tie the if_stack tail into the node
             tail = tail->next[0];
             if_stack.pop();
         } else if(func == "DO") {
             Function *_do = new Function(do_);           //Allocate do function
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = _do;                         //Set tail->next
             tail = tail->next[0];                        //Move tail
             Function *loop_head = new Function(nop);     //Allocate loop block head
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = loop_head;                   //Move tail to loop head
             do_stack.push(loop_head);                    //Put head on do loop stack
             tail = tail->next[0];
@@ -270,11 +292,11 @@ void add_word() {
             leave_stack.push(temp);                      //Set up leave stack
         } else if(func == "LEAVE") {
             Function *_leave = new Function(leave);      //Allocate leave node
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = _leave;                      //Set tail->next
             leave_stack.top().push_back(_leave);         //Push node onto leave stack
             tail = tail->next[0];
-            tail->next = new Function*[2];               //Set up leave escape path
+            FuncAlloc(tail, 2);                          //Set up leave escape path
             tail->next[0] = new Function(nop);
             tail = tail->next[0];
         } else if(func == "LOOP" || func == "+LOOP") {
@@ -283,9 +305,9 @@ void add_word() {
                 loop_ = new Function(loop);              //Allocate loop escape checker function
             else
                 loop_ = new Function(loop_plus);         //Differentiate between LOOP and +LOOP
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 2);
             tail->next[0] = loop_;                       //Add loop escape checker to loop path
-            loop_->next = new Function*[2];              //Allocate loop branching
+            FuncAlloc(loop_, 2);                         //Allocate loop branching
             loop_->next[1] = do_stack.top();             //Plug loop path into loop head
             do_stack.pop();                              //Clean up do stack
             loop_->next[0] = new Function(nop);          //Set up loop escape path
@@ -297,16 +319,16 @@ void add_word() {
             leave_stack.pop();
         } else if (func == "BEGIN") {
             Function *begin = new Function(nop);         //Allocate definite loop head
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = begin;                       //Set tail->next
             begin_stack.push(begin);                     //Push loop head onto stack
             tail = tail->next[0];                        //Move tail
         } else if (func == "UNTIL") {
             Function* until = new Function(cond);        //Allocate until conditional
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = until;                       //Set tail->next
             tail = tail->next[0];                        //Move tail
-            tail->next = new Function*[2];
+            FuncAlloc(tail, 2);
             tail->next[0] = begin_stack.top();           //Point the conditional false path at loop head
             begin_stack.pop();                           //Clean up loop stack
             Function* temp = new Function(nop);          //Set up escape tail
@@ -314,10 +336,10 @@ void add_word() {
             tail = tail->next[1];
         } else if (func == "WHILE") {
             Function* while_ = new Function(cond);       //Allocate while conditional
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = while_;                      //Set tail->next
             tail = tail->next[0];                        //Move tail->next
-            tail->next = new Function*[2];               //Allocate branching
+            FuncAlloc(tail, 2);                          //Allocate branching
             Function* temp = new Function(nop);
             tail->next[1] = temp;                        //Set up true path
             temp = new Function(nop);
@@ -325,24 +347,24 @@ void add_word() {
             while_stack.push(temp);                      //Push false path head onto while stack
             tail = tail->next[1];                        //Move tail
         } else if (func == "REPEAT") {
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = begin_stack.top();           //Plug current tail into loop head
             begin_stack.pop();                           //Clean up begin_stack
             tail = while_stack.top();                    //Move current tail to loop escape path
             while_stack.pop();                           //Clean up while_stack
         } else if (func == name) {                       //Allow for recursive calls
-            tail->next = new Function*[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = (Function*) new UsrFunc(head);
             tail = tail->next[0];
         } else if (func == "[']") {
             GetSubstring(isspace(*tmp_idx));
             std::string str(tmp_buf);
             Function* ptr = find(str);
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = (Function*) new Var((int) ptr, 4);
             tail = tail->next[0];
         } else if (func == "EXIT") {                     //I would have put this in the dictionary, but it's compile-only
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = new Function(exit);
             tail = tail->next[0];
         } else {
@@ -350,7 +372,7 @@ void add_word() {
             Function *tmp_ptr = find(func);
             //Figure out what the heck kind of thing we're dealing with
             temp = (Function *) (tmp_ptr ? (tmp_ptr->next ? new UsrFunc(tmp_ptr) : new Function(tmp_ptr)) : new Number(func));
-            tail->next = new Function *[1];
+            FuncAlloc(tail, 1);
             tail->next[0] = temp;
             tail = tail->next[0];
         }
@@ -1536,7 +1558,7 @@ int main() {
 
         free(buf);
         //Newline printing and flag resetting
-        if(S_UND) printf("stack underflow");
+        if(S_UND) printf("stack empty");
         if(!BYE && !ABORT && !QUIT && !S_UND) printf(" ok");
         if(!BYE && !PAGE) printf("\n\n");
         if(QUIT) QUIT = false;
