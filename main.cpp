@@ -1421,7 +1421,6 @@ void text_interpreter() {
             forget();
         else if (str == "BYE")
             BYE = true;
-
         else if (func)
             run(func);
         else
@@ -1538,7 +1537,7 @@ int main() {
         free(buf);
         //Newline printing and flag resetting
         if(S_UND) printf("stack underflow");
-        if(!BYE && !ABORT && !QUIT && !S_UND) printf("ok");
+        if(!BYE && !ABORT && !QUIT && !S_UND) printf(" ok");
         if(!BYE && !PAGE) printf("\n\n");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;
