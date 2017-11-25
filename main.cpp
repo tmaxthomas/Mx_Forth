@@ -57,6 +57,7 @@ int urjprint();
 int drjprint();
 int printS();
 int type();
+int bracket_pound();
 
 //String manip WORDS
 int trailing();
@@ -165,9 +166,6 @@ int exit();
 int abort_();
 int stack_q();
 
-
-void number(std::string& str);
-
 //Finds words in the glossary
 Function* find(std::string& name) {
     for(auto itr = glossary.rbegin(); itr != glossary.rend(); itr++) {
@@ -211,6 +209,26 @@ void forget() {
             delete_word((*itr2).second);
         glossary.erase(itr, glossary.end());
     }
+}
+
+//Number & related factory method
+Function* make_num(std::string& str) {
+    if(!is_num(str)) {
+        printf("%s ?", str.c_str());
+        abort_();
+    }
+
+    bool db = false;
+
+    if(str[str.size() - 1] == '.') {
+        db = true;
+        str.erase(str.size() - 1, 1);
+    }
+
+    if(db)
+        return new DoubleConst(atol(str.c_str()));
+    else
+        return new Var(atoi(str.c_str()), 4);
 }
 
 //Adds user-defined words to the glossary
@@ -371,7 +389,7 @@ void add_word() {
             Function *temp;
             Function *tmp_ptr = find(func);
             //Figure out what the heck kind of thing we're dealing with
-            temp = (Function *) (tmp_ptr ? (tmp_ptr->next ? new UsrFunc(tmp_ptr) : new Function(tmp_ptr)) : new Number(func));
+            temp = (Function *) (tmp_ptr ? (tmp_ptr->next ? new UsrFunc(tmp_ptr) : new Function(tmp_ptr)) : make_num(func));
             FuncAlloc(tail, 1);
             tail->next[0] = temp;
             tail = tail->next[0];
@@ -1331,12 +1349,13 @@ void number(std::string& str) {
         abort_();
         return;
     }
+
     bool db = false;
-    for(size_t i = 0; i < str.size(); i++)
-        if(str[i] == ',') {
-            db = true;
-            str.erase(i, 1);
-        }
+
+    if(str[str.size() - 1] == '.') {
+        db = true;
+        str.erase(str.size() - 1, 1);
+    }
 
     if(db) {
         int64_t n = atol(str.c_str());
@@ -1559,7 +1578,7 @@ int main() {
         free(buf);
         //Newline printing and flag resetting
         if(S_UND) printf("stack empty");
-        if(!BYE && !ABORT && !QUIT && !S_UND) printf(" ok");
+        if(!BYE && !ABORT && !QUIT && !S_UND) printf("ok");
         if(!BYE && !PAGE) printf("\n\n");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;

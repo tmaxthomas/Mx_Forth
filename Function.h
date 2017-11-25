@@ -25,24 +25,17 @@ public:
     virtual int run();
 };
 
-//Subclass used to deal with pushing numbers onto the stack from within user-defined functions
-class Number : public Function {
+//Subclass used to deal with all single-length integers, variables, arrays, and single-length constants
+class Var : public Function {
 public:
-    Number() : n(0) {}
-    Number(std::string str);
+    Var(int n_, size_t s_) : n(n_), s(s_) {}
     int run() override;
     int n;
-};
-
-//Subclass used to deal with all variables, arrays, and single-length constants
-class Var : public Number {
-public:
-    Var(int n_, size_t s_) : s(s_) { n = n_; }
     size_t s;
 };
 
 //Subclass used to deal with double-length constants
-class DoubleConst : public Number {
+class DoubleConst : public Function {
 public:
     DoubleConst(int64_t n_) : n64(n_) {}
     int64_t n64;
@@ -72,5 +65,6 @@ public:
 };
 
 bool is_num(std::string& str);
+void number(std::string& str);
 
 #endif //MX_FORTH_FUNCTION_H

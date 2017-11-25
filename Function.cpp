@@ -16,15 +16,7 @@ int Function::run() {
     return fxn();
 }
 
-Number::Number(std::string str) {
-    if(!is_num(str)) {
-        printf("%s ?", str.c_str());
-        abort_();
-    }
-    n = atoi(str.c_str());
-}
-
-int Number::run() {
+int Var::run() {
     stack->push(n);
     return 0;
 }
@@ -59,7 +51,7 @@ int UsrFunc::run() {
 //Number determination helper function
 bool is_num(std::string& str) {
     for(uint i = 0; i < str.size(); i++)
-        if((str[i] < '0' || str[i] > '9') && str[i] != ',' && (i == 0 && str[i] != '-'))
+        if((str[i] < '0' || str[i] > '9') && (i == str.size() - 1 && str[i] != '.') && (i == 0 && str[i] != '-'))
             return false;
     return true;
 }
