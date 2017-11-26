@@ -451,7 +451,7 @@ int cr() {
 //Prints n spaces
 int spaces() {
     std::string str((unsigned long)*(int*)stack->at(0), ' ');
-    printf(str.c_str());
+    printf("%s", str.c_str());
     stack->pop(1);
     return 0;
 }
@@ -515,7 +515,7 @@ int type() {
     stack->pop(2);
     char* p_buf = new char[u];
     memcpy(p_buf, str, u);
-    printf(p_buf);
+    printf("%s", p_buf);
     delete p_buf;
     return 0;
 }
@@ -569,7 +569,7 @@ int pounds() {
     memmove(swp + len, swp, swp_len);
     memmove(swp, buf, len);
     *(uint64_t*)stack->at(1) = 0;
-    swp_len++;
+    swp_len += len;
     return 0;
 }
 
@@ -997,9 +997,9 @@ int tuck() {
     int n1 = *(int*)stack->at(0);
     int n2 = *(int*)stack->at(1);
     stack->pop(2);
-    stack->push(n2);
     stack->push(n1);
     stack->push(n2);
+    stack->push(n1);
     return 0;
 }
 
@@ -1544,7 +1544,7 @@ void text_interpreter() {
             fclose(curr_file);
         } else if (str == ".\"") {
                 GetSubstring(*tmp_idx == '"');
-                printf(tmp_buf);
+                printf("%s", tmp_buf);
                 free(tmp_buf);
 
         // Misc. words

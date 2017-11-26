@@ -28,13 +28,13 @@ int DoubleConst::run() {
 
 //Prints the stored string. Simple enough.
 int StrPrint::run() {
-    printf(str);
+    printf("%s", str);
     return 0;
 }
 
 //Prints the stored string and aborts
 int Abort::run() {
-    printf(str);
+    printf("%s", str);
     abort_();
     return 0;
 }
