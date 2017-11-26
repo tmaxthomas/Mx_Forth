@@ -513,10 +513,7 @@ int type() {
     uint u = *stack->at(0);
     char* str = (char*)*stack->at(1);
     stack->pop(2);
-    char* p_buf = new char[u];
-    memcpy(p_buf, str, u);
-    printf("%s", p_buf);
-    delete p_buf;
+    fwrite(str, 1, u, stdout);
     return 0;
 }
 
@@ -586,6 +583,7 @@ int hold() {
 // ( ud1 -- ud1 )
 int sign() {
     int n = *(int*)stack->at(0);
+    stack->pop(1);
     if(n < 0) {
         swp = (char*) realloc(swp, swp_len + 1);
         memmove(swp + 1, swp, swp_len);
