@@ -19,6 +19,10 @@
 //Global file stream index pointers
 char *idx, *buf;
 
+//Global string scratch space (holy moly but FORTH's scoping is a mess)
+char *swp;
+uint swp_len;
+
 //Utility macro for getting char-delimited substrings of C strings
 #define GetSubstring(boolean) tmp_idx = idx; for (i = 0; !(boolean); i++) tmp_idx++; \
                            tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
@@ -41,7 +45,7 @@ bool ABORT = false, BYE = false, QUIT = false, S_UND = false, PAGE = false;
 
 Stack *stack, *return_stack;
 
-std::vector<std::pair<std::string, Function*> > glossary;
+std::vector<std::pair<std::string, Function*> > glossary, comp_glossary;
 
 //Proper header is used for each embeddable FORTH word to A: help with organization, and B: keep dependencies straight
 
@@ -57,10 +61,16 @@ int urjprint();
 int drjprint();
 int printS();
 int type();
-int bracket_pound();
 
-//String manip WORDS
+//String manip words
 int trailing();
+
+//Print formatting words
+int bracket_pound();
+int pound_bracket();
+int pound();
+int hold();
+int sign();
 
 //Integer math words
 int add();
@@ -84,6 +94,7 @@ int sub1();
 int add2();
 int sub2();
 int abs();
+int dabs();
 int neg();
 int Dneg();
 int min();
@@ -121,6 +132,7 @@ int over2();
 int rot();
 int drop();
 int drop2();
+int tuck();
 
 //Return stack access words
 int retPush();
@@ -168,10 +180,20 @@ int stack_q();
 
 //Finds words in the glossary
 Function* find(std::string& name) {
-    for(auto itr = glossary.rbegin(); itr != glossary.rend(); itr++) {
+    for(auto itr = glossary.rbegin(); itr != glossary.rend(); itr++)
         if(itr->first == name)
             return itr->second;
-    }
+    return NULL;
+}
+
+//Finds compile-time and run-time words in the glossaries
+Function* comp_find(std::string& name) {
+    Function* func = find(name);
+    if(func)
+        return func;
+    for(auto itr = comp_glossary.rbegin(); itr != comp_glossary.rend(); itr++)
+        if(itr->first == name)
+            return itr->second;
     return NULL;
 }
 
@@ -381,13 +403,19 @@ void add_word() {
             FuncAlloc(tail, 1);
             tail->next[0] = (Function*) new Var((int) ptr, 4);
             tail = tail->next[0];
-        } else if (func == "EXIT") {                     //I would have put this in the dictionary, but it's compile-only
+        } else if (func == "[CHAR]") {                   //Compile a character literal into the definition
+            GetSubstring(isspace(*tmp_idx));
+            std::string str(tmp_buf);
+            if(str.size() != 1) {
+                printf("%s ?", str.c_str());
+                abort_();
+            }
             FuncAlloc(tail, 1);
-            tail->next[0] = new Function(exit);
+            tail->next[0] = new Var(str[0], 4);
             tail = tail->next[0];
         } else {
             Function *temp;
-            Function *tmp_ptr = find(func);
+            Function *tmp_ptr = comp_find(func);
             //Figure out what the heck kind of thing we're dealing with
             temp = (Function *) (tmp_ptr ? (tmp_ptr->next ? new UsrFunc(tmp_ptr) : new Function(tmp_ptr)) : make_num(func));
             FuncAlloc(tail, 1);
@@ -501,6 +529,69 @@ int trailing() {
     for(; str[u-1] != ' '; u--);
     str[u] = '\0';
     stack->push((int) u);
+    return 0;
+}
+
+// ( ud -- ud )
+int bracket_pound() {
+    swp = (char*) malloc(0);
+    swp_len = 0;
+    return 0;
+}
+
+// ( ud -- addr u )
+int pound_bracket() {
+    stack->pop(2);
+    stack->push((int) swp);
+    stack->push((int) swp_len);
+    return 0;
+}
+
+// ( ud1 -- ud2 )
+int pound() {
+    uint64_t ud = *(uint64_t*)stack->at(1);
+    swp = (char*) realloc(swp, swp_len + 1);
+    memmove(swp + 1, swp, swp_len);
+    //ASCII table magic
+    char digit = (ud % 10) + '0';
+    swp[0] = digit;
+    *(uint64_t*)stack->at(1) /= 10;
+    swp_len++;
+    return 0;
+}
+
+// ( ud1 -- 0 )
+int pounds() {
+    uint64_t ud = *(uint64_t*)stack->at(1);
+    char buf[32];
+    uint len = (uint) sprintf(buf, "%llu", ud);
+    swp = (char*) realloc(swp, swp_len + len);
+    memmove(swp + len, swp, swp_len);
+    memmove(swp, buf, len);
+    *(uint64_t*)stack->at(1) = 0;
+    swp_len++;
+    return 0;
+}
+
+// ( ud1 c -- ud1 )
+int hold() {
+    swp = (char*) realloc(swp, swp_len + 1);
+    memmove(swp + 1, swp, swp_len);
+    swp[0] = *(char*)stack->at(0);
+    stack->pop(1);
+    swp_len++;
+    return 0;
+}
+
+// ( ud1 -- ud1 )
+int sign() {
+    int n = *(int*)stack->at(0);
+    if(n < 0) {
+        swp = (char*) realloc(swp, swp_len + 1);
+        memmove(swp + 1, swp, swp_len);
+        swp[0] = '-';
+        swp_len++;
+    }
     return 0;
 }
 
@@ -731,6 +822,12 @@ int abs(){
     return 0;
 }
 
+// ( d -- ud )
+int dabs() {
+    *(int64_t*)stack->at(1) = std::abs(*(int64_t*)stack->at(1));
+    return 0;
+}
+
 // ( n1 -- n2 )
 //Negates the top of the stack
 int neg(){
@@ -892,6 +989,17 @@ int drop() {
 //Pops the top 2 elements of the stack
 int drop2() {
     stack->pop(2);
+    return 0;
+}
+
+// ( n1 n2 -- n2 n1 n2 )
+int tuck() {
+    int n1 = *(int*)stack->at(0);
+    int n2 = *(int*)stack->at(1);
+    stack->pop(2);
+    stack->push(n2);
+    stack->push(n1);
+    stack->push(n2);
     return 0;
 }
 
@@ -1344,26 +1452,8 @@ int leave() {
 
 //Pushes a number onto the stack
 void number(std::string& str) {
-    if(!is_num(str)) {
-        printf("%s ?", str.c_str());
-        abort_();
-        return;
-    }
-
-    bool db = false;
-
-    if(str[str.size() - 1] == '.') {
-        db = true;
-        str.erase(str.size() - 1, 1);
-    }
-
-    if(db) {
-        int64_t n = atol(str.c_str());
-        stack->push(n);
-    } else {
-        int n = atoi(str.c_str());
-        stack->push(n);
-    }
+    Function* f = make_num(str);
+    f->run();
 }
 
 //The terminal/file text interpreter
@@ -1512,6 +1602,7 @@ int main() {
     glossary.push_back(std::make_pair("AND", new Function(and_)));
     glossary.push_back(std::make_pair("OR", new Function(or_)));
     glossary.push_back(std::make_pair("ABS", new Function(abs)));
+    glossary.push_back(std::make_pair("DABS", new Function(dabs)));
     glossary.push_back(std::make_pair("NEGATE", new Function(neg)));
     glossary.push_back(std::make_pair("DNEGATE", new Function(Dneg)));
     glossary.push_back(std::make_pair("MIN", new Function(min)));
@@ -1528,6 +1619,7 @@ int main() {
     glossary.push_back(std::make_pair("ROT", new Function(rot)));
     glossary.push_back(std::make_pair("DROP", new Function(drop)));
     glossary.push_back(std::make_pair("DROP2", new Function(drop2)));
+    glossary.push_back(std::make_pair("TUCK", new Function(tuck)));
     glossary.push_back(std::make_pair(">R", new Function(retPush)));
     glossary.push_back(std::make_pair("R>", new Function(retPop)));
     glossary.push_back(std::make_pair("I", new Function(retCopy)));
@@ -1565,6 +1657,15 @@ int main() {
     glossary.push_back(std::make_pair("TIB", new Function(tib)));
     glossary.push_back(std::make_pair("#TIB", new Function(pound_tib)));
     glossary.push_back(std::make_pair("SP0", new Var((int) (stack->stack - 1), 4)));
+
+    //Build the compile-time-only glossary
+    comp_glossary.push_back(std::make_pair("EXIT", new Function(exit)));
+    comp_glossary.push_back(std::make_pair("<#", new Function(bracket_pound)));
+    comp_glossary.push_back(std::make_pair("#>", new Function(pound_bracket)));
+    comp_glossary.push_back(std::make_pair("#", new Function(pound)));
+    comp_glossary.push_back(std::make_pair("#S", new Function(pounds)));
+    comp_glossary.push_back(std::make_pair("HOLD", new Function(hold)));
+    comp_glossary.push_back(std::make_pair("SIGN", new Function(sign)));
 
     //Loop until terminal exit command is issued
     while(!BYE) {
