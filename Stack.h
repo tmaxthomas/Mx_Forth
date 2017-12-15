@@ -5,15 +5,15 @@
 #ifndef MX_FORTH_STACK_H
 #define MX_FORTH_STACK_H
 
-#include <cstdlib>
-#include <cstdint>
+#include <stdlib.h>
+#include <stdint.h>
 
 #define uint unsigned
 
 class Stack {
 public:
-    Stack(size_t bytes) : top(-1), stack(new uint[bytes]) {}
-    ~Stack() { delete [] stack; }
+    Stack(size_t bytes) : top(-1), stack((uint*) malloc(bytes)) {}
+    ~Stack() { free(stack); }
     uint* at(int index) const;
     void pop(int mag);
     void push(int val);

@@ -6,10 +6,9 @@
 #define MX_FORTH_FUNCTION_H
 
 #include <stdint.h>
-#include <cstring>
+#include <string.h>
+#include <string>
 #include "Stack.h"
-
-#define byte uint8_t
 
 //Class used in storing user defined functions. User-defined functions are stored as graphs, with elements of class Function (and class Number) at the
 //nodes.

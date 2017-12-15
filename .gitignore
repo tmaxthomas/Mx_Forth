@@ -2,3 +2,4 @@
 *.txt*
 *.exe*
 Mx_Forth.*
+Debug/*

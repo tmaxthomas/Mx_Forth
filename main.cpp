@@ -18,6 +18,7 @@
 
 //Global file stream index pointers
 char *idx, *buf;
+uint buf_len;
 
 //Global string scratch space (holy moly but FORTH's scoping is a mess)
 char *swp;
@@ -27,11 +28,6 @@ uint swp_len;
 #define GetSubstring(boolean) tmp_idx = idx; for (i = 0; !(boolean); i++) tmp_idx++; \
                            tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
                            tmp_buf[i] = 0; idx = tmp_idx; if (*idx) idx++
-
-//Utiity macro for reading from a file/stream
-//I may remove this later, as it's only used in 1 place
-#define ReadInput(file) buf = NULL; size_t n = 0; getline(&buf, &n, file); idx = buf; \
-                        for(int i = 0; idx[i]; i++) idx[i] = toupper(idx[i])
 
 //Utility macro for Function next array allocation
 #define FuncAlloc(func, num) func->next = new Function *[num]; func->size = num
@@ -157,7 +153,9 @@ int fetch();
 int fetch2();
 int c_fetch();
 int query();
+int cell();
 int cells();
+int cell_plus();
 int fill();
 int erase();
 int dump();
@@ -331,10 +329,10 @@ void add_word() {
             std::vector<Function *> temp;
             leave_stack.push(temp);                      //Set up leave stack
         } else if(func == "LEAVE") {
-            Function *_leave = new Function(leave);      //Allocate leave node
+            Function *leave_ = new Function(leave);      //Allocate leave node
             FuncAlloc(tail, 1);
-            tail->next[0] = _leave;                      //Set tail->next
-            leave_stack.top().push_back(_leave);         //Push node onto leave stack
+            tail->next[0] = leave_;                      //Set tail->next
+            leave_stack.top().push_back(leave_);         //Push node onto leave stack
             tail = tail->next[0];
             FuncAlloc(tail, 2);                          //Set up leave escape path
             tail->next[0] = new Function(nop);
@@ -531,6 +529,7 @@ int trailing() {
 
 // ( ud -- ud )
 int bracket_pound() {
+    if(swp) free(swp);
     swp = (char*) malloc(0);
     swp_len = 0;
     return 0;
@@ -1259,10 +1258,25 @@ int query() {
     return 0;
 }
 
+// ( -- 4 )
+// Pushes 4 (the size of a cell) onto the stack
+int cell() {
+    stack->push(4);
+    return 0;
+}
+
 // ( n1 -- n2 )
 // Multiplies n1 by 4
 int cells() {
     *stack->at(0) *= 4;
+    return 0;
+}
+
+// ( addr1 -- addr2 )
+// Increments addr1 by the size of a cell
+int cell_plus() {
+    cell();
+    add();
     return 0;
 }
 
@@ -1311,9 +1325,9 @@ int tib() {
 }
 
 // ( -- u )
-//Pushes the length of the terminal input buffer onto the stack
+//Pushes the a pointer to the length of the terminal input buffer onto the stack
 int pound_tib() {
-    stack->push((int) strlen(buf));
+    stack->push((int) &buf_len);
     return 0;
 }
 
@@ -1528,16 +1542,17 @@ void text_interpreter() {
             size_t n = (size_t) ftell(curr_file);
             rewind(curr_file);
 
+			//Save *idx and *buf
+			char *buf_ = buf, *idx_ = idx;
+			//Read some stuff into a new buf
             char* buf = (char*) malloc(n + 1);
             fread(buf, n, 1, curr_file);
             buf[n] = '\0';
-            //Shuffle *idx around to make the text interpreter work
-            char* idx_ = idx;
             idx = buf;
             text_interpreter();
             free(buf);
             idx = idx_;
-
+			buf = buf_;
             free(tmp_buf);
             fclose(curr_file);
         } else if (str == ".\"") {
@@ -1559,8 +1574,9 @@ void text_interpreter() {
 
 int main() {
     //Initialize the stack & return stack
-    stack = new Stack(4096);
+    stack = new Stack(16384);
     return_stack = new Stack(4096);
+	buf = new char[1024];
 
     //Build the glossary
     glossary.push_back(std::make_pair("CR", new Function(cr)));
@@ -1642,7 +1658,9 @@ int main() {
     glossary.push_back(std::make_pair("2@", new Function(fetch2)));
     glossary.push_back(std::make_pair("C@", new Function(c_fetch)));
     glossary.push_back(std::make_pair("?", new Function(query)));
+    glossary.push_back(std::make_pair("CELL", new Function(cell)));
     glossary.push_back(std::make_pair("CELLS", new Function(cells)));
+    glossary.push_back(std::make_pair("CELL+", new Function(cell_plus)));
     glossary.push_back(std::make_pair("FILL", new Function(fill)));
     glossary.push_back(std::make_pair("ERASE", new Function(erase)));
     glossary.push_back(std::make_pair("DUMP", new Function(dump)));
@@ -1668,16 +1686,21 @@ int main() {
     //Loop until terminal exit command is issued
     while(!BYE) {
         printf("#F> ");
-        ReadInput(stdin);
+        //ReadInput(stdin, 1024);
+
+		fgets(buf, 1024, stdin);
+		idx = buf;
+		buf_len = strlen(buf);
+		for (int i = 0; idx[i]; i++)
+			idx[i] = toupper(idx[i]);
+
         //Try and do something, and catch the abort if it throws
         try {
             text_interpreter();
         } catch(int) {} //Abort catching
-
-        free(buf);
         //Newline printing and flag resetting
         if(S_UND) printf("stack empty");
-        if(!BYE && !ABORT && !QUIT && !S_UND) printf("ok");
+        if(!BYE && !ABORT && !QUIT && !S_UND) printf("ok ");
         if(!BYE && !PAGE) printf("\n\n");
         if(QUIT) QUIT = false;
         if(ABORT) ABORT = false;
