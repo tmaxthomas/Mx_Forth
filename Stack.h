@@ -8,8 +8,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define uint unsigned
-
+/*
 class Stack {
 public:
     Stack(size_t bytes) : top(-1), stack((uint*) malloc(bytes)) {}
@@ -23,8 +22,19 @@ public:
     int top; //Site of the top of the stack, counting by intervals of 4 bytes
     uint* stack;
 };
+*/
 
 int abort_();
 
+uint32_t* stack_at(uint32_t index);
+void stack_push(int32_t val);
+void stack_push(int64_t val);
+void stack_pop(int32_t mag);
+void stack_clear();
+
+uint32_t* rstack_at(uint32_t index);
+void rstack_push(int32_t val);
+void rstack_pop(int32_t mag);
+void rstack_clear();
 
 #endif //MX_FORTH_STACK_H

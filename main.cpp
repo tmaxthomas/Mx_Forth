@@ -13,21 +13,16 @@
 #include <unordered_set>
 
 // .h file imports
-#include "Stack.h"
+#include "stack.h"
 #include "Function.h"
+#include "sys.h"
 
-//Global file stream index pointers
-char *idx, *buf;
-uint buf_len;
-
-//Global string scratch space (holy moly but FORTH's scoping is a mess)
-char *swp;
-uint swp_len;
+struct System sys;
 
 //Utility macro for getting char-delimited substrings of C strings
-#define GetSubstring(boolean) tmp_idx = idx; for (i = 0; !(boolean); i++) tmp_idx++; \
-                           tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = idx[j]; \
-                           tmp_buf[i] = 0; idx = tmp_idx; if (*idx) idx++
+#define GetSubstring(boolean) tmp_idx = sys.idx; for (i = 0; !(boolean); i++) tmp_idx++; \
+                           tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = sys.idx[j]; \
+                           tmp_buf[i] = 0; sys.idx = tmp_idx; if (*sys.idx) sys.idx++
 
 //Utility macro for Function next array allocation
 #define FuncAlloc(func, num) func->next = new Function *[num]; func->size = num
@@ -39,142 +34,140 @@ uint swp_len;
 //Global boolean flags for program state management
 bool ABORT = false, BYE = false, QUIT = false, S_UND = false, PAGE = false;
 
-Stack *stack, *return_stack;
+//Stack *stack, *return_stack;
 
 std::vector<std::pair<std::string, Function*> > glossary, comp_glossary;
 
 //Proper header is used for each embeddable FORTH word to A: help with organization, and B: keep dependencies straight
 
 //Output words
-int cr();
-int spaces();
-int space();
-int emit();
-int print();
-int uprint();
-int dprint();
-int urjprint();
-int drjprint();
-int printS();
-int type();
+int32_t cr();
+int32_t spaces();
+int32_t space();
+int32_t emit();
+int32_t print();
+int32_t uprint();
+int32_t dprint();
+int32_t urjprint();
+int32_t drjprint();
+int32_t printS();
+int32_t type();
 
 //String manip words
-int trailing();
+int32_t trailing();
 
-//Print formatting words
-int bracket_pound();
-int pound_bracket();
-int pound();
-int hold();
-int sign();
+//Print32_t formatting words
+int32_t bracket_pound();
+int32_t pound_bracket();
+int32_t pound();
+int32_t hold();
+int32_t sign();
 
 //Integer math words
-int add();
-int Dadd();
-int Madd();
-int sub();
-int Dsub();
-int mult();
-int umult();
-int Mmult();
-int div();
-int mod();
-int modDiv();
-int UmodDiv();
-int SmodDiv();
-int FmodDiv();
-int multDiv();
-int multDivMod();
-int add1();
-int sub1();
-int add2();
-int sub2();
-int abs();
-int dabs();
-int neg();
-int Dneg();
-int min();
-int Dmin();
-int max();
-int Dmax();
-
-//Bithacking words
-int lshift();
-int rshift();
+int32_t add();
+int32_t Dadd();
+int32_t Madd();
+int32_t sub();
+int32_t Dsub();
+int32_t mult();
+int32_t umult();
+int32_t Mmult();
+int32_t div();
+int32_t mod();
+int32_t modDiv();
+int32_t UmodDiv();
+int32_t SmodDiv();
+int32_t FmodDiv();
+int32_t multDiv();
+int32_t multDivMod();
+int32_t add1();
+int32_t sub1();
+int32_t add2();
+int32_t sub2();
+int32_t abs();
+int32_t dabs();
+int32_t neg();
+int32_t Dneg();
+int32_t min();
+int32_t Dmin();
+int32_t max();
+int32_t Dmax();
+int32_t lshift();
+int32_t rshift();
 
 //Logic words
-int and_();
-int or_();
-int equals();
-int Dequals();
-int lessThan();
-int UlessThan();
-int DlessThan();
-int DUlessThan();
-int greaterThan();
-int zeroEquals();
-int DzeroEquals();
-int zeroLessThan();
-int zeroGreaterThan();
+int32_t and_();
+int32_t or_();
+int32_t equals();
+int32_t Dequals();
+int32_t lessThan();
+int32_t UlessThan();
+int32_t DlessThan();
+int32_t DUlessThan();
+int32_t greaterThan();
+int32_t zeroEquals();
+int32_t DzeroEquals();
+int32_t zeroLessThan();
+int32_t zeroGreaterThan();
 
 //Stack structure words
-int swap();
-int swap2();
-int dup();
-int dup2();
-int dup_if();
-int over();
-int over2();
-int rot();
-int drop();
-int drop2();
-int tuck();
+int32_t swap();
+int32_t swap2();
+int32_t dup();
+int32_t dup2();
+int32_t dup_if();
+int32_t over();
+int32_t over2();
+int32_t rot();
+int32_t drop();
+int32_t drop2();
+int32_t tuck();
 
 //Return stack access words
-int retPush();
-int retPop();
-int retCopy();
-int retCopy3();
+int32_t retPush();
+int32_t retPop();
+int32_t retCopy();
+int32_t retCopy3();
 
 //Structural (branching) words
-int cond();
-int loop();
-int loop_plus();
-int do_();
-int nop();
-int leave();
+int32_t cond();
+int32_t loop();
+int32_t loop_plus();
+int32_t do_();
+int32_t nop();
+int32_t leave();
 
 //Variable/constant words
-int store();
-int store2();
-int c_store();
-int plus_store();
-int fetch();
-int fetch2();
-int c_fetch();
-int query();
-int cell();
-int cells();
-int cell_plus();
-int fill();
-int erase();
-int dump();
+int32_t store();
+int32_t store2();
+int32_t c_store();
+int32_t plus_store();
+int32_t fetch();
+int32_t fetch2();
+int32_t c_fetch();
+int32_t query();
+int32_t cell();
+int32_t cells();
+int32_t cell_plus();
+int32_t fill();
+int32_t erase();
+int32_t dump();
 
 //Low-level memory access words
-int sp_at();
-int tib();
-int pound_tib();
+int32_t sp_at();
+int32_t tib();
+int32_t pound_tib();
 
 //Reflective words
-int tick();
-int execute();
+int32_t tick();
+int32_t execute();
 
 //Misc. words
-int page();
-int quit();
-int exit();
-int abort_();
-int stack_q();
+int32_t page();
+int32_t quit();
+int32_t exit();
+int32_t abort_();
+int32_t stack_q();
 
 //Finds words in the glossary
 Function* find(std::string& name) {
@@ -204,7 +197,7 @@ void delete_word(Function* word) {
         Function* next = to_delete.front();
         to_delete.pop();
         if(next)
-            for(int i = 0; i < next->size; i++)
+            for(int32_t i = 0; i < next->size; i++)
                 if(deleted.find(next->next[i]) == deleted.end())
                     to_delete.push(next->next[i]);
         delete next;
@@ -367,7 +360,7 @@ void add_word() {
             tail->next[0] = until;                       //Set tail->next
             tail = tail->next[0];                        //Move tail
             FuncAlloc(tail, 2);
-            tail->next[0] = begin_stack.top();           //Point the conditional false path at loop head
+            tail->next[0] = begin_stack.top();           //Point32_t the conditional false path at loop head
             begin_stack.pop();                           //Clean up loop stack
             Function* temp = new Function(nop);          //Set up escape tail
             tail->next[1] = temp;
@@ -399,7 +392,7 @@ void add_word() {
             std::string str(tmp_buf);
             Function* ptr = find(str);
             FuncAlloc(tail, 1);
-            tail->next[0] = (Function*) new Var((int) ptr, 4);
+            tail->next[0] = (Function*) new Var((int32_t) ptr, 4);
             tail = tail->next[0];
         } else if (func == "[CHAR]") {                   //Compile a character literal into the definition
             GetSubstring(isspace(*tmp_idx));
@@ -420,7 +413,7 @@ void add_word() {
             tail->next[0] = temp;
             tail = tail->next[0];
         }
-        while (isspace(*idx)) idx++;                        //Take care of loose/excess whitespace
+        while (isspace(*sys.idx)) sys.idx++;                        //Take care of loose/excess whitespace
         GetSubstring(isspace(*tmp_idx));
         func = std::string(tmp_buf);
     }
@@ -431,7 +424,7 @@ void add_word() {
 //Written to help debugging and to avoid stack overflow resulting from excessive recursion
 void run(Function* func) {
     while(func->next) {
-        int idx = func->run();
+        int32_t idx = func->run();
         if(idx == -1) return;
         else func = func->next[idx];
     }
@@ -440,607 +433,602 @@ void run(Function* func) {
 
 //( -- )
 //Prints a newline character to the terminal
-int cr() {
+int32_t cr() {
     printf("\n");
     return 0;
 }
 
 //( n -- )
 //Prints n spaces
-int spaces() {
-    std::string str((unsigned long)*(int*)stack->at(0), ' ');
+int32_t spaces() {
+    std::string str((unsigned long)*(int32_t*)stack_at(0), ' ');
     printf("%s", str.c_str());
-    stack->pop(1);
+    stack_pop(1);
     return 0;
 }
 
 //( -- )
 //Prints a space
-int space() {
+int32_t space() {
     printf(" ");
     return 0;
 }
 
 //( c -- )
 //Prints character c
-int emit() {
-    char ch = (char)*stack->at(0);
+int32_t emit() {
+    char ch = (char)*stack_at(0);
     printf("%c", ch);
-    stack->pop(1);
+    stack_pop(1);
     return 0;
 }
 
 // ( n -- )
 //Prints and pops the top of the stack, followed by a space
-int print() {
-    printf("%d ", *(int*)stack->at(0));
-    stack->pop(1);
+int32_t print() {
+    printf("%d ", *(int32_t*)stack_at(0));
+    stack_pop(1);
     return 0;
 }
 
 // ( u -- )
-//Unsigned int print
-int uprint() {
-    printf("%u ", *stack->at(0));
-    stack->pop(1);
+//Unsigned int32_t print
+int32_t uprint() {
+    printf("%u ", *stack_at(0));
+    stack_pop(1);
     return 0;
 }
 
 // ( d -- )
 //Double length integer print
-int dprint() {
-    printf("%lld ", *(int64_t*)stack->at(1));
-    stack->pop(2);
+int32_t dprint() {
+    printf("%lld ", *(int64_t*)stack_at(0));
+    stack_pop(2);
     return 0;
 }
 // ( u1 u2 -- )
 //Unsigned right-justified print
-int urjprint() {
-    uint size = *stack->at(0);
-    uint data =  *stack->at(1);
-    uint num_spaces = size - (uint) floor(log10((float)data));
-    stack->pop(2);
-    for(uint i = 0; i < num_spaces; i++)
+int32_t urjprint() {
+    uint32_t size = *stack_at(0);
+    uint32_t data =  *stack_at(1);
+    uint32_t num_spaces = size - (uint32_t) floor(log10((float)data));
+    stack_pop(2);
+    for(uint32_t i = 0; i < num_spaces; i++)
         printf(" ");
     printf("%u", data);
     return 0;
 }
 
 // ( addr u -- )
-int type() {
-    uint u = *stack->at(0);
-    char* str = (char*)*stack->at(1);
-    stack->pop(2);
+int32_t type() {
+    uint32_t u = *stack_at(0);
+    char* str = (char*)*stack_at(1);
+    stack_pop(2);
     fwrite(str, 1, u, stdout);
     return 0;
 }
 
 // ( addr u1 -- addr u2 )
-int trailing() {
-    uint u = *stack->at(0);
-    char* str = (char*)*stack->at(1);
-    stack->pop(1);
+int32_t trailing() {
+    uint32_t u = *stack_at(0);
+    char* str = (char*)*stack_at(1);
+    stack_pop(1);
     //Creatively (ab)using for loops for fun and profit
     for(; str[u-1] != ' '; u--);
     str[u] = '\0';
-    stack->push((int) u);
+    stack_push((int32_t) u);
     return 0;
 }
 
 // ( ud -- ud )
-int bracket_pound() {
-    if(swp) free(swp);
-    swp = (char*) malloc(0);
-    swp_len = 0;
+int32_t bracket_pound() {
+    sys.swp = (char*) sys.stack + 256;
+    sys.swp_len = 0;
     return 0;
 }
 
 // ( ud -- addr u )
-int pound_bracket() {
-    stack->pop(2);
-    stack->push((int) swp);
-    stack->push((int) swp_len);
+int32_t pound_bracket() {
+    stack_pop(2);
+    stack_push((int32_t) sys.swp);
+    stack_push((int32_t) sys.swp_len);
     return 0;
 }
 
 // ( ud1 -- ud2 )
-int pound() {
-    uint64_t ud = *(uint64_t*)stack->at(1);
-    swp = (char*) realloc(swp, swp_len + 1);
-    memmove(swp + 1, swp, swp_len);
+int32_t pound() {
+    uint64_t ud = *(uint64_t*)stack_at(1);
+    memmove(sys.swp + 1, sys.swp, sys.swp_len);
     //ASCII table magic
     char digit = (ud % 10) + '0';
-    swp[0] = digit;
-    *(uint64_t*)stack->at(1) /= 10;
-    swp_len++;
+    sys.swp[0] = digit;
+    *(uint64_t*)stack_at(1) /= 10;
+    sys.swp_len++;
     return 0;
 }
 
 // ( ud1 -- 0 )
-int pounds() {
-    uint64_t ud = *(uint64_t*)stack->at(1);
+int32_t pounds() {
+    uint64_t ud = *(uint64_t*)stack_at(1);
     char buf[32];
-    uint len = (uint) sprintf(buf, "%llu", ud);
-    swp = (char*) realloc(swp, swp_len + len);
-    memmove(swp + len, swp, swp_len);
-    memmove(swp, buf, len);
-    *(uint64_t*)stack->at(1) = 0;
-    swp_len += len;
+    uint32_t len = (uint32_t) sprintf(buf, "%llu", ud);
+    memmove(sys.swp + len, sys.swp, sys.swp_len);
+    memmove(sys.swp, buf, len);
+    *(uint64_t*)stack_at(1) = 0;
+    sys.swp_len += len;
     return 0;
 }
 
 // ( ud1 c -- ud1 )
-int hold() {
-    swp = (char*) realloc(swp, swp_len + 1);
-    memmove(swp + 1, swp, swp_len);
-    swp[0] = *(char*)stack->at(0);
-    stack->pop(1);
-    swp_len++;
+int32_t hold() {
+    memmove(sys.swp + 1, sys.swp, sys.swp_len);
+    sys.swp[0] = *(char*)stack_at(0);
+    stack_pop(1);
+    sys.swp_len++;
     return 0;
 }
 
 // ( ud1 -- ud1 )
-int sign() {
-    int n = *(int*)stack->at(0);
-    stack->pop(1);
+int32_t sign() {
+    int32_t n = *(int32_t*)stack_at(0);
+    stack_pop(1);
     if(n < 0) {
-        swp = (char*) realloc(swp, swp_len + 1);
-        memmove(swp + 1, swp, swp_len);
-        swp[0] = '-';
-        swp_len++;
+        memmove(sys.swp + 1, sys.swp, sys.swp_len);
+        sys.swp[0] = '-';
+        sys.swp_len++;
     }
     return 0;
 }
 
 // ( n1 n2 -- sum )
 //Adds n2 to n1
-int add() {
-    int s = *(int*)stack->at(0);
-    stack->pop(1);
-    *(int*)stack->at(0) += s;
+int32_t add() {
+    int32_t s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    *(int32_t*)stack_at(0) += s;
     return 0;
 }
 
 // ( d1 d2 -- sum )
 // Adds d2 to d1
-int Dadd() {
-    int64_t s = *(int64_t*)stack->at(1);
-    stack->pop(2);
-    *(int64_t*)stack->at(1) += s;
+int32_t Dadd() {
+    int64_t s = *(int64_t*)stack_at(0);
+    stack_pop(2);
+    *(int64_t*)stack_at(0) += s;
     return 0;
 }
 
 // ( d n -- sum )
 // Adds n to d - double length result
-int Madd() {
-    int n = *(int*)stack->at(0);
-    stack->pop(2);
-    *(int64_t*)stack->at(1) += (int64_t)n;
+int32_t Madd() {
+    int32_t n = *(int32_t*)stack_at(0);
+    stack_pop(2);
+    *(int64_t*)stack_at(0) += (int64_t)n;
     return 0;
 }
 
 // ( n1 n2 -- diff )
 // Subtracts n2 from n1
-int sub() {
-    int s = *(int*)stack->at(0);
-    stack->pop(1);
-    *(int*)stack->at(0) -= s;
+int32_t sub() {
+    int32_t s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    *(int32_t*)stack_at(0) -= s;
     return 0;
 }
 
 // ( d1 d2 -- diff )
 // Subtracts d2 from d1
-int Dsub() {
-    int64_t s = *(int64_t*)stack->at(1);
-    stack->pop(2);
-    *(int64_t*)stack->at(1) -= s;
+int32_t Dsub() {
+    int64_t s = *(int64_t*)stack_at(0);
+    stack_pop(2);
+    *(int64_t*)stack_at(0) -= s;
     return 0;
 }
 
 // ( n1 n2 -- prod )
 // Multiplies n1 by n2
-int mult() {
-    int s = *(int*)stack->at(0);
-    stack->pop(1);
-    *(int*)stack->at(0) *= s;
+int32_t mult() {
+    int32_t s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    *(int32_t*)stack_at(0) *= s;
     return 0;
 }
 
 // ( u1 u2 -- prod )
 // Multiplies u1 by u2
-int umult() {
-    int s = *stack->at(0);
-    int m = *stack->at(1);
-    stack->pop(2);
-    stack->push((int64_t)s*m);
+int32_t umult() {
+    int32_t s = *stack_at(0);
+    int32_t m = *stack_at(1);
+    stack_pop(2);
+    stack_push((int64_t)s*m);
     return 0;
 }
 
 // ( n1 n2 -- prod )
 // Multiplies n1 by n2 - double length result
-int Mmult() {
-    int s = *(int*)stack->at(0);
-    int m = *(int*)stack->at(1);
-    stack->pop(2);
-    stack->push((int64_t)s*m);
+int32_t Mmult() {
+    int32_t s = *(int32_t*)stack_at(0);
+    int32_t m = *(int32_t*)stack_at(1);
+    stack_pop(2);
+    stack_push((int64_t)s*m);
     return 0;
 }
 
 // ( n1 n2 -- qout )
 // Divides n1 by n2
-int div() {
-    int s = *(int*)stack->at(0);
-    stack->pop(1);
-    *(int*)stack->at(0) /= s;
+int32_t div() {
+    int32_t s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    *(int32_t*)stack_at(0) /= s;
     return 0;
 }
 
 // ( n1 n2 -- rem )
 // Computes n1 mod n2
-int mod() {
-    int s = *(int*)stack->at(0);
-    stack->pop(1);
-    *(int*)stack->at(0) %= s;
+int32_t mod() {
+    int32_t s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    *(int32_t*)stack_at(0) %= s;
     return 0;
 }
 
 // ( n1 n2 -- rem quot )
 // Divides n1 by n2, giving remainder and quotient
-int modDiv() {
-    int m, s = *(int*)stack->at(0);
-    stack->pop(1);
-    m = *(int*)stack->at(0) / s;
-    *(int*)stack->at(0) %= s;
-    stack->push(m);
+int32_t modDiv() {
+    int32_t m, s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    m = *(int32_t*)stack_at(0) / s;
+    *(int32_t*)stack_at(0) %= s;
+    stack_push(m);
     return 0;
 }
 
 // ( u1 u2 -- quot )
 // Divides u1 by u2
-int UmodDiv() {
-    uint m, s = *stack->at(0);
-    stack->pop(1);
-    m = *stack->at(0) % s;
-    *stack->at(0) /= s;
-    //Pointer hackery to get an unsigned int pushed onto the stack
-    stack->push(*(int*)&m);
+int32_t UmodDiv() {
+    uint32_t m, s = *stack_at(0);
+    stack_pop(1);
+    m = *stack_at(0) % s;
+    *stack_at(0) /= s;
+    //Pointer hackery to get an unsigned int32_t pushed onto the stack
+    stack_push(*(int32_t*)&m);
     return 0;
 }
 
 // ( d n1  -- n2 n3 )
 // Divides d by n1, giving symmetric quotient n3 and remainder n2
-int SmodDiv() {
-    int n = *(int*)stack->at(0);
-    int64_t s = *(int64_t*)stack->at(2);
-    stack->pop(3);
-    stack->push((int) s % n);
-    stack->push((int) round((float) s / n ));
+int32_t SmodDiv() {
+    int32_t n = *(int32_t*)stack_at(0);
+    int64_t s = *(int64_t*)stack_at(1);
+    stack_pop(3);
+    stack_push((int32_t) s % n);
+    stack_push((int32_t) round((float) s / n ));
     return 0;
 }
 
 // ( d n1 -- n2 n3 )
 // Divides d by n1, giving floored quotient n3 and remainder n2
-int FmodDiv() {
-    int n = *(int*)stack->at(0);
-    int64_t s = *(int64_t*)stack->at(2);
-    stack->pop(3);
-    stack->push((int) s % n);
-    stack->push((int) s / n);
+int32_t FmodDiv() {
+    int32_t n = *(int32_t*)stack_at(0);
+    int64_t s = *(int64_t*)stack_at(1);
+    stack_pop(3);
+    stack_push((int32_t) s % n);
+    stack_push((int32_t) s / n);
     return 0;
 }
 
 // ( n1 n2 n3 -- n-result )
 // Multiplies n1 by n2, then divides by n3. Uses a double length intermediate.
-int multDiv(){
-    int64_t a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
-    stack->pop(3);
+int32_t multDiv(){
+    int64_t a = *(int32_t*)stack_at(2), b = *(int32_t*)stack_at(1), c = *(int32_t*)stack_at(0);
+    stack_pop(3);
     int64_t m = a * b;
-    int d = (int)(m / c);
-    stack->push(d);
+    int32_t d = (int32_t)(m / c);
+    stack_push(d);
     return 0;
 }
 
 // ( n1 n2 n3 -- n-rem, n-result)
 // Multiplies n1 by n2, then divides by n3. Returns the quotient and remainder. Uses a double-length intermediate.
-int multDivMod(){
-    long a = *(int*)stack->at(2), b = *(int*)stack->at(1), c = *(int*)stack->at(0);
-    stack->pop(3);
+int32_t multDivMod(){
+    long a = *(int32_t*)stack_at(2), b = *(int32_t*)stack_at(1), c = *(int32_t*)stack_at(0);
+    stack_pop(3);
     long m = a * b;
-    int d = (int)(m / c), r = (int)(m % c);
-    stack->push(r);
-    stack->push(d);
+    int32_t d = (int32_t)(m / c), r = (int32_t)(m % c);
+    stack_push(r);
+    stack_push(d);
     return 0;
 }
 
 // ( n1 -- n2 )
 //Increments the top of the stack
-int add1() {
-    (*(int*)stack->at(0))++;
+int32_t add1() {
+    (*(int32_t*)stack_at(0))++;
     return 0;
 }
 
 // ( n1 -- n2 )
 //Decrements the top of the stack
-int sub1() {
-    (*(int*)stack->at(0))--;
+int32_t sub1() {
+    (*(int32_t*)stack_at(0))--;
     return 0;
 }
 
 // ( n1 -- n2 )
 //Adds 2 to the top of the stack
-int add2() {
-    *(int*)stack->at(0) += 2;
+int32_t add2() {
+    *(int32_t*)stack_at(0) += 2;
     return 0;
 }
 
 // ( n1 -- n2 )
 //Subtracts 2 from the top of the stack
-int sub2() {
-    *(int*)stack->at(0) -= 2;
+int32_t sub2() {
+    *(int32_t*)stack_at(0) -= 2;
     return 0;
 }
 
 // ( n1 -- n2 )
 //Leftshifts the top of the stack by 1
-int lshift() {
-    *(int*)stack->at(0) *= 2;
+int32_t lshift() {
+    *(int32_t*)stack_at(0) *= 2;
     return 0;
 }
 
 // ( n1 -- n2 )
 //Rightshifts the top of the stack by 1
-int rshift() {
-    *(int*)stack->at(0) /= 2;
+int32_t rshift() {
+    *(int32_t*)stack_at(0) /= 2;
     return 0;
 }
 
 // ( f1 f2 -- f3 )
 //Binary and operator
-int and_() {
-    int s = *(int*)stack->at(0);
-    stack->pop(1);
-    *(int*)stack->at(0) &= s;
+int32_t and_() {
+    int32_t s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    *(int32_t*)stack_at(0) &= s;
     return 0;
 }
 
 // ( f1 f2 -- f3 )
 //Binary or operator
-int or_() {
-    int s = *(int*)stack->at(0);
-    stack->pop(1);
-    *(int*)stack->at(0) |= s;
+int32_t or_() {
+    int32_t s = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    *(int32_t*)stack_at(0) |= s;
     return 0;
 }
 
 // ( n -- u)
 //Computes absolute value of the top of the stack
-int abs(){
-    *(int*)stack->at(0) = std::abs(*(int*)stack->at(0));
+int32_t abs(){
+    *(int32_t*)stack_at(0) = std::abs(*(int32_t*)stack_at(0));
     return 0;
 }
 
 // ( d -- ud )
-int dabs() {
-    *(int64_t*)stack->at(1) = std::abs(*(int64_t*)stack->at(1));
+int32_t dabs() {
+    *(int64_t*)stack_at(0) = std::abs(*(int64_t*)stack_at(0));
     return 0;
 }
 
 // ( n1 -- n2 )
 //Negates the top of the stack
-int neg(){
-    *(int*)stack->at(0) *= -1;
+int32_t neg(){
+    *(int32_t*)stack_at(0) *= -1;
     return 0;
 }
 
 // ( d1 -- d2 )
 //Negates the double-length top of the stack
-int Dneg() {
-    *(int64_t*)stack->at(1) *= -1;
+int32_t Dneg() {
+    *(int64_t*)stack_at(0) *= -1;
     return 0;
 }
 
 // ( n1 n2 -- n3 )
 //Returns minimum of n1 and n2
-int min(){
-    int a = *(int*)stack->at(0);
-    stack->pop(1);
-    int b = *(int*)stack->at(0);
-    stack->pop(1);
+int32_t min(){
+    int32_t a = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    int32_t b = *(int32_t*)stack_at(0);
+    stack_pop(1);
     if(a > b)
-        stack->push(b);
+        stack_push(b);
     else
-        stack->push(a);
+        stack_push(a);
     return 0;
 }
 
 // ( d1 d2 -- d3 )
 // Returns the minimum of 2 double-length numbers
-int Dmin(){
-    int64_t a = *(int64_t*)stack->at(1);
-    stack->pop(2);
-    int64_t b = *(int64_t*)stack->at(1);
-    stack->pop(2);
+int32_t Dmin(){
+    int64_t a = *(int64_t*)stack_at(0);
+    stack_pop(2);
+    int64_t b = *(int64_t*)stack_at(0);
+    stack_pop(2);
     if(a > b)
-        stack->push(b);
+        stack_push(b);
     else
-        stack->push(a);
+        stack_push(a);
     return 0;
 }
 
 // ( n1 n2 -- n3 )
 //Returns maximum of 2 numbers
-int max(){
-    int a = *(int*)stack->at(0);
-    stack->pop(1);
-    int b = *(int*)stack->at(0);
-    stack->pop(1);
+int32_t max(){
+    int32_t a = *(int32_t*)stack_at(0);
+    stack_pop(1);
+    int32_t b = *(int32_t*)stack_at(0);
+    stack_pop(1);
     if(a > b)
-        stack->push(a);
+        stack_push(a);
     else
-        stack->push(b);
+        stack_push(b);
     return 0;
 }
 
 // ( d1 d2 -- d3 )
 // Returns the maximum of 2 double-length numbers
-int Dmax(){
-    int64_t a = *(int64_t*)stack->at(1);
-    stack->pop(2);
-    int64_t b = *(int64_t*)stack->at(1);
-    stack->pop(2);
+int32_t Dmax(){
+    int64_t a = *(int64_t*)stack_at(0);
+    stack_pop(2);
+    int64_t b = *(int64_t*)stack_at(0);
+    stack_pop(2);
     if(a > b)
-        stack->push(a);
+        stack_push(a);
     else
-        stack->push(b);
+        stack_push(b);
     return 0;
 }
 
 // ( n1 n2 -- n2 n1 )
 //Swaps top two elements of the stack
-int swap() {
-    int t = *stack->at(0);
-    stack->pop(1);
-    int b = *stack->at(0);
-    stack->pop(1);
-    stack->push(t);
-    stack->push(b);
+int32_t swap() {
+    int32_t t = *stack_at(0);
+    stack_pop(1);
+    int32_t b = *stack_at(0);
+    stack_pop(1);
+    stack_push(t);
+    stack_push(b);
     return 0;
 }
 
 // ( d1 d2 -- d2 d1 )
 //Swaps top two elements of the stack for the next two
-int swap2() {
-    int64_t t = *(int64_t*)stack->at(1);
-    stack->pop(2);
-    int64_t b = *(int64_t*)stack->at(1);
-    stack->pop(2);
-    stack->push(t);
-    stack->push(b);
+int32_t swap2() {
+    int64_t t = *(int64_t*)stack_at(0);
+    stack_pop(2);
+    int64_t b = *(int64_t*)stack_at(0);
+    stack_pop(2);
+    stack_push(t);
+    stack_push(b);
     return 0;
 }
 
 // ( n -- n n )
 //Duplicates the top of the stack
-int dup() {
-    stack->push(*(int*)stack->at(0));
+int32_t dup() {
+    stack_push(*(int32_t*)stack_at(0));
     return 0;
 }
 
 // ( d -- d d )
 //Duplicates the top two elements of the stack
-int dup2() {
-    stack->push(*(int64_t*)stack->at(1));
+int32_t dup2() {
+    stack_push(*(int64_t*)stack_at(0));
     return 0;
 }
 
 //  ( f -- f f )
 // Duplicates the top of the stack if it isn't 0
-int dup_if() {
-    int q = *(int*)stack->at(0);
-    if(q) stack->push(q);
+int32_t dup_if() {
+    int32_t q = *(int32_t*)stack_at(0);
+    if(q) stack_push(q);
     return 0;
 }
 
 // ( n1 n2 -- n1 n2 n1 )
 //Pushes the second element of the stack onto the stack
-int over() {
-    int t = *stack->at(0);
-    stack->pop(1);
-    int d = *stack->at(0);
-    stack->push(t);
-    stack->push(d);
+int32_t over() {
+    int32_t t = *stack_at(0);
+    stack_pop(1);
+    int32_t d = *stack_at(0);
+    stack_push(t);
+    stack_push(d);
     return 0;
 }
 
 // ( d1 d2 -- d1 d2 d1 )
 //Pushes the third and fourth elements of the stack onto the stack
-int over2() {
-    int64_t t = *(int64_t*)stack->at(1);
-    stack->push(t);
+int32_t over2() {
+    int64_t t = *(int64_t*)stack_at(0);
+    stack_push(t);
     return 0;
 }
 
 // ( n1 n2 n3 -- n2 n3 n1 )
 //Removes the third element of the stack and pushes it onto the stack
-int rot() {
-    int t = *stack->at(0);
-    stack->pop(1);
-    int m = *stack->at(0);
-    stack->pop(1);
-    int b = *stack->at(0);
-    stack->pop(1);
-    stack->push(m);
-    stack->push(t);
-    stack->push(b);
+int32_t rot() {
+    int32_t t = *stack_at(0);
+    stack_pop(1);
+    int32_t m = *stack_at(0);
+    stack_pop(1);
+    int32_t b = *stack_at(0);
+    stack_pop(1);
+    stack_push(m);
+    stack_push(t);
+    stack_push(b);
     return 0;
 }
 
 // ( n -- )
 //Pops the top of the stack
-int drop() {
-    stack->pop(1);
+int32_t drop() {
+    stack_pop(1);
     return 0;
 }
 
 // ( d -- )
 //Pops the top 2 elements of the stack
-int drop2() {
-    stack->pop(2);
+int32_t drop2() {
+    stack_pop(2);
     return 0;
 }
 
 // ( n1 n2 -- n2 n1 n2 )
-int tuck() {
-    int n1 = *(int*)stack->at(0);
-    int n2 = *(int*)stack->at(1);
-    stack->pop(2);
-    stack->push(n1);
-    stack->push(n2);
-    stack->push(n1);
+int32_t tuck() {
+    int32_t n1 = *(int32_t*)stack_at(0);
+    int32_t n2 = *(int32_t*)stack_at(1);
+    stack_pop(2);
+    stack_push(n1);
+    stack_push(n2);
+    stack_push(n1);
     return 0;
 }
 
 // ( n -- )     rstack: ( -- n )
 //Pushes top of stack onto return stack
-int retPush(){
-    int a = *stack->at(0);
-    stack->pop(1);
-    return_stack->push(a);
+int32_t retPush(){
+    int32_t a = *stack_at(0);
+    stack_pop(1);
+    rstack_push(a);
     return 0;
 }
 
 // ( -- n )     rstack: ( n -- )
 //Pushes top of return stack onto stack
-int retPop(){
-    int a = *return_stack->at(0);
-    return_stack->pop(1);
-    stack->push(a);
+int32_t retPop(){
+    int32_t a = *rstack_at(0);
+    rstack_pop(1);
+    stack_push(a);
     return 0;
 }
 
 // ( -- n)      rstack: ( -- )
 //Copies top of return stack onto stack
-int retCopy(){
-    int a = *return_stack->at(0);
-    stack->push(a);
+int32_t retCopy(){
+    int32_t a = *rstack_at(0);
+    stack_push(a);
     return 0;
 }
 
 // ( -- n )     rstack: ( -- )
 //Copies 3rd value on return stack onto stack
-int retCopy3(){
-    int a = *return_stack->at(2);
-    stack->push(a);
+int32_t retCopy3(){
+    int32_t a = *rstack_at(2);
+    stack_push(a);
     return 0;
 }
 
 // ( d u -- )
 // Double-length right-justified print
-int drjprint() {
-    uint size = *stack->at(0);
-    int64_t data = *(int64_t*)stack->at(2);
+int32_t drjprint() {
+    uint32_t size = *stack_at(0);
+    int64_t data = *(int64_t*)stack_at(1);
     int64_t num_spaces = size - (int64_t) floor(log10((float)data));
-    stack->pop(3);
+    stack_pop(3);
     for(int64_t i = 0; i < num_spaces; i++)
         printf(" ");
     printf("%lld ", data);
@@ -1049,210 +1037,210 @@ int drjprint() {
 
 // ( -- )
 //Prints the contents of the stack
-int printS() {
-    for(int a = 0; a < stack->size(); a++) {
-        printf("%d ", *(int*)stack->at(a));
+int32_t printS() {
+    for(uint32_t* a = sys.stack; a != sys.stack_0; a++) {
+        printf("%d ", *(int32_t*) a);
     }
     return 0;
 }
 
 // ( n1 n2 -- f )
 // Compares the two numbers at the top of the stack for equality
-int equals(){
-    int a = *(int*)stack->at(0), b = *(int*)stack->at(1);
-    stack->pop(2);
+int32_t equals(){
+    int32_t a = *(int32_t*)stack_at(0), b = *(int32_t*)stack_at(1);
+    stack_pop(2);
     if(a == b)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( d1 d2 -- f )
 //Compares two double-length numbers at the top of the stack for equality
-int Dequals() {
-    int64_t a = *(int64_t*)stack->at(1), b = *(int64_t*)stack->at(3);
-    stack->pop(4);
+int32_t Dequals() {
+    int64_t a = *(int64_t*)stack_at(0), b = *(int64_t*)stack_at(2);
+    stack_pop(4);
     if(a == b)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( n1 n2 -- f )
-int lessThan(){
-    int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
-    stack->pop(2);
+int32_t lessThan(){
+    int32_t a = *(int32_t*)stack_at(1), b = *(int32_t*)stack_at(0);
+    stack_pop(2);
     if(a < b)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( u1 u2 -- f )
-int UlessThan(){
-    uint a = *stack->at(1), b = *stack->at(0);
-    stack->pop(2);
+int32_t UlessThan(){
+    uint32_t a = *stack_at(1), b = *stack_at(0);
+    stack_pop(2);
     if(a < b)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( d1 d2 -- f )
-int DlessThan() {
-    int64_t a = *(int64_t*)stack->at(1), b = *(int64_t*)stack->at(3);
-    stack->pop(4);
+int32_t DlessThan() {
+    int64_t a = *(int64_t*)stack_at(0), b = *(int64_t*)stack_at(2);
+    stack_pop(4);
     if(a < b)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( d1 d2 -- f )
-int DUlessThan() {
-    uint64_t a = *(uint64_t*)stack->at(1), b = *(uint64_t*)stack->at(3);
-    stack->pop(4);
+int32_t DUlessThan() {
+    uint64_t a = *(uint64_t*)stack_at(1), b = *(uint64_t*)stack_at(3);
+    stack_pop(4);
     if(a < b)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( n1 n2 -- f )
-int greaterThan(){
-    int a = *(int*)stack->at(1), b = *(int*)stack->at(0);
-    stack->pop(2);
+int32_t greaterThan(){
+    int32_t a = *(int32_t*)stack_at(1), b = *(int32_t*)stack_at(0);
+    stack_pop(2);
     if(a > b)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( n -- f )
 // Tests whether the top of the stack is equal to zero
-int zeroEquals(){
-    int a = *(int*)stack->at(0);
-    stack->pop(1);
+int32_t zeroEquals(){
+    int32_t a = *(int32_t*)stack_at(0);
+    stack_pop(1);
     if(a == 0)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( d -- f )
 // Tests whether the double-length top of the stack is equal to zero
-int DzeroEquals(){
-    int64_t a = *(int64_t*)stack->at(1);
-    stack->pop(2);
+int32_t DzeroEquals(){
+    int64_t a = *(int64_t*)stack_at(0);
+    stack_pop(2);
     if(a == 0)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( n -- f )
 // Tests whether the top of the stack is less than zero
-int zeroLessThan(){
-    int a = *(int*)stack->at(0);
-    stack->pop(1);
+int32_t zeroLessThan(){
+    int32_t a = *(int32_t*)stack_at(0);
+    stack_pop(1);
     if(0 < a)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( n -- f )
 // Tests whether the top of the stack is greater than zero
-int zeroGreaterThan(){
-    int a = *(int*)stack->at(0);
-    stack->pop(1);
+int32_t zeroGreaterThan(){
+    int32_t a = *(int32_t*)stack_at(0);
+    stack_pop(1);
     if(0 > a)
-        stack->push((int)0xffffffff);
+        stack_push((int32_t)0xffffffff);
     else
-        stack->push(0x00000000);
+        stack_push(0x00000000);
     return 0;
 }
 
 // ( n addr -- )
 // Stores n at the memory location pointed to by addr
-int store() {
-    int* ptr = (int*)*stack->at(0);
-    int n = *(int*)stack->at(1);
-    stack->pop(2);
+int32_t store() {
+    int* ptr = (int32_t*)*stack_at(0);
+    int32_t n = *(int32_t*)stack_at(1);
+    stack_pop(2);
     *ptr = n;
     return 0;
 }
 
 // ( d addr -- )
 // Stores d at the memory location pointed to by addr
-int store2() {
-    int64_t* ptr = (int64_t*)*stack->at(0);
-    int64_t n = *(int64_t*)stack->at(2);
-    stack->pop(3);
+int32_t store2() {
+    int64_t* ptr = (int64_t*)*stack_at(0);
+    int64_t n = *(int64_t*)stack_at(2);
+    stack_pop(3);
     *ptr = n;
     return 0;
 }
 
 // ( c addr -- )
 // Stores c at the memory location pointed to by addr
-int c_store() {
-    char *ptr = (char *) *stack->at(0);
-    char n = *(char *) stack->at(1);
-    stack->pop(2);
+int32_t c_store() {
+    char *ptr = (char *) *stack_at(0);
+    char n = *(char *) stack_at(1);
+    stack_pop(2);
     *ptr = n;
     return 0;
 }
 
 // ( n addr -- )
 // Adds n to the number stored at addr
-int plus_store() {
-    int* ptr = (int*)*stack->at(0);
-    int n = *(int*)stack->at(1);
-    stack->pop(2);
+int32_t plus_store() {
+    int* ptr = (int32_t*)*stack_at(0);
+    int32_t n = *(int32_t*)stack_at(1);
+    stack_pop(2);
     *ptr += n;
     return 0;
 }
 
 // ( addr -- n )
 // Pushes the contents of addr to the top of the stack
-int fetch() {
-    int* ptr = (int*)*stack->at(0);
-    stack->pop(1);
-    stack->push(*ptr);
+int32_t fetch() {
+    int* ptr = (int32_t*)*stack_at(0);
+    stack_pop(1);
+    stack_push(*ptr);
     return 0;
 }
 
 // ( addr -- d )
 // Pushes the double-length contents of addr to the top of the stack
-int fetch2() {
-    int64_t* ptr = (int64_t*)*stack->at(0);
-    stack->pop(1);
-    stack->push(*ptr);
+int32_t fetch2() {
+    int64_t* ptr = (int64_t*)*stack_at(0);
+    stack_pop(1);
+    stack_push(*ptr);
     return 0;
 }
 
 // ( addr -- c )
 // Pushes the byte pointed to by addr to the top of the stack
-int c_fetch() {
-    char* ptr = (char*)*stack->at(0);
-    stack->pop(1);
-    stack->push((int)*ptr);
+int32_t c_fetch() {
+    char* ptr = (char*)*stack_at(0);
+    stack_pop(1);
+    stack_push((int32_t)*ptr);
     return 0;
 }
 
 // ( addr  -- n )
 // Equivalent to @ .
-int query() {
+int32_t query() {
     fetch();
     print();
     return 0;
@@ -1260,21 +1248,21 @@ int query() {
 
 // ( -- 4 )
 // Pushes 4 (the size of a cell) onto the stack
-int cell() {
-    stack->push(4);
+int32_t cell() {
+    stack_push(4);
     return 0;
 }
 
 // ( n1 -- n2 )
 // Multiplies n1 by 4
-int cells() {
-    *stack->at(0) *= 4;
+int32_t cells() {
+    *stack_at(0) *= 4;
     return 0;
 }
 
 // ( addr1 -- addr2 )
 // Increments addr1 by the size of a cell
-int cell_plus() {
+int32_t cell_plus() {
     cell();
     add();
     return 0;
@@ -1282,79 +1270,79 @@ int cell_plus() {
 
 // ( n c addr -- )
 // Fills n1 bytes at addr with byte c
-int fill() {
-    char b = *(char*)stack->at(0);
-    int n = *(int*)stack->at(1);
-    char* addr = (char*)*stack->at(2);
-    stack->pop(3);
-    for(int i = 0; i < n; i++)
+int32_t fill() {
+    char b = *(char*)stack_at(0);
+    int32_t n = *(int32_t*)stack_at(1);
+    char* addr = (char*)*stack_at(2);
+    stack_pop(3);
+    for(int32_t i = 0; i < n; i++)
         addr[i] = b;
     return 0;
 }
 
 // ( n addr -- )
 // Fills n bytes at addr with 0
-int erase() {
-    stack->push(0);
+int32_t erase() {
+    stack_push(0);
     return fill();
 }
 
 // ( u addr -- )
 // Prints the contents of u bytes at addr
-int dump() {
-    uint c = *stack->at(0);
-    int* addr = (int*)stack->at(1);
-    stack->pop(2);
-    for(uint i = 0; i < c; i++)
+int32_t dump() {
+    uint32_t c = *stack_at(0);
+    int* addr = (int32_t*)stack_at(1);
+    stack_pop(2);
+    for(uint32_t i = 0; i < c; i++)
         if(i % 4 == 0) printf("%d ", addr[i / 4]);
     return 0;
 }
 
 // ( -- addr )
 //Pushes the address of the top of the stack onto the stack_q
-int sp_at() {
-    stack->push((int) stack->at(0));
+int32_t sp_at() {
+    stack_push((int32_t) stack_at(0));
     return 0;
 }
 
 // ( -- addr )
 //Pushes the address of the start of the trminal input buffer onto the stack
-int tib() {
-    stack->push((int) buf);
+int32_t tib() {
+    stack_push((int32_t) sys.buf);
     return 0;
 }
 
 // ( -- u )
 //Pushes the a pointer to the length of the terminal input buffer onto the stack
-int pound_tib() {
-    stack->push((int) &buf_len);
+int32_t pound_tib() {
+    stack_push((int32_t) &sys.buf_len);
     return 0;
 }
 
 // ( -- addr )
 // Pushes the exectuion address of the next word in the input stream onto the stack
-int tick() {
+int32_t tick() {
     char *tmp_buf, *tmp_idx;
     size_t i;
     GetSubstring(isspace(*tmp_idx));
     std::string str(tmp_buf);
     Function* func = find(str);
-    stack->push((int) func);
+    stack_push((int32_t) func);
     return 0;
 }
 
 // ( addr -- )
 // Executes the word pointed to by addr
-int execute() {
-    Function* func = (Function*)*stack->at(0);
-    stack->pop(1);
+int32_t execute() {
+    Function* func = (Function*)*stack_at(0);
+    stack_pop(1);
     run(func);
     return 0;
 }
 
 // ( -- )
 //Clears the screen
-int page() {
+int32_t page() {
     system("clear");
     QUIT = true; //Avoid printing 'ok' after clearing the terminal, because it looks weird
     PAGE = true; //Avoid printing a double newline as well, because it too looks weird
@@ -1363,31 +1351,31 @@ int page() {
 
 // ( -- )
 //Aborts the program
-int abort_() {
+int32_t abort_() {
     ABORT = true;
-    stack->clear();
+    stack_clear();
     throw 1;
 }
 
 // ( -- )
-//Sets up the interpreter to not print ok, among other things
-int quit() {
+//Sets up the interpreter to not print32_t ok, among other things
+int32_t quit() {
     QUIT = true;
-    return_stack->clear();
+    rstack_clear();
     return -1;
 }
 
 // ( -- f )
 // Pushes true if the stack is empty, pushes false otherwise
-int stack_q() {
-    if(!stack->size()) stack->push((int)0xffffffff);
-    else stack->push(0x00000000);
+int32_t stack_q() {
+    if(sys.stack == sys.stack_0) stack_push((int32_t)0xffffffff);
+    else stack_push(0x00000000);
     return 0;
 }
 
 // ( -- )
 // Compiled only-used to trigger termination of word execution
-int exit() {
+int32_t exit() {
     return -1;
 }
 
@@ -1397,68 +1385,68 @@ int exit() {
 
 //Manages branching for if statements
 //Branches to 0 if false, or to 1 if true.
-int cond() {
-    int a = *stack->at(0) != 0;
-    stack->pop(1);
+int32_t cond() {
+    int32_t a = *stack_at(0) != 0;
+    stack_pop(1);
     return a;
 }
 
 //Initializes definite loops
-int do_() {
-    int index = *stack->at(0);
-    int limit = *stack->at(1);
-    stack->pop(2);
-    return_stack->push(limit);
-    return_stack->push(index);
+int32_t do_() {
+    int32_t index = *stack_at(0);
+    int32_t limit = *stack_at(1);
+    stack_pop(2);
+    rstack_push(limit);
+    rstack_push(index);
     return 0;
 }
 
 //Definite loop conditional
-int loop() {
-    int index = *(int*)return_stack->at(0);
-    int limit = *(int*)return_stack->at(1);
+int32_t loop() {
+    int32_t index = *(int32_t*)rstack_at(0);
+    int32_t limit = *(int32_t*)rstack_at(1);
     index++;
     if(index != limit) {
-        *(int*)return_stack->at(0) = index;
+        *(int32_t*)rstack_at(0) = index;
         return 1;
     } else {
-        return_stack->pop(2);
+        rstack_pop(2);
         return 0;
     }
 }
 
 //Why does FORTH have to be inconsistent with its loop end condition, anyways?
-int loop_plus() {
-    int index = *(int*)return_stack->at(0);
-    int limit = *(int*)return_stack->at(1);
-    int inc = *(int*)stack->at(0);
+int32_t loop_plus() {
+    int32_t index = *(int32_t*)rstack_at(0);
+    int32_t limit = *(int32_t*)rstack_at(1);
+    int32_t inc = *(int32_t*)stack_at(0);
     index += inc;
     if(inc < 0) {
         if(index >= limit) {
-            *(int*)return_stack->at(0) = index;
+            *(int32_t*)rstack_at(0) = index;
             return 1;
         } else {
-            return_stack->pop(2);
+            rstack_pop(2);
             return 0;
         }
     } else {
         if(index < limit) {
-            *(int*)return_stack->at(0) = index;
+            *(int32_t*)rstack_at(0) = index;
             return 1;
         } else {
-            return_stack->pop(2);
+            rstack_pop(2);
             return 0;
         }
     }
 }
 
 //Null operand for structural nodes
-int nop() {
+int32_t nop() {
     return 0; //That's right; it does nothing.
 }
 
 //Nop-esque operand to handle loop break pathing
-int leave() {
+int32_t leave() {
     return 1;
 }
 
@@ -1471,8 +1459,8 @@ void number(std::string& str) {
 //The terminal/file text interpreter
 //Parses words (like :, VARIABLE) that can't be put into definitions
 void text_interpreter() {
-    while(*idx != '\0') {
-        while (isspace(*idx)) idx++;
+    while(*sys.idx != '\0') {
+        while (isspace(*sys.idx)) sys.idx++;
         // Get the next word in the input stream
         char *tmp_buf;
         size_t i;
@@ -1488,15 +1476,15 @@ void text_interpreter() {
         if (str == ":")
             add_word();
         else if (str == "VARIABLE") {
-            MakeVar(Var((int) malloc(4), 4));
+            MakeVar(Var((int32_t) malloc(4), 4));
         } else if(str == "2VARIABLE") {
-            MakeVar(Var((int) malloc(8), 8));
+            MakeVar(Var((int32_t) malloc(8), 8));
         } else if(str == "CONSTANT") {
-            MakeVar(Var(*(int *) stack->at(0), 4));
-            stack->pop(1);
+            MakeVar(Var(*(int32_t *) stack_at(0), 4));
+            stack_pop(1);
         } else if(str == "2CONSTANT") {
-            MakeVar(DoubleConst(*(int64_t*)stack->at(1)));
-            stack->pop(2);
+            MakeVar(DoubleConst(*(int64_t*)stack_at(0)));
+            stack_pop(2);
         } else if(str == "CREATE") {
             GetSubstring(isspace(*tmp_idx));
             glossary.push_back(std::make_pair(tmp_buf, new Var(0, 0)));
@@ -1505,27 +1493,27 @@ void text_interpreter() {
         } else if(str == "ALLOT") {
             Var *v = dynamic_cast<Var *>(glossary.back().second);
             if(v) {
-                uint size = *stack->at(0);
-                stack->pop(1);
-                v->n = (int) realloc((void *) v->n, v->s + size);
+                uint32_t size = *stack_at(0);
+                stack_pop(1);
+                v->n = (int32_t) realloc((void *) v->n, v->s + size);
                 v->s += size;
             }
         } else if(str == ",") {
             Var *v = dynamic_cast<Var *>(glossary.back().second);
             if (v) {
-                int n = *(int *) stack->at(0);
-                stack->pop(1);
-                v->n = (int) realloc((void *) v->n, v->s + 4);
-                int *pt = (int *) (v->n + v->s);
+                int32_t n = *(int32_t *) stack_at(0);
+                stack_pop(1);
+                v->n = (int32_t) realloc((void *) v->n, v->s + 4);
+                int32_t *pt = (int32_t *) (v->n + v->s);
                 *pt = n;
                 v->s += 4;
             }
         } else if(str == "C,") {
             Var *v = dynamic_cast<Var *>(glossary.back().second);
             if(v) {
-                char c = *(char*) stack->at(0);
-                stack->pop(1);
-                v->n = (int) realloc((void *) v->n, v->s + 1);
+                char c = *(char*) stack_at(0);
+                stack_pop(1);
+                v->n = (int32_t) realloc((void *) v->n, v->s + 1);
                 char *pt = (char *) (v->n + v->s);
                 *pt = c;
                 v->s += 1;
@@ -1543,16 +1531,16 @@ void text_interpreter() {
             rewind(curr_file);
 
 			//Save *idx and *buf
-			char *buf_ = buf, *idx_ = idx;
+			char *buf_ = sys.buf, *idx_ = sys.idx;
 			//Read some stuff into a new buf
             char* buf = (char*) malloc(n + 1);
             fread(buf, n, 1, curr_file);
             buf[n] = '\0';
-            idx = buf;
+            sys.idx = buf;
             text_interpreter();
             free(buf);
-            idx = idx_;
-			buf = buf_;
+            sys.idx = idx_;
+			sys.buf = buf_;
             free(tmp_buf);
             fclose(curr_file);
         } else if (str == ".\"") {
@@ -1572,11 +1560,14 @@ void text_interpreter() {
     }
 }
 
-int main() {
-    //Initialize the stack & return stack
-    stack = new Stack(16384);
-    return_stack = new Stack(4096);
-	buf = new char[1024];
+int32_t main() {
+    // Set up FORTH system and do all of the pointer math
+    sys.sys = (uint32_t*) malloc(262144);
+    sys.stack = sys.sys + 32768;
+    sys.stack_0 = sys.stack;
+    sys.rstack = sys.sys + 49152;
+    sys.rstack_0 = sys.rstack;
+	sys.buf = (char*) sys.stack_0 + 1;
 
     //Build the glossary
     glossary.push_back(std::make_pair("CR", new Function(cr)));
@@ -1672,7 +1663,7 @@ int main() {
     glossary.push_back(std::make_pair("SP@", new Function(sp_at)));
     glossary.push_back(std::make_pair("TIB", new Function(tib)));
     glossary.push_back(std::make_pair("#TIB", new Function(pound_tib)));
-    glossary.push_back(std::make_pair("SP0", new Var((int) (stack->stack - 1), 4)));
+    glossary.push_back(std::make_pair("SP0", new Var((int32_t) (sys.stack - 1), 4)));
 
     //Build the compile-time-only glossary
     comp_glossary.push_back(std::make_pair("EXIT", new Function(exit)));
@@ -1688,16 +1679,16 @@ int main() {
         printf("#F> ");
         //ReadInput(stdin, 1024);
 
-		fgets(buf, 1024, stdin);
-		idx = buf;
-		buf_len = strlen(buf);
-		for (int i = 0; idx[i]; i++)
-			idx[i] = toupper(idx[i]);
+		fgets(sys.buf, 1024, stdin);
+		sys.idx = sys.buf;
+		sys.buf_len = strlen(sys.buf);
+		for (int32_t i = 0; sys.idx[i]; i++)
+			sys.idx[i] = toupper(sys.idx[i]);
 
         //Try and do something, and catch the abort if it throws
         try {
             text_interpreter();
-        } catch(int) {} //Abort catching
+        } catch(int32_t) {} //Abort catching
         //Newline printing and flag resetting
         if(S_UND) printf("stack empty");
         if(!BYE && !ABORT && !QUIT && !S_UND) printf("ok ");
@@ -1709,8 +1700,6 @@ int main() {
     }
 
     //Clean up the environment (no, not that kind, the other kind)
-    delete stack;
-    delete return_stack;
     for(auto itr = glossary.begin(); itr != glossary.end(); itr++)
         delete itr->second;
 

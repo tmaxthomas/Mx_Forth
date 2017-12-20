@@ -3,3 +3,4 @@
 *.exe*
 Mx_Forth.*
 Debug/*
+*.o
