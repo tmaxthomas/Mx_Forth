@@ -1,6 +1,2 @@
-.idea*
 *.txt*
 *.exe*
-Mx_Forth.*
-Debug/*
-*.o

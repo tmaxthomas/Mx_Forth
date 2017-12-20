@@ -1,3 +1,6 @@
+#ifndef __SYS_H
+#define __SYS_H
+
 struct System {
     uint32_t *sys;
     char *idx, *buf;
@@ -9,3 +12,5 @@ struct System {
 };
 
 extern struct System sys;
+
+#endif
