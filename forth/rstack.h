@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-int32_t retPush();
-int32_t retPop();
-int32_t retCopy();
-int32_t retCopy3();
+void retPush();
+void retPop();
+void retCopy();
+void retCopy3();
 
 #endif

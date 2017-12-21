@@ -3,12 +3,13 @@
 
 #include <stdint.h>
 
-int32_t trailing();
-int32_t bracket_pound();
-int32_t pound_bracket();
-int32_t pound();
-int32_t pounds();
-int32_t hold();
-int32_t sign();
+void trailing();
+void bracket_pound();
+void pound_bracket();
+void pound();
+void pounds();
+void hold();
+void sign();
+void to_number();
 
 #endif

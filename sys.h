@@ -1,14 +1,18 @@
 #ifndef __SYS_H
 #define __SYS_H
 
+#include <stdbool.h>
+
+//Struct containing FORTH system data
 struct System {
     uint32_t *sys;
-    char *idx, *buf;
-    uint32_t buf_len;
-    char *swp;
-    uint32_t swp_len;
-    uint32_t *stack, *stack_0, *rstack, *rstack_0;
-    uint32_t base;
+    char *idx, *tib, *pad;
+    uint32_t tib_len, pad_len, base;
+    uint32_t *stack, *stack_0;
+    uint32_t *rstack, *rstack_0;
+    uint32_t *cp, *gloss_head;
+    uint32_t *inst;
+    bool BYE, PAGE;
 };
 
 extern struct System sys;

@@ -3,18 +3,18 @@
 
 #include <stdint.h>
 
-int32_t and_();
-int32_t or_();
-int32_t equals();
-int32_t Dequals();
-int32_t lessThan();
-int32_t UlessThan();
-int32_t DlessThan();
-int32_t DUlessThan();
-int32_t greaterThan();
-int32_t zeroEquals();
-int32_t DzeroEquals();
-int32_t zeroLessThan();
-int32_t zeroGreaterThan();
+void and_();
+void or_();
+void equals();
+void Dequals();
+void lessThan();
+void UlessThan();
+void DlessThan();
+void DUlessThan();
+void greaterThan();
+void zeroEquals();
+void DzeroEquals();
+void zeroLessThan();
+void zeroGreaterThan();
 
 #endif

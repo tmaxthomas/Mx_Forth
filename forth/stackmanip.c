@@ -2,72 +2,65 @@
 
 // ( n1 n2 -- n2 n1 )
 //Swaps top two elements of the stack
-int32_t swap() {
+void swap() {
     int32_t t = *stack_at(0);
     stack_pop(1);
     int32_t b = *stack_at(0);
     stack_pop(1);
     stack_push(t);
     stack_push(b);
-    return 0;
 }
 
 // ( d1 d2 -- d2 d1 )
 //Swaps top two elements of the stack for the next two
-int32_t swap2() {
+void swap2() {
     int64_t t = *(int64_t*)stack_at(0);
     stack_pop(2);
     int64_t b = *(int64_t*)stack_at(0);
     stack_pop(2);
     stack_push(t);
     stack_push(b);
-    return 0;
 }
 
 // ( n -- n n )
 //Duplicates the top of the stack
-int32_t dup() {
+void dup() {
     stack_push(*(int32_t*)stack_at(0));
-    return 0;
 }
 
 // ( d -- d d )
 //Duplicates the top two elements of the stack
-int32_t dup2() {
+void dup2() {
     stack_push(*(int64_t*)stack_at(0));
-    return 0;
 }
 
 //  ( f -- f f )
 // Duplicates the top of the stack if it isn't 0
-int32_t dup_if() {
+void dup_if() {
     int32_t q = *(int32_t*)stack_at(0);
     if(q) stack_push(q);
-    return 0;
 }
 
 // ( n1 n2 -- n1 n2 n1 )
 //Pushes the second element of the stack onto the stack
-int32_t over() {
+void over() {
     int32_t t = *stack_at(0);
     stack_pop(1);
     int32_t d = *stack_at(0);
     stack_push(t);
     stack_push(d);
-    return 0;
 }
 
 // ( d1 d2 -- d1 d2 d1 )
 //Pushes the third and fourth elements of the stack onto the stack
-int32_t over2() {
+void over2() {
     int64_t t = *(int64_t*)stack_at(0);
     stack_push(t);
-    return 0;
 }
 
 // ( n1 n2 n3 -- n2 n3 n1 )
 //Removes the third element of the stack and pushes it onto the stack
-int32_t rot() {
+void rot() {
     int32_t t = *stack_at(0);
     stack_pop(1);
     int32_t m = *stack_at(0);
@@ -77,30 +70,26 @@ int32_t rot() {
     stack_push(m);
     stack_push(t);
     stack_push(b);
-    return 0;
 }
 
 // ( n -- )
 //Pops the top of the stack
-int32_t drop() {
+void drop() {
     stack_pop(1);
-    return 0;
 }
 
 // ( d -- )
 //Pops the top 2 elements of the stack
-int32_t drop2() {
+void drop2() {
     stack_pop(2);
-    return 0;
 }
 
 // ( n1 n2 -- n2 n1 n2 )
-int32_t tuck() {
+void tuck() {
     int32_t n1 = *(int32_t*)stack_at(0);
     int32_t n2 = *(int32_t*)stack_at(1);
     stack_pop(2);
     stack_push(n1);
     stack_push(n2);
     stack_push(n1);
-    return 0;
 }

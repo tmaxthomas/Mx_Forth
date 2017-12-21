@@ -3,16 +3,16 @@
 
 #include <stdint.h>
 
-int32_t swap();
-int32_t swap2();
-int32_t dup();
-int32_t dup2();
-int32_t dup_if();
-int32_t over();
-int32_t over2();
-int32_t rot();
-int32_t drop();
-int32_t drop2();
-int32_t tuck();
+void swap();
+void swap2();
+void dup();
+void dup2();
+void dup_if();
+void over();
+void over2();
+void rot();
+void drop();
+void drop2();
+void tuck();
 
 #endif

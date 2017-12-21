@@ -3,23 +3,23 @@
 
 #include <stdint.h>
 
-int32_t store();
-int32_t store2();
-int32_t c_store();
-int32_t plus_store();
-int32_t fetch();
-int32_t fetch2();
-int32_t c_fetch();
-int32_t query();
-int32_t cell();
-int32_t cells();
-int32_t cell_plus();
-int32_t fill();
-int32_t erase();
-int32_t dump();
+void store();
+void store2();
+void c_store();
+void plus_store();
+void fetch();
+void fetch2();
+void c_fetch();
+void query();
+void cell();
+void cells();
+void cell_plus();
+void fill();
+void erase();
+void dump();
 
-int32_t sp_at();
-int32_t tib();
-int32_t pound_tib();
+void sp_at();
+void tib();
+void pound_tib();
 
 #endif

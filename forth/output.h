@@ -3,16 +3,16 @@
 
 #include <stdint.h>
 
-int32_t cr();
-int32_t spaces();
-int32_t space();
-int32_t emit();
-int32_t print();
-int32_t uprint();
-int32_t dprint();
-int32_t urjprint();
-int32_t drjprint();
-int32_t printS();
-int32_t type();
+void cr();
+void spaces();
+void space();
+void emit();
+void print();
+void uprint();
+void dprint();
+void urjprint();
+void drjprint();
+void printS();
+void type();
 
 #endif

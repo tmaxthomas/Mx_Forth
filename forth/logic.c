@@ -5,145 +5,132 @@
 
 // ( f1 f2 -- f3 )
 //Binary and operator
-int32_t and_() {
+void and_() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);
     *(int32_t*)stack_at(0) &= s;
-    return 0;
 }
 
 // ( f1 f2 -- f3 )
 //Binary or operator
-int32_t or_() {
+void or_() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);
     *(int32_t*)stack_at(0) |= s;
-    return 0;
 }
 
 // ( n1 n2 -- f )
 // Compares the two numbers at the top of the stack for equality
-int32_t equals(){
+void equals(){
     int32_t a = *(int32_t*)stack_at(0), b = *(int32_t*)stack_at(1);
     stack_pop(2);
     if(a == b)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( d1 d2 -- f )
 //Compares two double-length numbers at the top of the stack for equality
-int32_t Dequals() {
+void Dequals() {
     int64_t a = *(int64_t*)stack_at(0), b = *(int64_t*)stack_at(2);
     stack_pop(4);
     if(a == b)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( n1 n2 -- f )
-int32_t lessThan(){
+void lessThan(){
     int32_t a = *(int32_t*)stack_at(1), b = *(int32_t*)stack_at(0);
     stack_pop(2);
     if(a < b)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( u1 u2 -- f )
-int32_t UlessThan(){
+void UlessThan(){
     uint32_t a = *stack_at(1), b = *stack_at(0);
     stack_pop(2);
     if(a < b)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( d1 d2 -- f )
-int32_t DlessThan() {
+void DlessThan() {
     int64_t a = *(int64_t*)stack_at(0), b = *(int64_t*)stack_at(2);
     stack_pop(4);
     if(a < b)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( d1 d2 -- f )
-int32_t DUlessThan() {
+void DUlessThan() {
     uint64_t a = *(uint64_t*)stack_at(1), b = *(uint64_t*)stack_at(3);
     stack_pop(4);
     if(a < b)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( n1 n2 -- f )
-int32_t greaterThan(){
+void greaterThan(){
     int32_t a = *(int32_t*)stack_at(1), b = *(int32_t*)stack_at(0);
     stack_pop(2);
     if(a > b)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( n -- f )
 // Tests whether the top of the stack is equal to zero
-int32_t zeroEquals(){
+void zeroEquals(){
     int32_t a = *(int32_t*)stack_at(0);
     stack_pop(1);
     if(a == 0)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( d -- f )
 // Tests whether the double-length top of the stack is equal to zero
-int32_t DzeroEquals(){
+void DzeroEquals(){
     int64_t a = *(int64_t*)stack_at(0);
     stack_pop(2);
     if(a == 0)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( n -- f )
 // Tests whether the top of the stack is less than zero
-int32_t zeroLessThan(){
+void zeroLessThan(){
     int32_t a = *(int32_t*)stack_at(0);
     stack_pop(1);
     if(0 < a)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
 
 // ( n -- f )
 // Tests whether the top of the stack is greater than zero
-int32_t zeroGreaterThan(){
+void zeroGreaterThan(){
     int32_t a = *(int32_t*)stack_at(0);
     stack_pop(1);
     if(0 > a)
         stack_push((int32_t)0xffffffff);
     else
         stack_push(0x00000000);
-    return 0;
 }
