@@ -29,14 +29,6 @@ struct System sys;
                            tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = sys.idx[j]; \
                            tmp_buf[i] = 0; sys.idx = tmp_idx; if (*sys.idx) sys.idx++
 
-//Structural (branching) words
-void cond();
-void loop();
-void loop_plus();
-void do_();
-void nop();
-void leave();
-
 //Reflective words
 void tick();
 void execute();
@@ -48,26 +40,41 @@ void exit();
 void abort_();
 void stack_q();
 
-/*
+//Compares two counted strings for equality
+bool str_eq(uint8_t* c1, uint8_t* c2) {
+    for(uint8_t i = 0; i < *c1; i++)
+        if(c1[i] != c2[i])
+            return false;
+    return true;
+}
+
+// ( c-addr -- c-addr 0 | xt 1 | xt -1 )
 //Finds words in the glossary
-Function* find(std::string& name) {
-    for(auto itr = glossary.rbegin(); itr != glossary.rend(); itr++)
-        if(itr->first == name)
-            return itr->second;
-    return NULL;
+void find() {
+    uint8_t* name = (uint8_t*)*stack_at(0);
+    stack_pop(1);
+    uint32_t* gloss_loc = sys.gloss_head;
+    while(*gloss_loc) {
+        uint8_t* ccp = (uint8_t*) gloss_loc;
+        if(str_eq(ccp + 1, name)) {
+
+        } else {
+            //Increment gloss_loc by the ceiling-divided name length + 2, deference,
+            //and assign the dereferenced value back to gloss_loc
+            gloss_loc = (uint32_t*)*(gloss_loc + ((len + 2) / 4) + (len % 4 != 0));
+        }
+    }
+    stack_push(name);
+    stack_push(0);
 }
 
-
-//Finds compile-time and run-time words in the glossaries
-Function* comp_find(std::string& name) {
-    Function* func = find(name);
-    if(func)
-        return func;
-    for(auto itr = comp_glossary.rbegin(); itr != comp_glossary.rend(); itr++)
-        if(itr->first == name)
-            return itr->second;
-    return NULL;
+//Returns a pointer to a uint32_t that contains the xt for func
+uint32_t* get_xt(uint32_t* func) {
+    uint8_t len = *(((uint8_t*) func) + 1);
+    return func + ((len + 2) / 4) + (len % 4 != 0) + 1;
 }
+
+/*
 
 //Safely deletes a word, preventing segfaults and memory leaks
 void delete_word(Function* word) {
@@ -106,214 +113,8 @@ void forget() {
 }
 
 
-//Number & related factory method
-Function* make_num(std::string& str) {
-    if(!is_num(str)) {
-        printf("%s ?", str.c_str());
-        abort_();
-    }
-
-    bool db = false;
-
-    if(str[str.size() - 1] == '.') {
-        db = true;
-        str.erase(str.size() - 1, 1);
-    }
-
-    if(db)
-        return new DoubleConst(atol(str.c_str();
-    else
-        return new Var(atoi(str.c_str()), 4);
-}
-
-//Adds user-defined words to the glossary
-
-//WARNING: This code is very obtuse, despite the extensive comments. This program is necessarily
-//full of crazy pointer math, and this is no exception.
-void add_word() {
-    std::stack<Function*> if_stack, do_stack, begin_stack, while_stack;
-    std::stack<std::vector<Function*> > leave_stack;
-    char *tmp_buf;
-    size_t i;
-    char *tmp_idx;
-    GetSubstring(isspace(*tmp_idx));
-    std::string name(tmp_buf), func = "";
-    free(tmp_buf);
-    //Declare a starting null node
-    Function *head = nop), *tail = head;
-    GetSubstring(isspace(*tmp_idx));
-    func = std::string(tmp_buf);
-
-    while(func != ";") {
-        //Comment handler
-        if(func == "(") {
-            GetSubstring(*tmp_idx == ')');
-        } else if(func == ".\"") {                       //Handles string printing
-            GetSubstring(*tmp_idx == '"');
-            StrPrint *node = new StrPrint(tmp_buf);
-            FuncAlloc(tail, 1);
-            tail->next[0] = node;
-            tail = node;
-        } else if(func == "ABORT\"") {                   //Handles ABORT"
-            GetSubstring(*tmp_idx == '"');
-            Abort *node = new Abort(tmp_buf);
-            FuncAlloc(tail, 1);
-            tail->next[0] = node;
-            tail = node;
-        } else if(func == "IF") {                        //Conditional handling, step 1
-            Function* if_ = cond);          //Allcoate & initialize the if node
-            FuncAlloc(tail, 1);
-            tail->next[0] = if_;                         //Tail points to if
-            FuncAlloc(tail->next[0], 2);                 //if block branching nodes declaration
-            tail->next[0]->next[1] = nop);  //Dummy node for conditional branch in order to have if head node location
-            if_stack.push(tail->next[0]);                //Push the node onto the conditional stack
-            tail = if_stack.top()->next[1];              //Set tail node
-        } else if(func == "ELSE") {
-            Function* else_tail;
-            else_tail = if_stack.top();                  //Grab the top of the conditional stack
-            if_stack.top() = tail;                       //Move the tail
-            else_tail->next[0] = nop);      //Allocate dummy node
-            tail = else_tail->next[0];
-            Function* then = nop);          //Another dummy node, to unite the two conditional paths
-            FuncAlloc(tail, 1);                          //Stitch the active tail into the dummy node
-            tail->next[0] = then;
-            if(!if_stack.top()->next)                    //Handle possible if/else
-                FuncAlloc(if_stack.top(), 1);
-            if_stack.top()->next[0] = then;              //Stitch the other tail into the dummy node
-            tail = tail->next[0];
-            if_stack.pop();                              //Clean up the conditional stack
-        } else if(func == "THEN") {
-            Function* then = nop);          //Strucutral merger node allocation
-            FuncAlloc(tail, 1);
-            tail->next[0] = then;                        //Tie the tail into the node
-            if(!if_stack.top()->next)                    //Make sure the if-branch can be tied into the node
-                FuncAlloc(if_stack.top(), 1);
-            if_stack.top()->next[0] = then;              //Tie the if_stack tail into the node
-            tail = tail->next[0];
-            if_stack.pop();
-        } else if(func == "DO") {
-            Function *_do = do_);           //Allocate do function
-            FuncAlloc(tail, 1);
-            tail->next[0] = _do;                         //Set tail->next
-            tail = tail->next[0];                        //Move tail
-            Function *loop_head = nop);     //Allocate loop block head
-            FuncAlloc(tail, 1);
-            tail->next[0] = loop_head;                   //Move tail to loop head
-            do_stack.push(loop_head);                    //Put head on do loop stack
-            tail = tail->next[0];
-            std::vector<Function *> temp;
-            leave_stack.push(temp);                      //Set up leave stack
-        } else if(func == "LEAVE") {
-            Function *leave_ = leave);      //Allocate leave node
-            FuncAlloc(tail, 1);
-            tail->next[0] = leave_;                      //Set tail->next
-            leave_stack.top().push_back(leave_);         //Push node onto leave stack
-            tail = tail->next[0];
-            FuncAlloc(tail, 2);                          //Set up leave escape path
-            tail->next[0] = nop);
-            tail = tail->next[0];
-        } else if(func == "LOOP" || func == "+LOOP") {
-            Function *loop_;
-            if (func == "LOOP")
-                loop_ = loop);              //Allocate loop escape checker function
-            else
-                loop_ = loop_plus);         //Differentiate between LOOP and +LOOP
-            FuncAlloc(tail, 2);
-            tail->next[0] = loop_;                       //Add loop escape checker to loop path
-            FuncAlloc(loop_, 2);                         //Allocate loop branching
-            loop_->next[1] = do_stack.top();             //Plug loop path into loop head
-            do_stack.pop();                              //Clean up do stack
-            loop_->next[0] = nop);          //Set up loop escape path
-            tail = loop_->next[0];                       //Move tail
-            while (!leave_stack.top().empty()) {         //Take care of any leave's
-                leave_stack.top().back()->next[1] = tail;
-                leave_stack.top().pop_back();
-            }
-            leave_stack.pop();
-        } else if (func == "BEGIN") {
-            Function *begin = nop);         //Allocate definite loop head
-            FuncAlloc(tail, 1);
-            tail->next[0] = begin;                       //Set tail->next
-            begin_stack.push(begin);                     //Push loop head onto stack
-            tail = tail->next[0];                        //Move tail
-        } else if (func == "UNTIL") {
-            Function* until = cond);        //Allocate until conditional
-            FuncAlloc(tail, 1);
-            tail->next[0] = until;                       //Set tail->next
-            tail = tail->next[0];                        //Move tail
-            FuncAlloc(tail, 2);
-            tail->next[0] = begin_stack.top();           //Point32_t the conditional false path at loop head
-            begin_stack.pop();                           //Clean up loop stack
-            Function* temp = nop);          //Set up escape tail
-            tail->next[1] = temp;
-            tail = tail->next[1];
-        } else if (func == "WHILE") {
-            Function* while_ = cond);       //Allocate while conditional
-            FuncAlloc(tail, 1);
-            tail->next[0] = while_;                      //Set tail->next
-            tail = tail->next[0];                        //Move tail->next
-            FuncAlloc(tail, 2);                          //Allocate branching
-            Function* temp = nop);
-            tail->next[1] = temp;                        //Set up true path
-            temp = nop);
-            tail->next[0] = temp;                        //Set up false path
-            while_stack.push(temp);                      //Push false path head onto while stack
-            tail = tail->next[1];                        //Move tail
-        } else if (func == "REPEAT") {
-            FuncAlloc(tail, 1);
-            tail->next[0] = begin_stack.top();           //Plug current tail into loop head
-            begin_stack.pop();                           //Clean up begin_stack
-            tail = while_stack.top();                    //Move current tail to loop escape path
-            while_stack.pop();                           //Clean up while_stack
-        } else if (func == name) {                       //Allow for recursive calls
-            FuncAlloc(tail, 1);
-            tail->next[0] = (Function*) new UsrFunc(head);
-            tail = tail->next[0];
-        } else if (func == "[']") {
-            GetSubstring(isspace(*tmp_idx));
-            std::string str(tmp_buf);
-            Function* ptr = find(str);
-            FuncAlloc(tail, 1);
-            tail->next[0] = (Function*) new Var((int32_t) ptr, 4);
-            tail = tail->next[0];
-        } else if (func == "[CHAR]") {                   //Compile a character literal into the definition
-            GetSubstring(isspace(*tmp_idx));
-            std::string str(tmp_buf);
-            if(str.size() != 1) {
-                printf("%s ?", str.c_str());
-                abort_();
-            }
-            FuncAlloc(tail, 1);
-            tail->next[0] = new Var(str[0], 4);
-            tail = tail->next[0];
-        } else {
-            Function *temp;
-            Function *tmp_ptr = comp_find(func);
-            //Figure out what the heck kind of thing we're dealing with
-            temp = (Function *) (tmp_ptr ? (tmp_ptr->next ? new UsrFunc(tmp_ptr) : tmp_ptr)) : make_num(func));
-            FuncAlloc(tail, 1);
-            tail->next[0] = temp;
-            tail = tail->next[0];
-        }
-        while (isspace(*sys.idx)) sys.idx++;                        //Take care of loose/excess whitespace
-        GetSubstring(isspace(*tmp_idx));
-        func = std::string(tmp_buf);
-    }
-    add_basic_word(name, head));
-}
 */
-//Word-execution wrapper - executed word pointed to by func
-//Written to help debugging and to avoid stack overflow resulting from excessive recursion
-/*
-void run(Function* func) {
-    while(func->next) {
-        int32_t idx = func->run();
-        if(idx == -1) return;
-        else func = func->next[idx];
-    }
-    func->run();
-}
-*/
+
 
 // ( -- addr )
 // Pushes the exectuion address of the next word in the input stream onto the stack
@@ -321,12 +122,18 @@ void tick() {
     char *tmp_buf, *tmp_idx;
     size_t i;
     GetSubstring(isspace(*tmp_idx));
+    uint32_t* xt = get_xt(find(tmp_buf));
+    stack_push((uint32_t) xt);
 }
 
 // ( addr -- )
 // Executes the word pointed to by addr
 void execute() {
+    uint32_t* xt_ptr = stack_at(0);
     stack_pop(1);
+    sys.inst = xt_ptr;
+    void(*xt)() = (void(*)()) *xt_ptr;
+    xt();
 }
 
 // ( -- )
@@ -361,106 +168,30 @@ void exit_() {
 
 }
 
-// --------------------------------------------------------------
-// STRUCTURAL/COMPILE-ONLY WORDS START HERE
-// --------------------------------------------------------------
-
-/*
-//Manages branching for if statements
-//Branches to 0 if false, or to 1 if true.
-int32_t cond() {
-    int32_t a = *stack_at(0) != 0;
-    stack_pop(1);
-    return a;
-}
-
-//Initializes definite loops
-int32_t do_() {
-    int32_t index = *stack_at(0);
-    int32_t limit = *stack_at(1);
-    stack_pop(2);
-    rstack_push(limit);
-    rstack_push(index);
-    return 0;
-}
-
-//Definite loop conditional
-int32_t loop() {
-    int32_t index = *(int32_t*)rstack_at(0);
-    int32_t limit = *(int32_t*)rstack_at(1);
-    index++;
-    if(index != limit) {
-        *(int32_t*)rstack_at(0) = index;
-        return 1;
-    } else {
-        rstack_pop(2);
-        return 0;
-    }
-}
-
-//Why does FORTH have to be inconsistent with its loop end condition, anyways?
-int32_t loop_plus() {
-    int32_t index = *(int32_t*)rstack_at(0);
-    int32_t limit = *(int32_t*)rstack_at(1);
-    int32_t inc = *(int32_t*)stack_at(0);
-    index += inc;
-    if(inc < 0) {
-        if(index >= limit) {
-            *(int32_t*)rstack_at(0) = index;
-            return 1;
-        } else {
-            rstack_pop(2);
-            return 0;
-        }
-    } else {
-        if(index < limit) {
-            *(int32_t*)rstack_at(0) = index;
-            return 1;
-        } else {
-            rstack_pop(2);
-            return 0;
-        }
-    }
-}
-
-//Null operand for structural nodes
-int32_t nop() {
-    return 0; //That's right; it does nothing.
-}
-
-//Nop-esque operand to handle loop break pathing
-int32_t leave() {
-    return 1;
-}
-
-//Pushes a number onto the stack
-void number(std::string& str) {
-    Function* f = make_num(str);
-    f->run();
-}
-*/
-
-void run_basic_word() {
-    void(**func)() = (void(**)()) sys.inst;
-    func++;
-    (*func)();
-}
-
+//Adds a new empty definition to the dictionary with the
+//provided name and precedence, and returns a pointer to
+//the end of the new definition
 uint32_t* add_def(char* name, uint8_t precedence) {
+    //Set up traversal pointers
     uint32_t *new_wd = sys.cp;
     uint8_t *ccp = (uint8_t*) sys.cp;
+    //Set precedence byte
     *ccp = precedence;
     ccp++;
+    //Set string length byte
     uint8_t len = (uint8_t) strlen(name);
     *ccp = len;
     ccp++;
+    //Copy the name into glossary memory
     memcpy(ccp, name, len);
     ccp += len;
-    uint32_t ccp_val = (uint32_t) ccp;
     //Maintain alignment
+    uint32_t ccp_val = (uint32_t) ccp;
     ccp_val += ccp_val % 4;
+    //Move system cp pointer
     sys.cp = (uint32_t*) ccp_val;
     sys.cp++;
+    //Set up back pointer
     *sys.cp = (uint32_t) sys.gloss_head;
     sys.cp++;
     return new_wd;
@@ -474,16 +205,15 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 }
 
 //The terminal/file text interpreter
-void text_interpreter() {
+void interpret() {
     while(*sys.idx != '\0') {
         while (isspace(*sys.idx)) sys.idx++;
-        // Get the next word in the input stream
-        char *tmp_buf;
-        size_t i;
-        char *tmp_idx;
-        GetSubstring(isspace(*tmp_idx));
 
-        free(tmp_buf);
+        tick();
+        if(*stack->at(0))
+            execute();
+        else
+
     }
 }
 
@@ -528,8 +258,8 @@ int32_t main() {
     add_basic_word("UM/MOD", UmodDiv, 0);
     add_basic_word("SM/REM", SmodDiv, 0);
     add_basic_word("FM/MOD", FmodDiv, 0);
-    add_basic_word("*//*", multDiv, 0);
-    add_basic_word("*//*MOD", multDivMod, 0);
+    add_basic_word("*/", multDiv, 0);
+    add_basic_word("*/MOD", multDivMod, 0);
     add_basic_word("1+", add1, 0);
     add_basic_word("1-", sub1, 0);
     add_basic_word("2+", add2, 0);
@@ -611,7 +341,7 @@ int32_t main() {
 		sys.tib_len = strlen(sys.tib);
 		for (int32_t i = 0; sys.idx[i]; i++)
 			sys.idx[i] = toupper(sys.idx[i]);
-
+        interpret();
         printf(" ok\n\n");
     }
 
