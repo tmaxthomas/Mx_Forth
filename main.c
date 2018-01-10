@@ -33,19 +33,18 @@ struct System sys;
 void tick();
 void execute();
 
-//Misc. words
-void page();
-void quit();
-void exit();
-void abort_();
-void stack_q();
-
 //Compares two counted strings for equality
 bool str_eq(uint8_t* c1, uint8_t* c2) {
     for(uint8_t i = 0; i < *c1; i++)
         if(c1[i] != c2[i])
             return false;
     return true;
+}
+
+//Returns a pointer to a uint32_t that contains the xt for func
+uint32_t* get_xt(uint32_t* func) {
+    uint8_t len = *(((uint8_t*) func) + 1);
+    return func + ((len + 2) / 4) + (len % 4 != 0) + 1;
 }
 
 // ( c-addr -- c-addr 0 | xt 1 | xt -1 )
@@ -57,64 +56,19 @@ void find() {
     while(*gloss_loc) {
         uint8_t* ccp = (uint8_t*) gloss_loc;
         if(str_eq(ccp + 1, name)) {
-
+            stack_push((int32_t) get_xt(gloss_loc));
+            //Push something onto the stack for immediacy (not yet implemented)
+            stack_push(1);
         } else {
+            uint8_t len = *(ccp + 1);
             //Increment gloss_loc by the ceiling-divided name length + 2, deference,
             //and assign the dereferenced value back to gloss_loc
             gloss_loc = (uint32_t*)*(gloss_loc + ((len + 2) / 4) + (len % 4 != 0));
         }
     }
-    stack_push(name);
+    stack_push((int32_t) name);
     stack_push(0);
 }
-
-//Returns a pointer to a uint32_t that contains the xt for func
-uint32_t* get_xt(uint32_t* func) {
-    uint8_t len = *(((uint8_t*) func) + 1);
-    return func + ((len + 2) / 4) + (len % 4 != 0) + 1;
-}
-
-/*
-
-//Safely deletes a word, preventing segfaults and memory leaks
-void delete_word(Function* word) {
-    std::queue<Function*> to_delete;
-    std::unordered_set<Function*> deleted;
-    to_delete.push(word);
-    while(!to_delete.empty()) {
-        Function* next = to_delete.front();
-        to_delete.pop();
-        if(next)
-            for(int32_t i = 0; i < next->size; i++)
-                if(deleted.find(next->next[i]) == deleted.end())
-                    to_delete.push(next->next[i]);
-        delete next;
-        deleted.insert(next);
-    }
-}
-
-//FORGET word for dictionary cleanup
-void forget() {
-    char *tmp_buf, *tmp_idx;
-    size_t i;
-    GetSubstring(isspace(*tmp_idx));
-    std::string name(tmp_buf);
-    free(tmp_buf);
-
-    auto itr = glossary.begin();
-    for(; itr != glossary.end(); itr++)
-        if((*itr).first == name) break;
-
-    if(itr != glossary.end()) {
-        for(auto itr2 = itr; itr2 != glossary.end(); itr2++)
-            delete_word((*itr2).second);
-        glossary.erase(itr, glossary.end());
-    }
-}
-
-
-*/
-
 
 // ( -- addr )
 // Pushes the exectuion address of the next word in the input stream onto the stack
@@ -122,8 +76,11 @@ void tick() {
     char *tmp_buf, *tmp_idx;
     size_t i;
     GetSubstring(isspace(*tmp_idx));
-    uint32_t* xt = get_xt(find(tmp_buf));
+    find(tmp_buf);
+    uint32_t* xt = get_xt(stack_at(1));
+    stack_pop(2);
     stack_push((uint32_t) xt);
+    free(tmp_buf);
 }
 
 // ( addr -- )
@@ -136,24 +93,6 @@ void execute() {
     xt();
 }
 
-// ( -- )
-//Clears the screen
-void page() {
-    system("clear");
-}
-
-// ( -- )
-//Aborts the program
-void abort_() {
-
-}
-
-// ( -- )
-//Sets up the interpreter to not print ok, among other things
-void quit() {
-
-}
-
 // ( -- f )
 // Pushes true if the stack is empty, pushes false otherwise
 void stack_q() {
@@ -162,10 +101,21 @@ void stack_q() {
 
 }
 
-// ( -- )
-// Compiled only-used to trigger termination of word execution
-void exit_() {
-
+//Runs the FORTH program at func within the FORTH environment
+void exec(uint32_t* func) {
+    rstack_push(0);
+    sys.inst = func;
+    while(sys.inst) {
+        uint32_t* xt_ptr = (uint32_t*)*sys.inst;
+        if(sys.gloss_head < xt_ptr && xt_ptr < sys.cp) {
+            rstack_push((int32_t) sys.inst);
+            sys.inst = xt_ptr;
+        } else {
+            void(*fn)() = (void(*)()) *sys.inst;
+            fn();
+            sys.inst++;
+        }
+    }
 }
 
 //Adds a new empty definition to the dictionary with the
@@ -206,18 +156,10 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 
 //The terminal/file text interpreter
 void interpret() {
-    while(*sys.idx != '\0') {
-        while (isspace(*sys.idx)) sys.idx++;
 
-        tick();
-        if(*stack->at(0))
-            execute();
-        else
-
-    }
 }
 
-int32_t main() {
+int main() {
     // Set up the FORTH system
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t));
     sys.stack = sys.sys + (SYSTEM_SIZE / 2);
@@ -230,6 +172,7 @@ int32_t main() {
     sys.cp++;
 	sys.tib = (char*) sys.stack_0 + 1;
     sys.base = 10;
+    sys.inst = 0;
 
     //Build the glossary
     add_basic_word("CR", cr, 0);
@@ -319,13 +262,10 @@ int32_t main() {
     add_basic_word("DUMP", dump, 0);
     add_basic_word("'", tick, 0);
     add_basic_word("EXECUTE", execute, 0);
-    add_basic_word("PAGE", page, 0);
-    add_basic_word("QUIT", quit, 0);
     add_basic_word("?STACK", stack_q, 0);
     add_basic_word("SP@", sp_at, 0);
     add_basic_word("TIB", tib, 0);
     add_basic_word("#TIB", pound_tib, 0);
-    add_basic_word("EXIT", exit_, 0);
     add_basic_word("<#", bracket_pound, 0);
     add_basic_word("#>", pound_bracket, 0);
     add_basic_word("#", pound, 0);
@@ -333,17 +273,15 @@ int32_t main() {
     add_basic_word("HOLD", hold, 0);
     add_basic_word("SIGN", sign, 0);
 
-    //Loop until terminal exit command is issued
-    while(!sys.BYE) {
-        printf("#F> ");
-		fgets(sys.tib, 1024, stdin);
-		sys.idx = sys.tib;
-		sys.tib_len = strlen(sys.tib);
-		for (int32_t i = 0; sys.idx[i]; i++)
-			sys.idx[i] = toupper(sys.idx[i]);
-        interpret();
-        printf(" ok\n\n");
-    }
+    stack_push(3);
+    stack_push(4);
+    add();
+    unsigned char name[2] = {1, '.'};
+    find(name);
+    stack_pop(1);
+    uint32_t* func = (uint32_t*)*stack_at(0);
+    stack_pop(1);
+    exec(get_xt(func));
 
     free(sys.sys);
     return 0;

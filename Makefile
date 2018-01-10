@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=c99 -Og -g -m32 -Wall -Werror -Wextra -pedantic
+CFLAGS = -std=c99 -Og -g -m32 -lm -Wall -Werror -Wextra -pedantic
 FDIR = forth
 
 FDEPS = intmath.h logic.h stackmanip.h strmanip.h output.h memory.h rstack.h
