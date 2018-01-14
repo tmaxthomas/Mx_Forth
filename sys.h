@@ -10,7 +10,7 @@ struct System {
     uint32_t tib_len, pad_len, base;
     uint32_t *stack, *stack_0;
     uint32_t *rstack, *rstack_0;
-    uint32_t *cp, *gloss_head;
+    uint32_t *cp, *gloss_head, *gloss_base;
     uint32_t *inst;
     bool BYE, PAGE;
 };

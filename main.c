@@ -1,10 +1,8 @@
 // C imports
+#include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
-#include <ctype.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdbool.h>
 
 // .h file imports
 #include "stack.h"
@@ -16,82 +14,12 @@
 #include "forth/strmanip.h"
 #include "forth/stackmanip.h"
 #include "forth/rstack.h"
-#include "forth/stackmanip.h"
-#include "forth/stackmanip.h"
+#include "forth/control.h"
 
 struct System sys;
 
 //Size of the FORTH system size, in words (for now, 4 MB)
 #define SYSTEM_SIZE 1048576
-
-//Utility macro for getting char-delimited substrings of C strings
-#define GetSubstring(boolean) tmp_idx = sys.idx; for (i = 0; !(boolean); i++) tmp_idx++; \
-                           tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = sys.idx[j]; \
-                           tmp_buf[i] = 0; sys.idx = tmp_idx; if (*sys.idx) sys.idx++
-
-//Reflective words
-void tick();
-void execute();
-
-//Compares two counted strings for equality
-bool str_eq(uint8_t* c1, uint8_t* c2) {
-    for(uint8_t i = 0; i < *c1; i++)
-        if(c1[i] != c2[i])
-            return false;
-    return true;
-}
-
-//Returns a pointer to a uint32_t that contains the xt for func
-uint32_t* get_xt(uint32_t* func) {
-    uint8_t len = *(((uint8_t*) func) + 1);
-    return func + ((len + 2) / 4) + (len % 4 != 0) + 1;
-}
-
-// ( c-addr -- c-addr 0 | xt 1 | xt -1 )
-//Finds words in the glossary
-void find() {
-    uint8_t* name = (uint8_t*)*stack_at(0);
-    stack_pop(1);
-    uint32_t* gloss_loc = sys.gloss_head;
-    while(*gloss_loc) {
-        uint8_t* ccp = (uint8_t*) gloss_loc;
-        if(str_eq(ccp + 1, name)) {
-            stack_push((int32_t) get_xt(gloss_loc));
-            //Push something onto the stack for immediacy (not yet implemented)
-            stack_push(1);
-        } else {
-            uint8_t len = *(ccp + 1);
-            //Increment gloss_loc by the ceiling-divided name length + 2, deference,
-            //and assign the dereferenced value back to gloss_loc
-            gloss_loc = (uint32_t*)*(gloss_loc + ((len + 2) / 4) + (len % 4 != 0));
-        }
-    }
-    stack_push((int32_t) name);
-    stack_push(0);
-}
-
-// ( -- addr )
-// Pushes the exectuion address of the next word in the input stream onto the stack
-void tick() {
-    char *tmp_buf, *tmp_idx;
-    size_t i;
-    GetSubstring(isspace(*tmp_idx));
-    find(tmp_buf);
-    uint32_t* xt = get_xt(stack_at(1));
-    stack_pop(2);
-    stack_push((uint32_t) xt);
-    free(tmp_buf);
-}
-
-// ( addr -- )
-// Executes the word pointed to by addr
-void execute() {
-    uint32_t* xt_ptr = stack_at(0);
-    stack_pop(1);
-    sys.inst = xt_ptr;
-    void(*xt)() = (void(*)()) *xt_ptr;
-    xt();
-}
 
 // ( -- f )
 // Pushes true if the stack is empty, pushes false otherwise
@@ -107,13 +35,14 @@ void exec(uint32_t* func) {
     sys.inst = func;
     while(sys.inst) {
         uint32_t* xt_ptr = (uint32_t*)*sys.inst;
-        if(sys.gloss_head < xt_ptr && xt_ptr < sys.cp) {
+        if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
             rstack_push((int32_t) sys.inst);
             sys.inst = xt_ptr;
         } else {
             void(*fn)() = (void(*)()) *sys.inst;
             fn();
-            sys.inst++;
+            if(sys.inst)
+                sys.inst++;
         }
     }
 }
@@ -135,12 +64,8 @@ uint32_t* add_def(char* name, uint8_t precedence) {
     //Copy the name into glossary memory
     memcpy(ccp, name, len);
     ccp += len;
-    //Maintain alignment
-    uint32_t ccp_val = (uint32_t) ccp;
-    ccp_val += ccp_val % 4;
     //Move system cp pointer
-    sys.cp = (uint32_t*) ccp_val;
-    sys.cp++;
+    sys.cp = (uint32_t*) ccp;
     //Set up back pointer
     *sys.cp = (uint32_t) sys.gloss_head;
     sys.cp++;
@@ -151,12 +76,9 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
     uint32_t *new_wd = add_def(name, precedence);
     *(sys.cp) = (uint32_t) func;
     sys.cp++;
+    *(sys.cp) = (uint32_t) exit_;
+    sys.cp++;
     sys.gloss_head = new_wd;
-}
-
-//The terminal/file text interpreter
-void interpret() {
-
 }
 
 int main() {
@@ -169,6 +91,7 @@ int main() {
     sys.cp = sys.sys + (SYSTEM_SIZE / 4);
     *sys.cp = 0;
     sys.gloss_head = sys.cp;
+    sys.gloss_base = sys.gloss_head;
     sys.cp++;
 	sys.tib = (char*) sys.stack_0 + 1;
     sys.base = 10;
@@ -272,16 +195,18 @@ int main() {
     add_basic_word("#S", pounds, 0);
     add_basic_word("HOLD", hold, 0);
     add_basic_word("SIGN", sign, 0);
+    add_basic_word("EXIT", exit_, 0);
 
     stack_push(3);
     stack_push(4);
     add();
     unsigned char name[2] = {1, '.'};
-    find(name);
+    stack_push((uint32_t) name);
+    find();
     stack_pop(1);
     uint32_t* func = (uint32_t*)*stack_at(0);
     stack_pop(1);
-    exec(get_xt(func));
+    exec(func);
 
     free(sys.sys);
     return 0;

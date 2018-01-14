@@ -31,7 +31,7 @@ uint32_t* rstack_at(uint32_t index) {
     return sys.rstack + index;
 }
 
-void rstack_push(int32_t val){
+void rstack_push(int32_t val) {
     sys.rstack--;
     *(int32_t*)sys.rstack = val;
 }
@@ -41,7 +41,7 @@ void rstack_push_d(int64_t val) {
     *(int64_t*)sys.rstack = val;
 }
 
-void rstack_pop(int mag){
+void rstack_pop(int mag) {
     sys.rstack += mag;
 }
 
