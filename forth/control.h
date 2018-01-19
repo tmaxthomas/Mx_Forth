@@ -10,5 +10,17 @@ void find();
 void tick();
 void execute();
 void exit_();
+void if_();
+void else_();
+void then();
+void do_();
+void loop();
+void begin();
+void while_();
+void repeat();
+void until();
+void again();
+void jump();
+void cond_jump();
 
 #endif

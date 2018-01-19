@@ -78,3 +78,17 @@ void exit_() {
     sys.inst = (uint32_t*)*rstack_at(0);
     rstack_pop(1);
 }
+
+void if_(){ }
+void else_(){ }
+void then(){ }
+void do_(){ }
+void do_runtime() { }
+void loop(){ }
+void begin(){ }
+void while_(){ }
+void repeat(){ }
+void until(){ }
+void again(){ }
+void jump(){ }
+void cond_jump(){ }
