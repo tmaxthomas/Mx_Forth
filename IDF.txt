@@ -1,0 +1,121 @@
+Aligned address requirements:
+    Aligned addresses are those addresses that are either provided by the system
+    as aligned addresses, or that are offset from such an address by some
+    multiple of the size of CELL.
+
+Behavior of EMIT for non-graphical characters:
+    EMIT calls ABORT" if the user attempts to print a non-graphical character
+
+Character editing of ACCEPT and EXPECT:
+
+
+Character set:
+    This program supports the standard ASCII character set. Support for the extended
+    character set or UTF-8 may or may not be present, depending on your system.
+
+Character-aligned address requirements:
+    All valid addresses are character-aligned.
+
+Character-set-extensions matching characteristics:
+    Since no character set extensions are supported, attempting
+    to use a character from a character set extension in a definition
+    results in an ambiguous situation.
+
+Conditions under which control characters match a space delimiter:
+    The following control characters will match a space delimiter (ASCII codes given):
+    0x09, 0x0a, 0x0b, 0x0c, 0x0d
+
+Format of the control-flow stack:
+    The control flow stack is implemented using the data stack
+
+Conversion of digits larger than 35:
+    No support is provided for conversion of such digits, and by extension for
+    any bases above base 36.
+
+Display after input terminates in ACCEPT and EXPECT:
+    The inputted character sequence is displayed on the terminal as it was
+    inputted, including the line terminator character.
+
+Exception abort sequence:
+    If the value at the top of the stack is non-zero,
+    ABORT" displays the provided message and then calls ABORT. Otherwise,
+    does nothing.
+
+Input line terminator:
+    Input lines are to be terminated with a carriage return character.
+
+Maximum size of a counted string:
+    Counted strings are to be no more than 255 characters in length.
+
+Maximum size of a parsed string:
+    Parsed strings are to be no more than 4095 characters in length.
+
+Maximum size of a definition name:
+    Definition names are to be no more than 255 characters in length.
+
+Maximum string length for ENVIRONMENT?:
+    Parameters for ENVIRONMENT? are to be no more than 255 characters in length.
+
+Method of selecting the User Input Device:
+    The user input device is to be selected by the user when the
+    program is started (e.g. terminal text input or piped input from a file).
+
+Method of selecting the User Output Device:
+    The user input device is to be selected by the user when the program
+    is started (e.g. terminal text output or piped output to a file).
+
+Methods of dictionary compilation:
+    For the purposes of this specification, name space, data space, and code
+    space all exist within one contiguous section of memory. Therefore,
+    it is possible to offset from data space into name space or code space.
+    An ambiguous condition exists if this occurs. The word list is implemented
+    as a singly-linked list.
+
+Number of bits in one address unit:
+    All addresses are 32 bits wide, or the size of a standard word.
+
+Number representation and arithmetic:
+    Numbers in compiled literals and in memory are stored using their
+    two's complement representations.
+
+Ranges for n, +n, u, d, +d, and ud:
+    Cells are 4 bytes (32 bits) wide.
+
+Read-only data regions:
+    No regions are marked as read-only.
+
+Size of buffer in WORD:
+    The user may assume that the buffer used by WORD is large enough to hold
+    any counted string.
+
+Size of one cell in address units:
+    One cell is 4 address units wide.
+
+Size of the keyboard terminal input buffer:
+    The terminal input buffer is 1023 characters wide.
+
+Size of the pictured numeric output string buffer:
+    The pictured numeric output string buffer is 255 characters wide.
+
+Size of scratch area returned by PAD:
+    The scratch area is 255 characters wide.
+
+System case-sensitivity:
+    The system is not case-sensitive, and stores all names in uppercase.
+
+System prompt:
+    The system prompt is " ok", followed by a line feed.
+
+Type of division rounded:
+    Division is truncated towards zero.
+
+Value of STATE when true:
+    STATE contains a flag with value -1 (all bits high).
+
+Values returned after arithmetic overflow:
+    The value returned after overflow will be the 32 (or 64 in the case of
+    double-length arithmetic) least significant bits of the result of the
+    calculation.
+
+Whether the current definition can be found after DOES>:
+    The current definition cannot be found by DOES>.

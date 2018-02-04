@@ -21,14 +21,6 @@ struct System sys;
 //Size of the FORTH system size, in words (for now, 4 MB)
 #define SYSTEM_SIZE 1048576
 
-// ( -- f )
-// Pushes true if the stack is empty, pushes false otherwise
-void stack_q() {
-    if(sys.stack == sys.stack_0) stack_push((int32_t)0xffffffff);
-    else stack_push(0x00000000);
-
-}
-
 //Runs the FORTH program at func within the FORTH environment
 void exec(uint32_t* func) {
     rstack_push(0);

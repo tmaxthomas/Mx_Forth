@@ -16,5 +16,6 @@ void zeroEquals();
 void DzeroEquals();
 void zeroLessThan();
 void zeroGreaterThan();
+void stack_q();
 
 #endif
