@@ -2,6 +2,7 @@
 
 #include "logic.h"
 #include "../stack.h"
+#include "../sys.h"
 
 // ( f1 f2 -- f3 )
 //Binary and operator
