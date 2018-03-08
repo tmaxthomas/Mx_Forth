@@ -22,5 +22,10 @@ void until();
 void again();
 void jump();
 void cond_jump();
+void lbracket();
+void rbracket();
+void colon();
+void semicolon();
+void quit();
 
 #endif

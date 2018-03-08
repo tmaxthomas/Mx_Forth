@@ -12,7 +12,7 @@ struct System {
     uint32_t *rstack, *rstack_0;
     uint32_t *cp, *gloss_head, *gloss_base;
     uint32_t *inst;
-    bool BYE, PAGE;
+    bool BYE, PAGE, COMPILE;
 };
 
 extern struct System sys;

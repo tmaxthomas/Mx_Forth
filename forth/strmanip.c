@@ -74,3 +74,7 @@ void sign() {
 void to_number() {
 
 }
+
+void parse() {
+        
+}

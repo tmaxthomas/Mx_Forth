@@ -18,7 +18,7 @@
 
 struct System sys;
 
-//Size of the FORTH system size, in words (for now, 4 MB)
+//Size of the FORTH system size, in words (for now, 4 MB or 2^20 words)
 #define SYSTEM_SIZE 1048576
 
 //Runs the FORTH program at func within the FORTH environment

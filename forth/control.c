@@ -7,7 +7,7 @@
 #include "../stack.h"
 #include "control.h"
 
-// HELPER FUNCTIONS
+/* HELPER FUNCTIONS */
 
 //Compares two counted strings for equality
 bool str_eq(uint8_t* c1, uint8_t* c2) {
@@ -24,7 +24,7 @@ uint32_t* get_xt(uint32_t* func) {
     return (uint32_t*) xt;
 }
 
-//FORTH FUNCTIONS
+/* FORTH FUNCTIONS */
 
 // ( c-addr -- c-addr 0 | xt 1 | xt -1 )
 //Finds words in the glossary
@@ -92,3 +92,12 @@ void until(){ }
 void again(){ }
 void jump(){ }
 void cond_jump(){ }
+void lbracket(){ }
+void rbracket(){ }
+void colon(){
+    char *tmp_buf, *tmp_idx;
+}
+void semicolon(){ }
+void quit(){
+    
+}
