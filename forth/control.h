@@ -2,7 +2,7 @@
 #define __CONTROL_H
 
 //Utility macro for getting char-delimited substrings of C strings
-#define GetSubstring(boolean) tmp_idx = sys.idx; for (i = 0; !(boolean); i++) tmp_idx++; \
+#define GetSubstring(boolean) tmp_idx = sys.idx; for(i = 0; boolean; i++) tmp_idx++; for (i = 0; !(boolean); i++) tmp_idx++; \
                            tmp_buf = (char *) malloc(i + 1); for (size_t j = 0; j < i; j++) tmp_buf[j] = sys.idx[j]; \
                            tmp_buf[i] = 0; sys.idx = tmp_idx; if (*sys.idx) sys.idx++
 

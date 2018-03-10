@@ -7,6 +7,8 @@
 #include "../stack.h"
 #include "control.h"
 
+
+
 /* HELPER FUNCTIONS */
 
 //Compares two counted strings for equality
@@ -98,6 +100,16 @@ void colon(){
     char *tmp_buf, *tmp_idx;
 }
 void semicolon(){ }
-void quit(){
-    
+//Word that runs the FORTH system, including the interpreter/compiler
+void quit() {
+    rstack_clear();
+    rstack_push(0):
+    rstack_push(sys.q_addr);
+
+    read(stdin, sys.tib, 4096);
+    sys.idx = sys.tib;
+    sys.idx_loc = 0;
+
+
+    GetSubstring(isspace(*tmp_idx));
 }

@@ -189,16 +189,13 @@ int main() {
     add_basic_word("SIGN", sign, 0);
     add_basic_word("EXIT", exit_, 0);
 
-    stack_push(3);
-    stack_push(4);
-    add();
-    unsigned char name[2] = {1, '.'};
+    unsigned char name[5] = {4, 'QUIT'};
     stack_push((uint32_t) name);
     find();
     stack_pop(1);
-    uint32_t* func = (uint32_t*)*stack_at(0);
+    sys.q_addr = (uint32_t*)*stack_at(0);
     stack_pop(1);
-    exec(func);
+    exec(sys.q_addr);
 
     free(sys.sys);
     return 0;

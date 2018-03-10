@@ -104,7 +104,7 @@ System case-sensitivity:
     The system is not case-sensitive, and stores all names in uppercase.
 
 System prompt:
-    The system prompt is " ok", followed by a line feed.
+    The system prompt is "ok", followed by a line feed.
 
 Type of division rounded:
     Division is truncated towards zero.
