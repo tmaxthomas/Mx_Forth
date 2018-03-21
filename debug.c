@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 //Grabs the contents of a definition and dumps them as part of a string. Used for debugging ONLY.
 char* word_dump(uint32_t *word) {

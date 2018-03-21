@@ -33,5 +33,6 @@ void max();
 void Dmax();
 void lshift();
 void rshift();
+void number();
 
 #endif

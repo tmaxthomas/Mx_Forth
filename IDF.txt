@@ -42,7 +42,7 @@ Exception abort sequence:
     does nothing.
 
 Input line terminator:
-    Input lines are to be terminated with a carriage return character.
+    Input lines are to be terminated with a line feed character.
 
 Maximum size of a counted string:
     Counted strings are to be no more than 255 characters in length.

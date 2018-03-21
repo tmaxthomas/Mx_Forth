@@ -261,3 +261,5 @@ void Dmax(){
     else
         stack_push_d(b);
 }
+
+// ( ud1 c-addr u1 -- ud2 c-addr u2 )

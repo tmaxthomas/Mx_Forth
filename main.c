@@ -28,7 +28,7 @@ void exec(uint32_t* func) {
     while(sys.inst) {
         uint32_t* xt_ptr = (uint32_t*)*sys.inst;
         if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
-            rstack_push((int32_t) sys.inst);
+            rstack_push(((int32_t) sys.inst) + 1);
             sys.inst = xt_ptr;
         } else {
             void(*fn)() = (void(*)()) *sys.inst;
@@ -86,6 +86,7 @@ int main() {
     sys.gloss_base = sys.gloss_head;
     sys.cp++;
 	sys.tib = (char*) sys.stack_0 + 1;
+    sys.tib_len = 4096;
     sys.base = 10;
     sys.inst = 0;
 
@@ -188,8 +189,9 @@ int main() {
     add_basic_word("HOLD", hold, 0);
     add_basic_word("SIGN", sign, 0);
     add_basic_word("EXIT", exit_, 0);
+    add_basic_word("QUIT", quit, 0);
 
-    unsigned char name[5] = {4, 'QUIT'};
+    unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);
     find();
     stack_pop(1);
