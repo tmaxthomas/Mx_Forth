@@ -13,6 +13,21 @@
 
 /* HELPER FUNCTIONS */
 
+char *get_substring(int(*func)(int)) {
+    int i;
+    for(; func(*sys.idx); sys.idx++);
+    char *tmp_idx = sys.idx;
+    for(i = 0; !func(*tmp_idx); i++) 
+        tmp_idx++;
+    char *tmp_buf = malloc(i + 1);
+    for(int j = 0; j < i; j++) 
+        tmp_buf[j] = sys.idx[j];
+    tmp_buf[i] = '\0';
+    sys.idx = tmp_idx;
+    
+    return tmp_buf;
+}
+
 int64_t ipow(int base, int exp) {
     int64_t ret = 1;
     for(int i = 0; i < exp; i++)
@@ -89,12 +104,10 @@ void find() {
 // ( -- addr )
 // Pushes the exectuion address of the next word in the input stream onto the stack
 void tick() {
-    char *tmp_buf, *tmp_idx;
-    size_t i;
-    GetSubstring(isspace(*tmp_idx));
-    int32_t xt = cfind(tmp_buf, NULL);
+    char *buf = get_substring(isspace);
+    int32_t xt = cfind(buf, NULL);
     stack_push(xt);
-    free(tmp_buf);
+    free(buf);
 }
 
 // ( addr -- )
@@ -151,90 +164,97 @@ void abort_(){
     rstack_push((int32_t) sys.q_addr);
 }
 
+int isquote(int ch) {
+    return ch == '\"';
+}
+
 void abort_quote() {
-    char *tmp_buf, *tmp_idx;
-    size_t i;
-    GetSubstring(*tmp_idx == '\"');
-    fprintf(stdout, "%s\n", tmp_buf);
-    free(tmp_buf);
+    char *buf = get_substring(isquote);
+    fprintf(stdout, "%s\n", buf);
+    free(buf);
     abort_();
 }
 
 //Word that runs the FORTH system, including the interpreter/compiler
 //Well, for now just the interpreter. But you get the point.
 void quit() {
-    char *tmp_buf, *tmp_idx;
-    size_t i, num_bytes;
+    size_t num_bytes;
 
     rstack_clear();
     rstack_push(0);
     rstack_push((int32_t) sys.q_addr);
-
-    num_bytes = read(0, sys.tib, sys.tib_len);
-    sys.tib[num_bytes] = '\0';
-    sys.idx = sys.tib;
-    sys.idx_loc = 0;
-
-    GetSubstring(isspace(*tmp_idx));
+    
+    char *buf = get_substring(isspace);
+    
+    //If we need to read some input, do so
+    if(strlen(buf) == 0) {
+        num_bytes = read(0, sys.tib, sys.tib_len);
+        sys.tib[num_bytes - 1] = '\0'; //Chop off the trailing newline
+        sys.idx = sys.tib;
+        sys.idx_loc = 0;
+        buf = get_substring(isspace);
+    }
+    
     int precedence;
-    int32_t wd = cfind(tmp_buf, &precedence);
+    int32_t wd = cfind(buf, &precedence);
     if(wd) {
-        free(tmp_buf);
         stack_push(wd);
-        execute();
+        rstack_push(cfind(buf, NULL));
+        free(buf);
     } else { //Woo, number conversion (yes, I know it's a mess)
-        int i = 0, neg = 0, di = 0;
-        if(tmp_buf[strlen(tmp_buf)] == '.') {
+        int i = 0, neg = 1, di = 0;
+        if(buf[strlen(buf)] == '.') {
             int64_t num = 0;
-            tmp_buf[strlen(tmp_buf)] = '\0';
-            if(isdigit(tmp_buf[i])) {
-                num += (tmp_buf[i] - '0') * ipow(sys.base, di++); 
-            } else if(tmp_buf[i] == '-')
+            buf[strlen(buf)] = '\0';
+            if(isdigit(buf[i])) {
+                num += (buf[i] - '0') * ipow(sys.base, di++); 
+            } else if(buf[i] == '-')
                 neg = -1;
-            else if(tmp_buf[i] == '+') 
+            else if(buf[i] == '+') 
                 neg = 1;
-             else {
-                printf("ERROR: Unknown word %s, aborting\n", tmp_buf);
+            else {
+                printf("ERROR: Unknown word %s, aborting\n", buf);
                 abort_();
                 return;
             }
 
-            for(; i != strlen(tmp_buf); i++) {
-                if(!isdigit(tmp_buf[i])) {
-                    printf("ERROR: Unknown word %s, aborting\n", tmp_buf);
+            for(; i != strlen(buf); i++) {
+                if(!isdigit(buf[i])) {
+                    printf("ERROR: Unknown word %s, aborting\n", buf);
                     abort_();
                     return;
                 } else {
-                    num += (tmp_buf[i] - '0') * ipow(sys.base, di++); 
+                    num += (buf[i] - '0') * ipow(sys.base, di++); 
                 }
             }
             num *= neg;
             stack_push_d(num);
         } else {
             int32_t num = 0;
-            if(isdigit(tmp_buf[i])) {
-                num += (tmp_buf[i] - '0') * ipow(sys.base, di++); 
-            } else if(tmp_buf[i] == '-')
+            if(isdigit(buf[i])) {
+                num += (buf[i] - '0') * ipow(sys.base, di++); 
+            } else if(buf[i] == '-')
                 neg = -1;
-            else if(tmp_buf[i] == '+') 
+            else if(buf[i] == '+') 
                 neg = 1;
             else {
-                printf("ERROR: Unknown word %s, aborting\n", tmp_buf);
+                printf("ERROR: Unknown word %s, aborting\n", buf);
                 abort_();
                 return;
             }
 
-            for(; i != strlen(tmp_buf); i++) {
-                if(!isdigit(tmp_buf[i])) {
-                    printf("ERROR: Unknown word %s, aborting\n", tmp_buf);
+            for(i = 1; i != strlen(buf); i++) {
+                if(!isdigit(buf[i])) {
+                    printf("ERROR: Unknown word %s, aborting\n", buf);
                     abort_();
                     return;
                 } else {
-                    num += (tmp_buf[i] - '0') * ipow(sys.base, di++); 
+                    num += (buf[i] - '0') * ipow(sys.base, di++); 
                 }
             }
             num *= neg;
             stack_push(num);
         }
     }
+    free(buf);
 }

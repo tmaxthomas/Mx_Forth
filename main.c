@@ -33,8 +33,11 @@ void exec(uint32_t* func) {
         } else {
             void(*fn)() = (void(*)()) *sys.inst;
             fn();
-            if(sys.inst)
+            if(sys.inst && !sys.exit_q) {
                 sys.inst++;
+            } else {
+                sys.exit_q = false;
+            }
         }
     }
 }
@@ -86,6 +89,9 @@ int main() {
     sys.gloss_base = sys.gloss_head;
     sys.cp++;
 	sys.tib = (char*) sys.stack_0 + 1;
+    sys.tib[0] = '\0';
+    sys.idx = sys.tib;
+    sys.idx_loc = 0;
     sys.tib_len = 4096;
     sys.base = 10;
     sys.inst = 0;
