@@ -15,14 +15,21 @@
 
 char *get_substring(int(*func)(int)) {
     int i;
+    if(*sys.idx == '\0') {
+        return NULL;
+    }
     for(; func(*sys.idx); sys.idx++);
+
     char *tmp_idx = sys.idx;
     for(i = 0; !func(*tmp_idx); i++) 
         tmp_idx++;
+
     char *tmp_buf = malloc(i + 1);
     for(int j = 0; j < i; j++) 
         tmp_buf[j] = sys.idx[j];
+
     tmp_buf[i] = '\0';
+
     sys.idx = tmp_idx;
     
     return tmp_buf;
@@ -124,6 +131,7 @@ void execute() {
 void exit_() {
     sys.inst = (uint32_t*)*rstack_at(0);
     rstack_pop(1);
+    sys.inst--; //Needed to circumvent a particular bit of logic in exec() that causes shit to not work
 }
 
 void if_(){ }
@@ -161,6 +169,9 @@ void semicolon(){ }
 
 void abort_(){ 
     stack_clear();
+    strcpy(sys.tib, "\0");
+    sys.idx = sys.tib;
+    sys.idx_loc = 0;
     rstack_push((int32_t) sys.q_addr);
 }
 
@@ -187,9 +198,10 @@ void quit() {
     char *buf = get_substring(isspace);
     
     //If we need to read some input, do so
-    if(strlen(buf) == 0) {
+    if(!buf) {
         num_bytes = read(0, sys.tib, sys.tib_len);
         sys.tib[num_bytes - 1] = '\0'; //Chop off the trailing newline
+        sys.tib[num_bytes] = '\0';
         sys.idx = sys.tib;
         sys.idx_loc = 0;
         buf = get_substring(isspace);
@@ -198,9 +210,7 @@ void quit() {
     int precedence;
     int32_t wd = cfind(buf, &precedence);
     if(wd) {
-        stack_push(wd);
         rstack_push(cfind(buf, NULL));
-        free(buf);
     } else { //Woo, number conversion (yes, I know it's a mess)
         int i = 0, neg = 1, di = 0;
         if(buf[strlen(buf)] == '.') {
@@ -214,13 +224,15 @@ void quit() {
                 neg = 1;
             else {
                 printf("ERROR: Unknown word %s, aborting\n", buf);
+                free(buf);
                 abort_();
                 return;
             }
 
-            for(; i != strlen(buf); i++) {
+            for(i = 1; i != strlen(buf); i++) {
                 if(!isdigit(buf[i])) {
                     printf("ERROR: Unknown word %s, aborting\n", buf);
+                    free(buf);
                     abort_();
                     return;
                 } else {
@@ -239,6 +251,7 @@ void quit() {
                 neg = 1;
             else {
                 printf("ERROR: Unknown word %s, aborting\n", buf);
+                free(buf);
                 abort_();
                 return;
             }
@@ -246,6 +259,7 @@ void quit() {
             for(i = 1; i != strlen(buf); i++) {
                 if(!isdigit(buf[i])) {
                     printf("ERROR: Unknown word %s, aborting\n", buf);
+                    free(buf);
                     abort_();
                     return;
                 } else {
@@ -257,4 +271,9 @@ void quit() {
         }
     }
     free(buf);
+}
+
+void bye() {
+    free(sys.sys);
+    exit(0);
 }

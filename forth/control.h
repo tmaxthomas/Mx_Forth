@@ -21,6 +21,7 @@ void rbracket();
 void colon();
 void semicolon();
 void quit();
+void bye();
 void abort_();
 void abort_quote();
 

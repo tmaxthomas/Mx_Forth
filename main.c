@@ -33,11 +33,8 @@ void exec(uint32_t* func) {
         } else {
             void(*fn)() = (void(*)()) *sys.inst;
             fn();
-            if(sys.inst && !sys.exit_q) {
+            if(sys.inst)
                 sys.inst++;
-            } else {
-                sys.exit_q = false;
-            }
         }
     }
 }
@@ -196,6 +193,7 @@ int main() {
     add_basic_word("SIGN", sign, 0);
     add_basic_word("EXIT", exit_, 0);
     add_basic_word("QUIT", quit, 0);
+    add_basic_word("BYE", bye, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

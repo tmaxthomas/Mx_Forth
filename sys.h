@@ -15,7 +15,7 @@ struct System {
     uint32_t *inst;
     uint32_t *q_addr;
 
-    bool PAGE, COMPILE, exit_q;
+    bool PAGE, COMPILE;
 };
 
 extern struct System sys;
