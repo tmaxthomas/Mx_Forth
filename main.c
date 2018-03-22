@@ -92,6 +92,7 @@ int main() {
     sys.tib_len = 4096;
     sys.base = 10;
     sys.inst = 0;
+    sys.OKAY = false;
 
     //Build the glossary
     add_basic_word("CR", cr, 0);

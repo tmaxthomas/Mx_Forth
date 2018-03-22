@@ -15,13 +15,10 @@
 
 char *get_substring(int(*func)(int)) {
     int i;
-    if(*sys.idx == '\0') {
-        return NULL;
-    }
     for(; func(*sys.idx); sys.idx++);
 
     char *tmp_idx = sys.idx;
-    for(i = 0; !func(*tmp_idx); i++) 
+    for(i = 0; !func(*tmp_idx) && *tmp_idx != '\0'; i++) 
         tmp_idx++;
 
     char *tmp_buf = malloc(i + 1);
@@ -189,17 +186,27 @@ void abort_quote() {
 //Word that runs the FORTH system, including the interpreter/compiler
 //Well, for now just the interpreter. But you get the point.
 void quit() {
-    size_t num_bytes;
+    
+    //If QUIT was called by some means other than the normal way
+    //QUIT loops
+    if(*rstack_at(0) != 0) {
+        sys.OKAY = false;
+        rstack_clear();
+        rstack_push(0);
+    }
 
-    rstack_clear();
-    rstack_push(0);
     rstack_push((int32_t) sys.q_addr);
     
     char *buf = get_substring(isspace);
     
     //If we need to read some input, do so
-    if(!buf) {
-        num_bytes = read(0, sys.tib, sys.tib_len);
+    if(strlen(buf) == 0) {
+        if(sys.OKAY) {
+            printf("ok\n");
+        } else {
+            sys.OKAY = true;
+        }
+        int num_bytes = read(0, sys.tib, sys.tib_len);
         sys.tib[num_bytes - 1] = '\0'; //Chop off the trailing newline
         sys.tib[num_bytes] = '\0';
         sys.idx = sys.tib;

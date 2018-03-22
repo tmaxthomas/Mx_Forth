@@ -10,6 +10,7 @@
 //Prints a newline character to the terminal
 void cr() {
     printf("\n");
+    fflush(stdout);
 }
 
 //( n -- )
@@ -18,12 +19,14 @@ void spaces() {
     for(uint32_t i = 0; i < *(uint32_t*)stack_at(0); i++)
         printf(" ");
     stack_pop(1);
+    fflush(stdout);
 }
 
 //( -- )
 //Prints a space
 void space() {
     printf(" ");
+    fflush(stdout);
 }
 
 //( c -- )
@@ -32,6 +35,7 @@ void emit() {
     char ch = (char)*stack_at(0);
     printf("%c", ch);
     stack_pop(1);
+    fflush(stdout);
 }
 
 // ( n -- )
@@ -39,6 +43,7 @@ void emit() {
 void print() {
     printf("%d ", *(int32_t*)stack_at(0));
     stack_pop(1);
+    fflush(stdout);
 }
 
 // ( u -- )
@@ -46,6 +51,7 @@ void print() {
 void uprint() {
     printf("%u ", *stack_at(0));
     stack_pop(1);
+    fflush(stdout);
 }
 
 // ( d -- )
@@ -53,6 +59,7 @@ void uprint() {
 void dprint() {
     printf("%lld ", *(int64_t*)stack_at(0));
     stack_pop(2);
+    fflush(stdout);
 }
 
 // ( u1 u2 -- )
@@ -65,6 +72,7 @@ void urjprint() {
     for(uint32_t i = 0; i < num_spaces; i++)
         printf(" ");
     printf("%u", data);
+    fflush(stdout);
 }
 
 // ( addr u -- )
@@ -73,6 +81,7 @@ void type() {
     char* str = (char*)*stack_at(1);
     stack_pop(2);
     fwrite(str, 1, u, stdout);
+    fflush(stdout);
 }
 
 // ( d u -- )
@@ -85,6 +94,7 @@ void drjprint() {
     for(int64_t i = 0; i < num_spaces; i++)
         printf(" ");
     printf("%lld ", data);
+    fflush(stdout);
 }
 
 // ( -- )
@@ -92,4 +102,5 @@ void drjprint() {
 void printS() {
     for(uint32_t* a = sys.stack; a != sys.stack_0; a++)
         printf("%d ", *(int32_t*) a);
+    fflush(stdout);
 }
