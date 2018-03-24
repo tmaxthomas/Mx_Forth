@@ -2,3 +2,4 @@
 *.exe*
 .gdb_history
 mxf
+*.swp

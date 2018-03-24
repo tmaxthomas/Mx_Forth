@@ -195,6 +195,8 @@ int main() {
     add_basic_word("EXIT", exit_, 0);
     add_basic_word("QUIT", quit, 0);
     add_basic_word("BYE", bye, 0);
+    add_basic_word("[", rbracket, 1);
+    add_basic_word("]", lbracket, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

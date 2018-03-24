@@ -1,6 +1,8 @@
 #ifndef __CONTROL_H
 #define __CONTROL_H
 
+uint32_t *add_def(char *name, uint8_t precedence);
+
 void find();
 void tick();
 void execute();
