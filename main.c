@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 
 // .h file imports
 #include "stack.h"
@@ -28,7 +29,7 @@ void exec(uint32_t* func) {
     while(sys.inst) {
         uint32_t* xt_ptr = (uint32_t*)*sys.inst;
         if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
-            rstack_push(((int32_t) sys.inst) + 1);
+            rstack_push((int32_t) (sys.inst + 1));
             sys.inst = xt_ptr;
         } else {
             void(*fn)() = (void(*)()) *sys.inst;
@@ -43,6 +44,10 @@ void exec(uint32_t* func) {
 //provided name and precedence, and returns a pointer to
 //the end of the new definition
 uint32_t* add_def(char* name, uint8_t precedence) {
+    //Make sure the name gets stored as uppercase
+    for(int i = 0; i < strlen(name); i++) {
+        if(islower(name[i])) name[i] = toupper(name[i]);
+    }
     //Set up traversal pointers
     uint32_t *new_wd = sys.cp;
     uint8_t *ccp = (uint8_t*) sys.cp;
@@ -197,6 +202,8 @@ int main() {
     add_basic_word("BYE", bye, 0);
     add_basic_word("[", rbracket, 1);
     add_basic_word("]", lbracket, 1);
+    add_basic_word(":", colon, 0);
+    add_basic_word(";", semicolon, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

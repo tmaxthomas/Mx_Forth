@@ -166,15 +166,23 @@ void rbracket() {
 }
 
 void colon() {
-    //char *name = get_substring(isspace);    
+    char *name = get_substring(isspace);
+    uint32_t *new_wd = add_def(name, 0);
+    stack_push((int32_t) new_wd);
+    rbracket(); 
 }
 
 void semicolon() {
-    
+    *(sys.cp) = (uint32_t) exit_;
+    sys.cp++;
+    uint32_t *new_wd = *(uint32_t**)stack_at(0);
+    stack_pop(1);
+    sys.gloss_head = new_wd; 
+    lbracket();
 }
 
-//In case of emergency, burn everything to the ground and
-//start over
+//In case of emergency, burn everything to the ground and start over
+//NOTE: Aborting in the middle of compilation may leave junk in the glossary
 void abort_(){ 
     stack_clear();
     rstack_clear();
@@ -184,6 +192,7 @@ void abort_(){
     sys.inst = sys.q_addr;
     sys.inst--;
     sys.ABORT = true;
+    sys.COMPILE = false;
 }
 
 int isquote(int ch) {
@@ -251,6 +260,7 @@ int32_t int32_convert(char *buf, int *err) {
 //Word that runs the FORTH system, including the interpreter/compiler
 //Well, for now just the interpreter. But you get the point.
 void quit() {
+    //We're not aborting anymore
     sys.ABORT = false;
 
     //If QUIT was called by some means other than the normal way
@@ -292,7 +302,12 @@ void quit() {
     int precedence;
     int32_t wd = cfind(buf, &precedence);
     if(wd) {
-        rstack_push(cfind(buf, NULL));
+        if(!sys.COMPILE || precedence == -1) {
+            rstack_push(wd);
+        } else {
+            *(sys.cp) = (uint32_t) wd;
+            sys.cp++;
+        }
     } else {
         int err = 0;
         if(buf[strlen(buf)] == '.') {
@@ -304,7 +319,14 @@ void quit() {
                 abort_();
                 return;
             }
-            stack_push_d(num);
+            if(!sys.COMPILE) {
+                stack_push_d(num);
+            } else {    
+                *(sys.cp) = (uint32_t) dnum_runtime;
+                sys.cp++;
+                *(int64_t*) (sys.cp) = num;
+                sys.cp += 2;
+            }
         } else {
             int32_t num = int32_convert(buf, &err);
             if(err) {
@@ -313,7 +335,14 @@ void quit() {
                 abort_();
                 return;
             }
-            stack_push(num);
+            if(!sys.COMPILE) {
+                stack_push(num);
+            } else {
+                *(sys.cp) = (uint32_t) num_runtime;
+                sys.cp++;
+                *(int32_t*) (sys.cp) = num;
+                sys.cp++;
+            }
         }
     }
     free(buf);
