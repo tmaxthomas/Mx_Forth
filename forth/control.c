@@ -131,11 +131,53 @@ void exit_() {
     sys.inst--; //Needed to circumvent a particular bit of logic in exec() that causes shit to not work
 }
 
-void if_(){ }
-void else_(){ }
-void then(){ }
+void if_() {
+    *sys.cp = (uint32_t) cond_jump;
+    sys.cp++;
+    stack_push((int32_t) sys.cp);
+    sys.cp++;
+}
+
+void else_() { 
+    uint32_t **loc = *(uint32_t ***)stack_at(0);
+    stack_pop(1);
+
+    *sys.cp = (uint32_t) jump;
+    sys.cp++;
+    stack_push((int32_t) sys.cp);
+    sys.cp++;
+
+    *loc = sys.cp;
+}
+
+void then(){
+    uint32_t **loc = *(uint32_t ***)stack_at(0);
+    stack_pop(1);
+    *loc = sys.cp;
+}
+
 void do_(){ }
 void do_runtime() { }
+void loop(){ }
+void begin(){ }
+void while_(){ }
+void repeat(){ }
+void until(){ }
+void again(){ }
+void jump() { 
+    sys.inst++;
+    sys.inst = *(uint32_t **) sys.inst;
+    sys.inst--;
+}
+
+void cond_jump() { 
+    uint32_t flag = *stack_at(0);
+    stack_pop(1);
+    if(!flag) 
+        jump();
+    else
+        sys.inst++;
+}
 
 void num_runtime() {
     sys.inst++;
@@ -147,15 +189,6 @@ void dnum_runtime() {
     stack_push_d(*(int64_t *) sys.inst);
     sys.inst++;
 }
-
-void loop(){ }
-void begin(){ }
-void while_(){ }
-void repeat(){ }
-void until(){ }
-void again(){ }
-void jump(){ }
-void cond_jump(){ }
 
 void lbracket() { 
     sys.COMPILE = false;

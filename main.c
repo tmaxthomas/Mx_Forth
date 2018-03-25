@@ -204,6 +204,9 @@ int main() {
     add_basic_word("]", lbracket, 1);
     add_basic_word(":", colon, 0);
     add_basic_word(";", semicolon, 1);
+    add_basic_word("IF", if_, 1);
+    add_basic_word("ELSE", else_, 1);
+    add_basic_word("THEN", then, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

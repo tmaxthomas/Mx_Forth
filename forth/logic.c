@@ -5,7 +5,7 @@
 #include "../sys.h"
 
 // ( f1 f2 -- f3 )
-//Binary and operator
+//Bitwise and operator
 void and_() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);
@@ -13,7 +13,7 @@ void and_() {
 }
 
 // ( f1 f2 -- f3 )
-//Binary or operator
+//Bitwise or operator
 void or_() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);
@@ -26,7 +26,7 @@ void equals(){
     int32_t a = *(int32_t*)stack_at(0), b = *(int32_t*)stack_at(1);
     stack_pop(2);
     if(a == b)
-        stack_push((int32_t)0xffffffff);
+        stack_push((int32_t) 0xffffffff);
     else
         stack_push(0x00000000);
 }
