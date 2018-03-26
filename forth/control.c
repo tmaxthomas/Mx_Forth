@@ -286,18 +286,15 @@ int64_t int64_convert(char *buf, int *err) {
     } else if(buf[0] == '+') {
         neg = 1;
         memmove(buf, buf + 1, strlen(buf) + 1);
-    }
+    } 
 
-    for(int i = 0; i < strlen(buf) / 2; i++) {
-        swp(buf + i, buf + (strlen(buf) - i - 1));
-    }
-
-    for(int i = 0; i != strlen(buf); i++) {
-        if(!isdigit(buf[i])) {
+    for(int i = strlen(buf); i > 0; i--) {
+        if(!isdigit(buf[i - 1])) {
             *err = 1;
             return 0;
         } else {
-            num += (buf[i] - '0') * ipow((int64_t) sys.base, (int64_t) i); 
+            num += (buf[i - 1] - '0') * ipow((int64_t) sys.base, 
+                                             (int64_t) (strlen(buf) - i)); 
         }
     }
     num *= neg;
@@ -313,18 +310,15 @@ int32_t int32_convert(char *buf, int *err) {
     } else if(buf[0] == '+') {
         neg = 1;
         memmove(buf, buf + 1, strlen(buf) + 1);
-    }
+    } 
 
-    for(int i = 0; i < strlen(buf) / 2; i++) {
-        swp(buf + i, buf + (strlen(buf) - i - 1));
-    }
-
-    for(int i = 0; i != strlen(buf); i++) {
-        if(!isdigit(buf[i])) {
+    for(int i = strlen(buf); i > 0; i--) {
+        if(!isdigit(buf[i - 1])) {
             *err = 1;
             return 0;
         } else {
-            num += (buf[i] - '0') * ipow((int64_t) sys.base, (int64_t) i); 
+            num += (buf[i - 1] - '0') * ipow((int64_t) sys.base, 
+                                         (int64_t) (strlen(buf) - i)); 
         }
     }
     num *= neg;
@@ -379,8 +373,14 @@ void quit() {
         if(!sys.COMPILE || precedence == -1) {
             rstack_push(wd);
         } else {
-            *(sys.cp) = (uint32_t) wd;
+            //Some necessary optimizations, needed to make some stuff work
+            if(*(((uint32_t *) wd) + 1) == (uint32_t) exit_) {
+                *(sys.cp) = *(uint32_t *) wd;
+            } else {
+                *(sys.cp) = (uint32_t) wd; 
+            }
             sys.cp++;
+
         }
     } else {
         int err = 0;
