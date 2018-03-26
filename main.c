@@ -207,6 +207,8 @@ int main() {
     add_basic_word("IF", if_, 1);
     add_basic_word("ELSE", else_, 1);
     add_basic_word("THEN", then, 1);
+    add_basic_word("DO", do_, 1);
+    add_basic_word("LOOP", loop, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

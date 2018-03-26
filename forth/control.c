@@ -156,14 +156,47 @@ void then(){
     *loc = sys.cp;
 }
 
-void do_(){ }
-void do_runtime() { }
-void loop(){ }
+void do_() { 
+    *sys.cp = (uint32_t) do_runtime;
+    sys.cp++;
+    stack_push((int32_t) sys.cp);
+}
+
+void do_runtime() {
+    int32_t i = *(int32_t *) stack_at(0),
+            n = *(int32_t *) stack_at(1);
+    stack_pop(2);
+    rstack_push(n);
+    rstack_push(i);
+}
+
+void loop() {
+    uint32_t addr = *stack_at(0); 
+    stack_pop(1);
+    *sys.cp = (uint32_t) loop_runtime;
+    sys.cp++;
+    *sys.cp = addr;
+    sys.cp++;
+}
+
+void loop_runtime() {
+    int32_t *i = (int32_t *) rstack_at(0),
+            n = *(int32_t *) rstack_at(1);
+    
+    (*i)++;
+    if(*i == n) {
+        rstack_pop(2);
+        sys.inst++;
+    } else {
+        jump();
+    }
+}
+
 void begin(){ }
 void while_(){ }
 void repeat(){ }
 void until(){ }
-void again(){ }
+
 void jump() { 
     sys.inst++;
     sys.inst = *(uint32_t **) sys.inst;
@@ -239,25 +272,32 @@ void abort_quote() {
     abort_();
 }
 
+void swp(char *c1, char *c2) {
+    char a = *c1, b = *c2;
+    *c1 = b, *c2 = a;
+}
+
 int64_t int64_convert(char *buf, int *err) {
-    int64_t num = 0, neg = 1, di = 0, i = 0;
-    if(isdigit(buf[i])) {
-        num += (buf[i] - '0') * ipow((int64_t) sys.base, di++); 
-    } else if(buf[i] == '-')
+    int64_t num = 0, neg = 1;
+
+    if(buf[0] == '-') {
         neg = -1;
-    else if(buf[i] == '+') 
+        memmove(buf, buf + 1, strlen(buf) + 1);
+    } else if(buf[0] == '+') {
         neg = 1;
-    else {
-        *err = 1;
-        return 0;
+        memmove(buf, buf + 1, strlen(buf) + 1);
     }
 
-    for(i = 1; i != strlen(buf); i++) {
+    for(int i = 0; i < strlen(buf) / 2; i++) {
+        swp(buf + i, buf + (strlen(buf) - i - 1));
+    }
+
+    for(int i = 0; i != strlen(buf); i++) {
         if(!isdigit(buf[i])) {
             *err = 1;
             return 0;
         } else {
-            num += (buf[i] - '0') * ipow((int64_t) sys.base, di++); 
+            num += (buf[i] - '0') * ipow((int64_t) sys.base, (int64_t) i); 
         }
     }
     num *= neg;
@@ -265,25 +305,26 @@ int64_t int64_convert(char *buf, int *err) {
 }
 
 int32_t int32_convert(char *buf, int *err) {
-    int32_t num = 0, neg = 1, di = 0, i = 0;
+    int32_t num = 0, neg = 1;
 
-    if(isdigit(buf[i])) {
-        num += (buf[i] - '0') * ipow((int64_t) sys.base, (int64_t) di++); 
-    } else if(buf[i] == '-')
+    if(buf[0] == '-') {
         neg = -1;
-    else if(buf[i] == '+') 
+        memmove(buf, buf + 1, strlen(buf) + 1);
+    } else if(buf[0] == '+') {
         neg = 1;
-    else {
-        *err = 1;
-        return 0;
+        memmove(buf, buf + 1, strlen(buf) + 1);
     }
 
-    for(i = 1; i != strlen(buf); i++) {
+    for(int i = 0; i < strlen(buf) / 2; i++) {
+        swp(buf + i, buf + (strlen(buf) - i - 1));
+    }
+
+    for(int i = 0; i != strlen(buf); i++) {
         if(!isdigit(buf[i])) {
             *err = 1;
             return 0;
         } else {
-            num += (buf[i] - '0') * ipow((int64_t) sys.base, (int64_t) di++); 
+            num += (buf[i] - '0') * ipow((int64_t) sys.base, (int64_t) i); 
         }
     }
     num *= neg;
