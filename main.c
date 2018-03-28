@@ -210,6 +210,10 @@ int main() {
     add_basic_word("DO", do_, 1);
     add_basic_word("LOOP", loop, 1);
     add_basic_word("+LOOP", plus_loop, 1);
+    add_basic_word("BEGIN", begin, 1);
+    add_basic_word("UNTIL", until, 1);
+    add_basic_word("WHILE", while_, 1);
+    add_basic_word("REPEAT", repeat, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

@@ -217,10 +217,38 @@ void plus_loop_runtime() {
     }
 }
 
-void begin(){ }
-void while_(){ }
-void repeat(){ }
-void until(){ }
+void begin() { 
+    stack_push((int32_t) sys.cp);
+}
+
+void until() {
+    uint32_t jmp_addr = *stack_at(0);
+    stack_pop(1);
+    *sys.cp = (uint32_t) cond_jump;
+    sys.cp++;
+    *sys.cp = jmp_addr;
+    sys.cp++; 
+}
+
+void while_() { 
+    *sys.cp = (uint32_t) cond_jump;
+    sys.cp++;
+    stack_push((int32_t) sys.cp);
+    sys.cp++;
+}
+
+void repeat() {
+    uint32_t *while_addr = *(uint32_t **) stack_at(0),
+             begin_addr = *stack_at(1);
+
+    stack_pop(2);
+    
+    *sys.cp = (uint32_t) jump;
+    sys.cp++;
+    *sys.cp = begin_addr;
+    sys.cp++;
+    *while_addr = (uint32_t) sys.cp;
+}
 
 void jump() { 
     sys.inst++;
