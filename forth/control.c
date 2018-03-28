@@ -189,6 +189,31 @@ void loop_runtime() {
         sys.inst++;
     } else {
         jump();
+    } 
+}
+
+void plus_loop() {
+    uint32_t addr = *stack_at(0); 
+    stack_pop(1);
+    *sys.cp = (uint32_t) plus_loop_runtime;
+    sys.cp++;
+    *sys.cp = addr;
+    sys.cp++;
+}
+
+void plus_loop_runtime() {
+    int32_t *i = (int32_t *) rstack_at(0),
+            n = *(int32_t *) rstack_at(1),
+            k = *(int32_t *) stack_at(0);
+    
+    stack_pop(1);
+    
+    *i += k;
+    if((k > 0 && *i >= n) || (k <= 0 && *i < n)) {
+        rstack_pop(2);
+        sys.inst++;
+    } else {
+        jump();
     }
 }
 
