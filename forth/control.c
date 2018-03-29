@@ -117,10 +117,10 @@ void tick() {
 // ( addr -- )
 // Executes the word pointed to by addr by moving the instruction pointer
 void execute() {
-    uint32_t* xt_ptr = (uint32_t*)*stack_at(0);
+    uint32_t* xt_ptr = *(uint32_t **) stack_at(0);
     stack_pop(1);
     rstack_push((int32_t) (sys.inst + 1));
-    sys.inst = xt_ptr;
+    rstack_push((int32_t) (xt_ptr));
 }
 
 // ( -- )
@@ -189,13 +189,66 @@ void loop_runtime() {
         sys.inst++;
     } else {
         jump();
+    } 
+}
+
+void plus_loop() {
+    uint32_t addr = *stack_at(0); 
+    stack_pop(1);
+    *sys.cp = (uint32_t) plus_loop_runtime;
+    sys.cp++;
+    *sys.cp = addr;
+    sys.cp++;
+}
+
+void plus_loop_runtime() {
+    int32_t *i = (int32_t *) rstack_at(0),
+            n = *(int32_t *) rstack_at(1),
+            k = *(int32_t *) stack_at(0);
+    
+    stack_pop(1);
+    
+    *i += k;
+    if((k > 0 && *i >= n) || (k <= 0 && *i < n)) {
+        rstack_pop(2);
+        sys.inst++;
+    } else {
+        jump();
     }
 }
 
-void begin(){ }
-void while_(){ }
-void repeat(){ }
-void until(){ }
+void begin() { 
+    stack_push((int32_t) sys.cp);
+}
+
+void until() {
+    uint32_t jmp_addr = *stack_at(0);
+    stack_pop(1);
+    *sys.cp = (uint32_t) cond_jump;
+    sys.cp++;
+    *sys.cp = jmp_addr;
+    sys.cp++; 
+}
+
+void while_() { 
+    *sys.cp = (uint32_t) cond_jump;
+    sys.cp++;
+    stack_push((int32_t) sys.cp);
+    sys.cp++;
+}
+
+void repeat() {
+    uint32_t *while_addr = *(uint32_t **) stack_at(0),
+             begin_addr = *stack_at(1);
+
+    stack_pop(2);
+    
+    *sys.cp = (uint32_t) jump;
+    sys.cp++;
+    *sys.cp = begin_addr;
+    sys.cp++;
+    *while_addr = (uint32_t) sys.cp;
+}
 
 void jump() { 
     sys.inst++;
@@ -244,6 +297,7 @@ void semicolon() {
     uint32_t *new_wd = *(uint32_t**)stack_at(0);
     stack_pop(1);
     sys.gloss_head = new_wd; 
+    sys.old_cp = sys.cp;
     lbracket();
 }
 
@@ -255,6 +309,7 @@ void abort_(){
     strcpy(sys.tib, "\0");
     sys.idx = sys.tib;
     sys.idx_loc = 0;
+    sys.cp = sys.old_cp;
     sys.inst = sys.q_addr;
     sys.inst--;
     sys.ABORT = true;

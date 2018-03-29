@@ -76,6 +76,7 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
     *(sys.cp) = (uint32_t) exit_;
     sys.cp++;
     sys.gloss_head = new_wd;
+    sys.old_cp = sys.cp;
 }
 
 int main() {
@@ -90,6 +91,7 @@ int main() {
     sys.gloss_head = sys.cp;
     sys.gloss_base = sys.gloss_head;
     sys.cp++;
+    sys.old_cp = sys.cp;
 	sys.tib = (char*) sys.stack_0 + 1;
     sys.tib[0] = '\0';
     sys.idx = sys.tib;
@@ -209,6 +211,11 @@ int main() {
     add_basic_word("THEN", then, 1);
     add_basic_word("DO", do_, 1);
     add_basic_word("LOOP", loop, 1);
+    add_basic_word("+LOOP", plus_loop, 1);
+    add_basic_word("BEGIN", begin, 1);
+    add_basic_word("UNTIL", until, 1);
+    add_basic_word("WHILE", while_, 1);
+    add_basic_word("REPEAT", repeat, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

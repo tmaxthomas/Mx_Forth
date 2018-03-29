@@ -14,6 +14,8 @@ void do_();
 void do_runtime();
 void loop();
 void loop_runtime();
+void plus_loop();
+void plus_loop_runtime();
 void begin();
 void while_();
 void repeat();
