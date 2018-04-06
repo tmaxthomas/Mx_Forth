@@ -2,6 +2,8 @@
 #define __CONTROL_H
 
 uint32_t *add_def(char *name, uint8_t precedence);
+char *get_substring(int(*func)(int));
+
 
 void find();
 void tick();

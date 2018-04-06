@@ -18,6 +18,16 @@ void fill();
 void erase();
 void dump();
 
+void variable();
+void variable2();
+void create();
+void constant();
+void constant2();
+
+void create_runtime();
+void constant_runtime();
+void constant2_runtime();
+
 void sp_at();
 void tib();
 void pound_tib();
