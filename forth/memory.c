@@ -14,7 +14,11 @@ void store() {
     int* ptr = (int32_t*)*stack_at(0);
     int32_t n = *(int32_t*)stack_at(1);
     stack_pop(2);
-    *ptr = n;
+    if(ptr >= sys.sys && ptr < sys.sys_top) {
+        *ptr = n;
+    } else {
+
+    }
 }
 
 // ( d addr -- )
@@ -23,7 +27,11 @@ void store2() {
     int64_t* ptr = (int64_t*)*stack_at(0);
     int64_t n = *(int64_t*)stack_at(2);
     stack_pop(3);
-    *ptr = n;
+    if(ptr >= sys.sys && ptr < sys.sys_top) {
+        *ptr = n;
+    } else {
+
+    }
 }
 
 // ( c addr -- )
@@ -32,7 +40,11 @@ void c_store() {
     char *ptr = (char *) *stack_at(0);
     char n = *(char *) stack_at(1);
     stack_pop(2);
-    *ptr = n;
+    if(ptr >= sys.sys && ptr < sys.sys_top) {
+        *ptr = n;
+    } else {
+
+    }
 }
 
 // ( n addr -- )
@@ -41,7 +53,11 @@ void plus_store() {
     int* ptr = (int32_t*)*stack_at(0);
     int32_t n = *(int32_t*)stack_at(1);
     stack_pop(2);
-    *ptr += n;
+    if(ptr >= sys.sys && ptr < sys.sys_top) {
+        *ptr += n;
+    } else {
+        
+    }
 }
 
 // ( addr -- n )

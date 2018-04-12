@@ -5,7 +5,7 @@
 
 //Struct containing FORTH system data
 struct System {
-    uint32_t *sys;
+    uint32_t *sys, *sys_top;
     char *idx, *tib, *pad;
     uint32_t tib_loc, idx_loc;
     uint32_t tib_len, pad_len, base;
