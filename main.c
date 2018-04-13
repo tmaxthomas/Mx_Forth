@@ -82,6 +82,7 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 int main() {
     // Set up the FORTH system
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t));
+    sys.sys_top = sys.sys + SYSTEM_SIZE;
     sys.stack = sys.sys + (SYSTEM_SIZE / 2);
     sys.stack_0 = sys.stack;
     sys.rstack = sys.sys + 3*(SYSTEM_SIZE / 4);
