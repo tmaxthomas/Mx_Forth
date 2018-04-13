@@ -192,8 +192,6 @@ int main() {
     add_basic_word("EXECUTE", execute, 0);
     add_basic_word("?STACK", stack_q, 0);
     add_basic_word("SP@", sp_at, 0);
-    add_basic_word("TIB", tib, 0);
-    add_basic_word("#TIB", pound_tib, 0);
     add_basic_word("<#", bracket_pound, 0);
     add_basic_word("#>", pound_bracket, 0);
     add_basic_word("#", pound, 0);
@@ -223,6 +221,9 @@ int main() {
     add_basic_word("2CONSTANT", constant2, 0);
     add_basic_word("CREATE", create, 0);
     add_basic_word("ALLOT", allot, 0);
+    add_basic_word("(", paren, 1);
+    add_basic_word(",", comma, 0);
+    add_basic_word(".\"", dot_quote, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

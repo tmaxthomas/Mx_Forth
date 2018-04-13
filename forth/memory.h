@@ -24,6 +24,7 @@ void create();
 void constant();
 void constant2();
 void allot();
+void comma();
 
 void create_runtime();
 void constant_runtime();

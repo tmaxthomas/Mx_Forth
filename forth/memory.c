@@ -11,13 +11,14 @@
 // ( n addr -- )
 // Stores n at the memory location pointed to by addr
 void store() {
-    int* ptr = (int32_t*)*stack_at(0);
+    int32_t* ptr = (int32_t*)*stack_at(0);
     int32_t n = *(int32_t*)stack_at(1);
     stack_pop(2);
-    if(ptr >= sys.sys && ptr < sys.sys_top) {
+    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         *ptr = n;
     } else {
-
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
     }
 }
 
@@ -27,10 +28,11 @@ void store2() {
     int64_t* ptr = (int64_t*)*stack_at(0);
     int64_t n = *(int64_t*)stack_at(2);
     stack_pop(3);
-    if(ptr >= sys.sys && ptr < sys.sys_top) {
+    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         *ptr = n;
     } else {
-
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
     }
 }
 
@@ -40,23 +42,25 @@ void c_store() {
     char *ptr = (char *) *stack_at(0);
     char n = *(char *) stack_at(1);
     stack_pop(2);
-    if(ptr >= sys.sys && ptr < sys.sys_top) {
+    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         *ptr = n;
     } else {
-
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
     }
 }
 
 // ( n addr -- )
 // Adds n to the number stored at addr
 void plus_store() {
-    int* ptr = (int32_t*)*stack_at(0);
+    int32_t* ptr = (int32_t*)*stack_at(0);
     int32_t n = *(int32_t*)stack_at(1);
     stack_pop(2);
-    if(ptr >= sys.sys && ptr < sys.sys_top) {
+    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         *ptr += n;
     } else {
-        
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
     }
 }
 
@@ -65,7 +69,12 @@ void plus_store() {
 void fetch() {
     int* ptr = (int32_t*)*stack_at(0);
     stack_pop(1);
-    stack_push(*ptr);
+    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
+        stack_push(*ptr);
+    } else {
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
+    }
 }
 
 // ( addr -- d )
@@ -73,7 +82,12 @@ void fetch() {
 void fetch2() {
     int64_t* ptr = (int64_t*)*stack_at(0);
     stack_pop(1);
-    stack_push(*ptr);
+    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
+        stack_push_d(*ptr);
+    } else {
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
+    }
 }
 
 // ( addr -- c )
@@ -81,10 +95,15 @@ void fetch2() {
 void c_fetch() {
     char* ptr = (char*)*stack_at(0);
     stack_pop(1);
-    stack_push((int32_t)*ptr);
+    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
+        stack_push((int32_t)*ptr);
+    } else {
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
+    }
 }
 
-// ( addr  -- n )
+// ( addr -- n )
 // Equivalent to @ .
 void query() {
     fetch();
@@ -117,8 +136,13 @@ void fill() {
     int32_t n = *(int32_t*)stack_at(1);
     char* addr = (char*)*stack_at(2);
     stack_pop(3);
-    for(int32_t i = 0; i < n; i++)
-        addr[i] = b;
+    if((uint32_t *) addr >= sys.sys && (uint32_t *) addr < sys.sys_top) {
+        for(int32_t i = 0; i < n; i++)
+            addr[i] = b;
+    } else {
+        fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
+        abort_();
+    }
 }
 
 // ( n addr -- )
@@ -191,8 +215,8 @@ void create() {
     uint32_t *new_wd = add_def(name, 0);
     sys.gloss_head = new_wd;
     *sys.cp = (uint32_t) create_runtime;
-    sys.cp++;
     sys.old_cp = sys.cp;
+    sys.cp++;
 }
 
 void create_runtime() {
@@ -210,20 +234,15 @@ void constant2_runtime() {
     exit_();
 }
 
+void comma() {
+    *sys.cp = *stack_at(0);
+    sys.cp++;
+    stack_pop(1);
+}
+
 // ( -- addr )
 //Pushes the address of the top of the stack onto the stack_q
 void sp_at() {
     stack_push((int32_t) stack_at(0));
 }
 
-// ( -- addr )
-//Pushes the address of the start of the trminal input buffer onto the stack
-void tib() {
-    stack_push((int32_t) sys.pad);
-}
-
-// ( -- u )
-//Pushes the a pointer to the length of the terminal input buffer onto the stack
-void pound_tib() {
-    stack_push((int32_t) &sys.pad_len);
-}

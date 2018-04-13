@@ -32,5 +32,6 @@ void quit();
 void bye();
 void abort_();
 void abort_quote();
+void paren();
 
 #endif

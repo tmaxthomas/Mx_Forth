@@ -18,7 +18,7 @@ void trailing() {
 
 // ( ud -- ud )
 void bracket_pound() {
-    sys.pad = (char*) sys.stack + 256;
+    sys.pad = (char *) sys.stack + 256;
     sys.pad_len = 0;
 }
 
@@ -31,24 +31,21 @@ void pound_bracket() {
 
 // ( ud1 -- ud2 )
 void pound() {
-    uint64_t ud = *(uint64_t*)stack_at(1);
+    uint64_t ud = *(uint64_t *) stack_at(1);
     memmove(sys.pad + 1, sys.pad, sys.pad_len);
     //ASCII table magic
-    char digit = (ud % 10) + '0';
+    char digit = (ud % sys.base) + '0';
     sys.pad[0] = digit;
-    *(uint64_t*)stack_at(1) /= 10;
+    *(uint64_t*)stack_at(1) /= sys.base;
     sys.pad_len++;
 }
 
 // ( ud1 -- 0 )
 void pounds() {
-    uint64_t ud = *(uint64_t*)stack_at(1);
-    char buf[32];
-    uint32_t len = (uint32_t) sprintf(buf, "%llu", ud);
-    memmove(sys.pad + len, sys.pad, sys.pad_len);
-    memmove(sys.pad, buf, len);
-    *(uint64_t*)stack_at(1) = 0;
-    sys.pad_len += len;
+    uint64_t *ud = (uint64_t *) stack_at(1);
+    while(*ud > 0) {
+        pound();
+    } 
 }
 
 // ( ud1 c -- ud1 )
@@ -72,9 +69,24 @@ void sign() {
 
 // ( ud1 c-addr u1 -- ud2 c-addr u2 )
 void to_number() {
-
+    
 }
 
 void parse() {
+    
+}
+
+int is_quote(int ch) {
+    return ch == '\"';
+}
+
+void dot_quote() {
+    char *buf = get_substring(is_quote);
+    if(sys.COMPILE) {
         
+    }
+}
+
+void dot_quote_runtime() {
+
 }

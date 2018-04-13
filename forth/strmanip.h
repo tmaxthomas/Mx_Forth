@@ -13,4 +13,7 @@ void sign();
 void to_number();
 void parse();
 
+void dot_quote();
+void dot_quote_runtime();
+
 #endif

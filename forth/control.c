@@ -481,3 +481,13 @@ void bye() {
     free(sys.sys);
     exit(0);
 }
+
+int is_paren(int ch) {
+    return ch == ')';
+}
+
+void paren() {
+    char *buf = get_substring(is_paren);
+    free(buf);
+    sys.idx++;
+}
