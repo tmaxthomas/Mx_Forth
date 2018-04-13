@@ -221,6 +221,7 @@ int main() {
     add_basic_word("CONSTANT", constant, 0);
     add_basic_word("2CONSTANT", constant2, 0);
     add_basic_word("CREATE", create, 0);
+    add_basic_word("ALLOT", allot, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

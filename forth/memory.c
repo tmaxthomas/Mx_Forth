@@ -164,6 +164,12 @@ void constant2() {
     sys.old_cp = sys.cp; 
 }
 
+void allot() {
+    uint32_t count = *stack_at(0);
+    stack_pop(1);
+    sys.cp += count;
+}
+
 void create() {
     char *name = get_substring(isspace);
     uint32_t *new_wd = add_def(name, 0);
