@@ -28,6 +28,7 @@ char *get_substring(int(*func)(int)) {
     tmp_buf[i] = '\0';
 
     sys.idx = tmp_idx;
+    sys.idx++;
     
     return tmp_buf;
 }
@@ -489,5 +490,4 @@ int is_paren(int ch) {
 void paren() {
     char *buf = get_substring(is_paren);
     free(buf);
-    sys.idx++;
 }

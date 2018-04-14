@@ -4,6 +4,8 @@
 
 #include "../stack.h"
 #include "../sys.h"
+#include "control.h"
+#include "strmanip.h"
 
 // ( addr u1 -- addr u2 )
 void trailing() {
@@ -83,10 +85,28 @@ int is_quote(int ch) {
 void dot_quote() {
     char *buf = get_substring(is_quote);
     if(sys.COMPILE) {
-        
+        *sys.cp = (uint32_t) dot_quote_runtime;
+        sys.cp++;
+        char *ccp = (char *) sys.cp;
+        *ccp = strlen(buf);
+        memcpy(ccp + 1, buf, *ccp);
+        int count = *ccp + 1;
+        sys.cp += (count + (4 - (count % 4))) / 4;
+    } else {
+        printf("%s", buf);
     }
+    free(buf);
 }
 
 void dot_quote_runtime() {
-
+    sys.inst++;
+    char *c = (char *) sys.inst;
+    char *buf = malloc(*c + 1);
+    memcpy(buf, c + 1, *c);
+    buf[(int) *c] = '\0';
+    printf("%s", buf);
+    sys.inst += ((*c + 1) / 4);
+    if((*c + 1) % 4 == 0)
+        sys.inst--;
+    free(buf);
 }
