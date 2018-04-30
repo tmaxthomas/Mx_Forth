@@ -91,7 +91,8 @@ void dot_quote() {
         *ccp = strlen(buf);
         memcpy(ccp + 1, buf, *ccp);
         int count = *ccp + 1;
-        sys.cp += (count + (4 - (count % 4))) / 4;
+        sys.cp += count / 4;
+        if (count % 4 != 0) sys.cp++;
     } else {
         printf("%s", buf);
     }
