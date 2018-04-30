@@ -398,6 +398,9 @@ void quit() {
     rstack_push((int32_t) sys.q_addr);
     
     char *buf = get_substring(isspace);
+    for(int i = 0; i < strlen(buf); i++) {
+        if(islower(buf[i])) buf[i] = toupper(buf[i]);
+    }
     
     //If we need to read some input, do so
     if(strlen(buf) == 0) {
@@ -410,12 +413,13 @@ void quit() {
         int num_bytes = read(0, sys.tib, sys.tib_len);
         sys.tib[num_bytes - 1] = '\0'; //Chop off the trailing newline
         sys.tib[num_bytes] = '\0';
-        for(int i = 0; i < strlen(sys.tib); i++) {
-            if(islower(sys.tib[i])) sys.tib[i] = toupper(sys.tib[i]);
-        }
+        
         sys.idx = sys.tib;
         sys.idx_loc = 0;
         buf = get_substring(isspace);
+        for(int i = 0; i < strlen(buf); i++) {
+            if(islower(buf[i])) buf[i] = toupper(buf[i]);
+        }
     }
     
     if(strlen(buf) == 0) {
@@ -425,6 +429,7 @@ void quit() {
 
     int precedence;
     int32_t wd = cfind(buf, &precedence);
+
     if(wd) {
         if(!sys.COMPILE || precedence == -1) {
             rstack_push(wd);
