@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "../stack.h"
 #include "../sys.h"
@@ -53,14 +54,14 @@ void pounds() {
 // ( ud1 c -- ud1 )
 void hold() {
     memmove(sys.pad + 1, sys.pad, sys.pad_len);
-    sys.pad[0] = *(char*)stack_at(0);
+    sys.pad[0] = *(char *) stack_at(0);
     stack_pop(1);
     sys.pad_len++;
 }
 
 // ( ud1 -- ud1 )
 void sign() {
-    int32_t n = *(int32_t*)stack_at(0);
+    int32_t n = *(int32_t *) stack_at(0);
     stack_pop(1);
     if(n < 0) {
         memmove(sys.pad + 1, sys.pad, sys.pad_len);
@@ -71,7 +72,24 @@ void sign() {
 
 // ( ud1 c-addr u1 -- ud2 c-addr u2 )
 void to_number() {
-    
+    uint32_t n = *stack_at(0);
+    char *str = *(char **) stack_at(1);
+    uint64_t b = *(uint64_t *) stack_at(2);
+    stack_pop(4);
+
+    int i, num;
+    for(i = 0; i < n && ((num = to_num(*str)) != -1); i++, str++) {
+        b *= sys.base;
+        b += n;
+    }
+
+    stack_push_d(n);
+    stack_push((int32_t) str);
+    stack_push(n - i);
+}
+
+void to_in() {
+    stack_push((int32_t) &sys.idx_loc);
 }
 
 void parse() {

@@ -1,9 +1,11 @@
 #ifndef __CONTROL_H
 #define __CONTROL_H
 
+#include <stdint.h>
+
 uint32_t *add_def(char *name, uint8_t precedence);
 char *get_substring(int(*func)(int));
-
+int to_num(int c);
 
 void find();
 void tick();
@@ -32,6 +34,7 @@ void quit();
 void bye();
 void abort_();
 void abort_quote();
+void abort_quote_runtime();
 void paren();
 
 #endif
