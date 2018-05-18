@@ -230,6 +230,9 @@ int main() {
     add_basic_word("ABORT", abort_, 0);
     add_basic_word("ABORT\"", abort_quote, 1);
     add_basic_word("ACCEPT", accept, 0);
+    add_basic_word("ALIGN", align, 0);
+    add_basic_word("ALIGNED", aligned, 0);
+    add_basic_word("BASE", base, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

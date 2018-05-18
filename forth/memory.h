@@ -35,4 +35,7 @@ void tib();
 void pound_tib();
 void to_body();
 
+void align();
+void aligned();
+
 #endif

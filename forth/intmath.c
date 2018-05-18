@@ -4,6 +4,7 @@
 
 #include "intmath.h"
 #include "../stack.h"
+#include "../sys.h"
 
 // ( n1 n2 -- sum )
 //Adds n2 to n1
@@ -195,7 +196,7 @@ void abs_(){
 
 // ( d -- ud )
 void dabs() {
-    *(int64_t*)stack_at(0) = abs(*(int64_t*)stack_at(0));
+    *(int64_t*)stack_at(0) = llabs(*(int64_t*)stack_at(0));
 }
 
 // ( n1 -- n2 )
@@ -262,4 +263,6 @@ void Dmax(){
         stack_push_d(b);
 }
 
-// ( ud1 c-addr u1 -- ud2 c-addr u2 )
+void base() {
+    stack_push((int32_t) &sys.base);
+}

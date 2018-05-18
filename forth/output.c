@@ -16,6 +16,7 @@ void ubprint(uint64_t num) {
     int len = (int) (log(tmpnum) / log(sys.base));
     for(int i = len; tmpnum > 0; i--) {
         char digit = (tmpnum % sys.base) + '0';
+        if (digit > '9') digit += 7;
         buf[i] = digit;
         tmpnum /= sys.base;
     }

@@ -14,7 +14,8 @@ void store() {
     int32_t* ptr = (int32_t*)*stack_at(0);
     int32_t n = *(int32_t*)stack_at(1);
     stack_pop(2);
-    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
+    if(((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top)
+            || (uint32_t *) ptr == &sys.base) {
         *ptr = n;
     } else {
         fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
@@ -28,7 +29,8 @@ void store2() {
     int64_t* ptr = (int64_t*)*stack_at(0);
     int64_t n = *(int64_t*)stack_at(2);
     stack_pop(3);
-    if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
+    if(((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top)
+            || (uint32_t *) ptr == &sys.base) {
         *ptr = n;
     } else {
         fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
@@ -248,4 +250,16 @@ void sp_at() {
 
 void to_body() {
     *stack_at(0) += 4;
+}
+
+void align() {
+    if((uint32_t) sys.cp % 4 != 0) {
+        uint32_t *cp_ptr = (uint32_t *) &sys.cp;
+        cp_ptr += 4 - ((uint32_t) sys.cp % 4);
+    }
+}
+
+void aligned() {
+    uint32_t addr = (uint32_t) sys.cp + ((4 - ((uint32_t) sys.cp % 4)) % 4);
+    stack_push(addr);
 }
