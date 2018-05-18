@@ -302,8 +302,7 @@ void semicolon() {
 }
 
 //In case of emergency, burn everything to the ground and start over
-//NOTE: Aborting in the middle of compilation may leave junk in the glossary
-void abort_(){ 
+void abort_() { 
     stack_clear();
     rstack_clear();
     strcpy(sys.tib, "\0");
@@ -381,7 +380,6 @@ int32_t int32_convert(char *buf, int *err) {
 }
 
 //Word that runs the FORTH system, including the interpreter/compiler
-//Well, for now just the interpreter. But you get the point.
 void quit() {
     //We're not aborting anymore
     sys.ABORT = false;
