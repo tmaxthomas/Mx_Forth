@@ -1,9 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "../stack.h"
 #include "../sys.h"
+#include "control.h"
+#include "strmanip.h"
 
 // ( addr u1 -- addr u2 )
 void trailing() {
@@ -51,14 +54,14 @@ void pounds() {
 // ( ud1 c -- ud1 )
 void hold() {
     memmove(sys.pad + 1, sys.pad, sys.pad_len);
-    sys.pad[0] = *(char*)stack_at(0);
+    sys.pad[0] = *(char *) stack_at(0);
     stack_pop(1);
     sys.pad_len++;
 }
 
 // ( ud1 -- ud1 )
 void sign() {
-    int32_t n = *(int32_t*)stack_at(0);
+    int32_t n = *(int32_t *) stack_at(0);
     stack_pop(1);
     if(n < 0) {
         memmove(sys.pad + 1, sys.pad, sys.pad_len);
@@ -69,7 +72,24 @@ void sign() {
 
 // ( ud1 c-addr u1 -- ud2 c-addr u2 )
 void to_number() {
-    
+    uint32_t n = *stack_at(0);
+    char *str = *(char **) stack_at(1);
+    uint64_t b = *(uint64_t *) stack_at(2);
+    stack_pop(4);
+
+    int i, num;
+    for(i = 0; i < n && ((num = to_num(*str)) != -1); i++, str++) {
+        b *= sys.base;
+        b += n;
+    }
+
+    stack_push_d(n);
+    stack_push((int32_t) str);
+    stack_push(n - i);
+}
+
+void to_in() {
+    stack_push((int32_t) &sys.idx_loc);
 }
 
 void parse() {
@@ -83,10 +103,29 @@ int is_quote(int ch) {
 void dot_quote() {
     char *buf = get_substring(is_quote);
     if(sys.COMPILE) {
-        
+        *sys.cp = (uint32_t) dot_quote_runtime;
+        sys.cp++;
+        char *ccp = (char *) sys.cp;
+        *ccp = strlen(buf);
+        memcpy(ccp + 1, buf, *ccp);
+        int count = *ccp + 1;
+        sys.cp += count / 4;
+        if (count % 4 != 0) sys.cp++;
+    } else {
+        printf("%s", buf);
     }
+    free(buf);
 }
 
 void dot_quote_runtime() {
-
+    sys.inst++;
+    char *c = (char *) sys.inst;
+    char *buf = malloc(*c + 1);
+    memcpy(buf, c + 1, *c);
+    buf[(int) *c] = '\0';
+    printf("%s", buf);
+    sys.inst += ((*c + 1) / 4);
+    if((*c + 1) % 4 == 0)
+        sys.inst--;
+    free(buf);
 }

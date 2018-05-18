@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -28,7 +27,9 @@ char *get_substring(int(*func)(int)) {
     tmp_buf[i] = '\0';
 
     sys.idx = tmp_idx;
+    sys.idx++;
     
+    sys.idx_loc = sys.idx - sys.tib; 
     return tmp_buf;
 }
 
@@ -109,6 +110,9 @@ void find() {
 // Pushes the exectuion address of the next word in the input stream onto the stack
 void tick() {
     char *buf = get_substring(isspace);
+    for(int i = 0; i < strlen(buf); i++) {
+        buf[i] = toupper(buf[i]);
+    }
     int32_t xt = cfind(buf, NULL);
     stack_push(xt);
     free(buf);
@@ -305,7 +309,7 @@ void semicolon() {
 void abort_() { 
     stack_clear();
     rstack_clear();
-    strcpy(sys.tib, "\0");
+    strcpy(sys.tib, "");
     sys.idx = sys.tib;
     sys.idx_loc = 0;
     sys.cp = sys.old_cp;
@@ -321,14 +325,65 @@ int isquote(int ch) {
 
 void abort_quote() {
     char *buf = get_substring(isquote);
-    fprintf(stdout, "%s\n", buf);
+    *sys.cp = (uint32_t) abort_quote_runtime;
+    sys.cp++;
+    char *ccp = (char *) sys.cp;
+    *ccp = strlen(buf);
+    memcpy(ccp + 1, buf, *ccp);
+    int count = *ccp + 1;
+    sys.cp += count / 4;
+    if (count % 4 != 0) sys.cp++;
     free(buf);
-    abort_();
+}
+
+void abort_quote_runtime() {
+    uint32_t flag = *stack_at(0);
+    stack_pop(1);
+    if (flag) {
+        sys.inst++;
+        char *c = (char *) sys.inst;
+        char *buf = malloc(*c + 1);
+        memcpy(buf, c + 1, *c);
+        buf[(int) *c] = '\0';
+        printf("%s", buf);
+        free(buf);
+        abort_();
+    } else {
+        sys.inst++;
+        char *c = (char *) sys.inst;
+        sys.inst += ((*c + 1) / 4);
+        if((*c + 1) % 4 == 0)
+            sys.inst--;
+    }
+    return;
 }
 
 void swp(char *c1, char *c2) {
     char a = *c1, b = *c2;
     *c1 = b, *c2 = a;
+}
+
+//Case-insensitive base-compliant digit converter
+int to_num(int c) {
+    if(c >= 'a' && c <= 'z') {
+        c -= 87;
+        if(c < sys.base) 
+            return c;
+        else 
+            return -1;
+    } else if(c >= 'A' && c <= 'Z') {
+        c -= 55;
+        if(c < sys.base)
+            return c;
+        else
+            return -1;
+    } else if(isdigit(c)) {
+        c -= '0';
+        if(c < sys.base)
+            return c;
+    }
+
+    return -1; 
 }
 
 int64_t int64_convert(char *buf, int *err) {
@@ -343,12 +398,12 @@ int64_t int64_convert(char *buf, int *err) {
     } 
 
     for(int i = strlen(buf); i > 0; i--) {
-        if(!isdigit(buf[i - 1])) {
+        int n;
+        if((n = to_num(buf[i - 1])) == -1) {
             *err = 1;
             return 0;
         } else {
-            num += (buf[i - 1] - '0') * ipow((int64_t) sys.base, 
-                                             (int64_t) (strlen(buf) - i)); 
+            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i)); 
         }
     }
     num *= neg;
@@ -367,12 +422,12 @@ int32_t int32_convert(char *buf, int *err) {
     } 
 
     for(int i = strlen(buf); i > 0; i--) {
-        if(!isdigit(buf[i - 1])) {
+        int n;
+        if((n = to_num(buf[i - 1])) == -1) {
             *err = 1;
             return 0;
         } else {
-            num += (buf[i - 1] - '0') * ipow((int64_t) sys.base, 
-                                         (int64_t) (strlen(buf) - i)); 
+            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i)); 
         }
     }
     num *= neg;
@@ -395,6 +450,9 @@ void quit() {
     rstack_push((int32_t) sys.q_addr);
     
     char *buf = get_substring(isspace);
+    for(int i = 0; i < strlen(buf); i++) {
+        if(islower(buf[i])) buf[i] = toupper(buf[i]);
+    }
     
     //If we need to read some input, do so
     if(strlen(buf) == 0) {
@@ -407,12 +465,13 @@ void quit() {
         int num_bytes = read(0, sys.tib, sys.tib_len);
         sys.tib[num_bytes - 1] = '\0'; //Chop off the trailing newline
         sys.tib[num_bytes] = '\0';
-        for(int i = 0; i < strlen(sys.tib); i++) {
-            if(islower(sys.tib[i])) sys.tib[i] = toupper(sys.tib[i]);
-        }
+        
         sys.idx = sys.tib;
         sys.idx_loc = 0;
         buf = get_substring(isspace);
+        for(int i = 0; i < strlen(buf); i++) {
+            if(islower(buf[i])) buf[i] = toupper(buf[i]);
+        }
     }
     
     if(strlen(buf) == 0) {
@@ -422,6 +481,7 @@ void quit() {
 
     int precedence;
     int32_t wd = cfind(buf, &precedence);
+
     if(wd) {
         if(!sys.COMPILE || precedence == -1) {
             rstack_push(wd);
@@ -487,5 +547,4 @@ int is_paren(int ch) {
 void paren() {
     char *buf = get_substring(is_paren);
     free(buf);
-    sys.idx++;
 }

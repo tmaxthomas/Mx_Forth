@@ -11,6 +11,7 @@ void pounds();
 void hold();
 void sign();
 void to_number();
+void to_in();
 void parse();
 
 void dot_quote();

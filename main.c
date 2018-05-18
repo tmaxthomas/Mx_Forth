@@ -9,6 +9,7 @@
 #include "stack.h"
 #include "sys.h"
 #include "forth/intmath.h"
+#include "forth/input.h"
 #include "forth/logic.h"
 #include "forth/output.h"
 #include "forth/memory.h"
@@ -224,6 +225,11 @@ int main() {
     add_basic_word("(", paren, 1);
     add_basic_word(",", comma, 0);
     add_basic_word(".\"", dot_quote, 1);
+    add_basic_word(">BODY", to_body, 0);
+    add_basic_word(">IN", to_in, 0);
+    add_basic_word("ABORT", abort_, 0);
+    add_basic_word("ABORT\"", abort_quote, 1);
+    add_basic_word("ACCEPT", accept, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

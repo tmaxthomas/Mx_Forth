@@ -246,3 +246,6 @@ void sp_at() {
     stack_push((int32_t) stack_at(0));
 }
 
+void to_body() {
+    *stack_at(0) += 4;
+}

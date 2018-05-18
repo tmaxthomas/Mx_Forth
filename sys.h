@@ -1,6 +1,7 @@
 #ifndef __SYS_H
 #define __SYS_H
 
+#include <stdint.h>
 #include <stdbool.h>
 
 //Struct containing FORTH system data

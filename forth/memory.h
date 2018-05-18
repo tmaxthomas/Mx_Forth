@@ -33,5 +33,6 @@ void constant2_runtime();
 void sp_at();
 void tib();
 void pound_tib();
+void to_body();
 
 #endif

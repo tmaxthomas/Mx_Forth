@@ -11,6 +11,7 @@
 void ubprint(uint64_t num) {
     char buf[32];
     memset(buf, 0, 32);
+    buf[0] = '0';
     uint64_t tmpnum = num;
     int len = (int) (log(tmpnum) / log(sys.base));
     for(int i = len; tmpnum > 0; i--) {
