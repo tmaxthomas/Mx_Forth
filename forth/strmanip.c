@@ -100,6 +100,22 @@ int is_quote(int ch) {
     return ch == '\"';
 }
 
+void bl() {
+    stack_push((int32_t) ' ');
+}
+
+void char_() {
+    char *buf = get_substring(isspace);
+    stack_push(buf[0]);
+    free(buf);
+}
+
+void count() {
+    char *len = *(char **) stack_at(0);
+    (*stack_at(0))++;
+    stack_push((int32_t) *len);
+}
+
 void dot_quote() {
     char *buf = get_substring(is_quote);
     if(sys.COMPILE) {

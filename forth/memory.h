@@ -13,6 +13,8 @@ void c_fetch();
 void query();
 void cell();
 void cells();
+void chars();
+void char_plus();
 void cell_plus();
 void fill();
 void erase();
@@ -25,6 +27,7 @@ void constant();
 void constant2();
 void allot();
 void comma();
+void c_comma();
 
 void create_runtime();
 void constant_runtime();

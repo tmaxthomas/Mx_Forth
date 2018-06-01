@@ -131,6 +131,17 @@ void cell_plus() {
     add();
 }
 
+// In this implementation, chars() is effectively a no-op
+// It still needs to check the top of the stack though, because
+// it's supposed to crash if the stack is empty
+void chars() {
+    *stack_at(0) *= 1;
+}
+
+void char_plus() {
+    *stack_at(0) += 1;
+}
+
 // ( n c addr -- )
 // Fills n1 bytes at addr with byte c
 void fill() {
@@ -239,6 +250,13 @@ void constant2_runtime() {
 void comma() {
     *sys.cp = *stack_at(0);
     sys.cp++;
+    stack_pop(1);
+}
+
+void c_comma() {
+    char *ccp = (char *) sys.cp;
+    *ccp = *(char *) stack_at(0);
+    sys.cp = (uint32_t *) (ccp + 1);
     stack_pop(1);
 }
 

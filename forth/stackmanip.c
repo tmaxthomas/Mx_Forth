@@ -1,4 +1,5 @@
 #include "../stack.h"
+#include "../sys.h"
 
 // ( n1 n2 -- n2 n1 )
 //Swaps top two elements of the stack
@@ -92,4 +93,8 @@ void tuck() {
     stack_push(n1);
     stack_push(n2);
     stack_push(n1);
+}
+
+void depth() {
+    stack_push(sys.stack_0 - sys.stack);
 }

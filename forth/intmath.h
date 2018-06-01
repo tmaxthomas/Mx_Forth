@@ -34,5 +34,6 @@ void Dmax();
 void lshift();
 void rshift();
 void base();
+void decimal();
 
 #endif

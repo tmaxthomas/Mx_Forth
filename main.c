@@ -183,7 +183,6 @@ int main() {
     add_basic_word("2@", fetch2, 0);
     add_basic_word("C@", c_fetch, 0);
     add_basic_word("?", query, 0);
-    add_basic_word("CELL", cell, 0);
     add_basic_word("CELLS", cells, 0);
     add_basic_word("CELL+", cell_plus, 0);
     add_basic_word("FILL", fill, 0);
@@ -233,6 +232,14 @@ int main() {
     add_basic_word("ALIGN", align, 0);
     add_basic_word("ALIGNED", aligned, 0);
     add_basic_word("BASE", base, 0);
+    add_basic_word("BL", bl, 0);
+    add_basic_word("C,", c_comma, 0);
+    add_basic_word("CHAR", char_, 0);
+    add_basic_word("CHARS", chars, 0);
+    add_basic_word("CHAR+", char_plus, 0);
+    add_basic_word("COUNT", count, 0);
+    add_basic_word("DECIMAL", decimal, 0);
+    add_basic_word("DEPTH", depth, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

@@ -266,3 +266,7 @@ void Dmax(){
 void base() {
     stack_push((int32_t) &sys.base);
 }
+
+void decimal() {
+    sys.base = 10;
+}
