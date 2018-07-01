@@ -36,5 +36,6 @@ void abort_();
 void abort_quote();
 void abort_quote_runtime();
 void paren();
+void does();
 
 #endif

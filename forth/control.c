@@ -41,12 +41,26 @@ int64_t ipow(int64_t base, int64_t exp) {
     return ret;
 }
 
-//Compares two counted strings for equality
+// Compares two counted strings for equality
 bool str_eq(uint8_t* c1, uint8_t* c2) {
-    for(uint8_t i = 0; i <= *c1; i++)
-        if(c1[i] != c2[i])
-            return false;
-    return true;
+    uint8_t len = 0, *buf = NULL;
+    if (*c1 <= *c2) {
+        len = *c2;
+        buf = malloc(len + 1);
+        memset(buf, 0, len + 1);
+        memcpy(buf, c1, *c1 + 1);
+        c1 = buf;
+    } else {
+        len = *c1;
+        buf = malloc(len + 1);
+        memset(buf, 0, len + 1); 
+        memcpy(buf, c2, *c2 + 1);
+        c2 = buf;
+    }
+    int result;
+    result = strncmp((char *) (c1 + 1), (char *) (c2 + 1), len) == 0;
+    free(buf);
+    return result;
 }
 
 //Returns a pointer to the start of the code section for func
@@ -69,7 +83,7 @@ int32_t cfind(char *str, int *precedence) {
         return 0;
     } else {
         if(precedence) {
-            *precedence = *stack_at(0);                
+            *precedence = *stack_at(0);           
         }
         int32_t ret = *stack_at(1);
         stack_pop(2);
@@ -292,6 +306,7 @@ void colon() {
     char *name = get_substring(isspace);
     uint32_t *new_wd = add_def(name, 0);
     stack_push((int32_t) new_wd);
+    free(name);
     rbracket(); 
 }
 
@@ -403,7 +418,7 @@ int64_t int64_convert(char *buf, int *err) {
             *err = 1;
             return 0;
         } else {
-            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i)); 
+            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
         }
     }
     num *= neg;
@@ -427,7 +442,7 @@ int32_t int32_convert(char *buf, int *err) {
             *err = 1;
             return 0;
         } else {
-            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i)); 
+            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
         }
     }
     num *= neg;
@@ -456,6 +471,7 @@ void quit() {
     
     //If we need to read some input, do so
     if(strlen(buf) == 0) {
+        free(buf);
         if(sys.OKAY) {
             printf("ok");
         } else {
@@ -473,11 +489,13 @@ void quit() {
             if(islower(buf[i])) buf[i] = toupper(buf[i]);
         }
     }
-    
+
+    /* 
     if(strlen(buf) == 0) {
         free(buf);
         return;
     } 
+    */
 
     int precedence;
     int32_t wd = cfind(buf, &precedence);
@@ -547,4 +565,10 @@ int is_paren(int ch) {
 void paren() {
     char *buf = get_substring(is_paren);
     free(buf);
+}
+
+void does() {
+    uint32_t dict_ptr = *stack_at(0);
+    uint8_t len = *(uint8_t *) dict_ptr;
+    dict_ptr += len + 1;
 }

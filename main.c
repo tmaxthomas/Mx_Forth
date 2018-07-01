@@ -57,12 +57,14 @@ uint32_t* add_def(char* name, uint8_t precedence) {
     ccp++;
     //Set string length byte
     uint8_t len = (uint8_t) strlen(name);
-    *ccp = len;
+    uint8_t mem_len = ((len + 1) % 4 == 0) ? len : (len + 4 - ((len + 1) % 4));
+    *ccp = mem_len;
     ccp++;
     //Copy the name into glossary memory
+    memset(ccp, 0, mem_len);
     memcpy(ccp, name, len);
-    ccp += len;
-    //Move system cp pointer
+    ccp += mem_len;
+    //Move & align system cp pointer
     sys.cp = (uint32_t*) ccp;
     //Set up back pointer
     *sys.cp = (uint32_t) sys.gloss_head;
@@ -240,6 +242,7 @@ int main() {
     add_basic_word("COUNT", count, 0);
     add_basic_word("DECIMAL", decimal, 0);
     add_basic_word("DEPTH", depth, 0);
+    add_basic_word("DOES>", does, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);
