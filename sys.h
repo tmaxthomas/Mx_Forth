@@ -19,6 +19,11 @@ struct System {
     bool PAGE, COMPILE, OKAY, ABORT;
 };
 
+struct Sys_util_t {
+    uint32_t alloc;
+};
+
 extern struct System sys;
+extern struct Sys_util_t sys_util;
 
 #endif

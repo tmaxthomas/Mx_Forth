@@ -269,8 +269,7 @@ void repeat() {
 }
 
 void jump() { 
-    sys.inst++;
-    sys.inst = *(uint32_t **) sys.inst;
+    sys.inst = *(uint32_t **) (sys.inst + 1);
     sys.inst--;
 }
 
@@ -568,7 +567,19 @@ void paren() {
 }
 
 void does() {
-    uint32_t dict_ptr = *stack_at(0);
-    uint8_t len = *(uint8_t *) dict_ptr;
-    dict_ptr += len + 1;
+    uint32_t dict_ptr_val = 1 + (uint32_t) sys.gloss_head;
+    uint8_t len = *(uint8_t *) dict_ptr_val;
+    dict_ptr_val += len + 5;
+    uint32_t *dict_ptr = (uint32_t *) dict_ptr_val;
+    *dict_ptr = (uint32_t) does_runtime;
+    dict_ptr++;
+    memmove(dict_ptr + 1, dict_ptr, sys_util.alloc);
+    *dict_ptr = (uint32_t) (sys.inst + 1);
+    exit_();
+}
+
+void does_runtime() {
+    stack_push((int32_t) (sys.inst + 2));
+    sys.inst = *(uint32_t **) (sys.inst + 1);
+    sys.inst--;    
 }

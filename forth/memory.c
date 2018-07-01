@@ -221,6 +221,7 @@ void allot() {
     uint32_t count = *stack_at(0);
     stack_pop(1);
     sys.cp += count;
+    sys_util.alloc += count * 4;
 }
 
 void create() {
@@ -230,6 +231,7 @@ void create() {
     *sys.cp = (uint32_t) create_runtime;
     sys.old_cp = sys.cp;
     sys.cp++;
+    sys_util.alloc = 0;
 }
 
 void create_runtime() {
@@ -268,6 +270,14 @@ void sp_at() {
 
 void to_body() {
     *stack_at(0) += 4;
+}
+
+uint32_t *align_(uint32_t *in) {
+    if((uint32_t) in % 4 != 0) {
+        uint32_t *ptr = (uint32_t *) &in;
+        *ptr += 4 - ((uint32_t) in % 4);
+    }
+    return in;
 }
 
 void align() {

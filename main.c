@@ -19,6 +19,7 @@
 #include "forth/control.h"
 
 struct System sys;
+struct Sys_util_t sys_util;
 
 //Size of the FORTH system size, in words (for now, 4 MB or 2^20 words)
 #define SYSTEM_SIZE 1048576
@@ -57,7 +58,7 @@ uint32_t* add_def(char* name, uint8_t precedence) {
     ccp++;
     //Set string length byte
     uint8_t len = (uint8_t) strlen(name);
-    uint8_t mem_len = ((len + 1) % 4 == 0) ? len : (len + 4 - ((len + 1) % 4));
+    uint8_t mem_len = ((len + 2) % 4 == 0) ? len : (len + 4 - ((len + 2) % 4));
     *ccp = mem_len;
     ccp++;
     //Copy the name into glossary memory
