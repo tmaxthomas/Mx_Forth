@@ -270,3 +270,15 @@ void base() {
 void decimal() {
     sys.base = 10;
 }
+
+void invert() {
+    uint32_t *a = stack_at(0);
+    *a = ~*a;
+}
+
+void xor() {
+    uint32_t a = *stack_at(0),
+             b = *stack_at(1);
+    stack_pop(2);
+    stack_push(a ^ b);
+}

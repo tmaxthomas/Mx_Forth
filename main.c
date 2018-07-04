@@ -8,6 +8,7 @@
 // .h file imports
 #include "stack.h"
 #include "sys.h"
+#include "defs.h"
 #include "forth/intmath.h"
 #include "forth/input.h"
 #include "forth/logic.h"
@@ -17,12 +18,11 @@
 #include "forth/stackmanip.h"
 #include "forth/rstack.h"
 #include "forth/control.h"
+#include "forth/misc.h"
 
-struct System sys;
-struct Sys_util_t sys_util;
+struct system_t sys;
+struct sys_util_t sys_util;
 
-//Size of the FORTH system size, in words (for now, 4 MB or 2^20 words)
-#define SYSTEM_SIZE 1048576
 
 //Runs the FORTH program at func within the FORTH environment
 void exec(uint32_t* func) {
@@ -105,6 +105,7 @@ int main() {
     sys.base = 10;
     sys.inst = 0;
     sys.OKAY = false;
+    sys.source_id = 0;
 
     //Build the glossary
     add_basic_word("CR", cr, 0);
@@ -244,6 +245,13 @@ int main() {
     add_basic_word("DECIMAL", decimal, 0);
     add_basic_word("DEPTH", depth, 0);
     add_basic_word("DOES>", does, 0);
+    add_basic_word("ENVIRONMENT?", environment, 0);
+    add_basic_word("HERE", here, 0);
+    add_basic_word("IMMEDIATE", immediate, 0);
+    add_basic_word("INVERT", invert, 0);
+    add_basic_word("LSHIFT", lshift, 0);
+    add_basic_word("RSHIFT", rshift, 0);
+    add_basic_word("XOR", xor, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

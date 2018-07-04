@@ -292,4 +292,6 @@ void aligned() {
     stack_push(addr);
 }
 
-
+void here() {
+    stack_push((int32_t) sys.cp);
+}

@@ -38,5 +38,7 @@ void abort_quote_runtime();
 void paren();
 void does();
 void does_runtime();
+void evaluate();
+void immediate();
 
 #endif

@@ -583,3 +583,16 @@ void does_runtime() {
     sys.inst = *(uint32_t **) (sys.inst + 1);
     sys.inst--;    
 }
+
+void evaluate() {
+    rstack_push((int32_t) sys.idx);
+    rstack_push((int32_t) sys.idx_loc);
+    rstack_push(sys.source_id);
+    sys.idx = *(char **) stack_at(0);
+    
+}
+
+void immediate() {
+    uint8_t *precedence = (uint8_t *) sys.gloss_head;
+    *precedence = 1;
+}

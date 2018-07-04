@@ -35,5 +35,7 @@ void lshift();
 void rshift();
 void base();
 void decimal();
+void invert();
+void xor();
 
 #endif
