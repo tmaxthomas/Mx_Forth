@@ -6,7 +6,9 @@
 
 uint32_t* stack_at(uint32_t index) {
     if(sys.stack == sys.stack_0) {
-        if(!sys.ABORT) fprintf(stderr, "ERROR: Stack underflow detected, aborting\n");
+        if(!sys.ABORT) { 
+            fprintf(stderr, "ERROR: Stack underflow detected, aborting\n");
+        }
         abort_();
     }
     return sys.stack + index;
@@ -29,7 +31,9 @@ void stack_push_d(int64_t val) {
 void stack_pop(int32_t mag) {
     sys.stack += mag;
     if(sys.stack > sys.stack_0) {
-        if(!sys.ABORT) fprintf(stderr, "ERROR: Stack underflow detected, aborting\n");
+        if(!sys.ABORT) {
+            fprintf(stderr, "ERROR: Stack underflow detected, aborting\n");
+        }
         abort_();
     }
 }
@@ -40,7 +44,9 @@ void stack_clear() {
 
 uint32_t* rstack_at(uint32_t index) {
     if(sys.rstack == sys.rstack_0) {
-        if(!sys.ABORT) fprintf(stderr, "ERROR: R-Stack underflow detected, aborting\n");
+        if(!sys.ABORT) {
+            fprintf(stderr, "ERROR: R-Stack underflow detected, aborting\n");
+        }
         abort_();
     }
     return sys.rstack + index;
@@ -63,7 +69,9 @@ void rstack_push_d(int64_t val) {
 void rstack_pop(int mag) {
     sys.rstack += mag;
     if(sys.stack > sys.stack_0) {
-        if(!sys.ABORT) fprintf(stderr, "ERROR: R-Stack underflow detected, aborting\n");
+        if(!sys.ABORT) {
+            fprintf(stderr, "ERROR: R-Stack underflow detected, aborting\n");
+        }
         abort_();
     }
 }

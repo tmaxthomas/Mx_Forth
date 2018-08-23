@@ -3,4 +3,5 @@
 .gdb_history
 mxf
 *.swp
+*.swo
 *.py

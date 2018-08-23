@@ -13,23 +13,25 @@
 /* HELPER FUNCTIONS */
 
 char *get_substring(int(*func)(int)) {
-    int i;
-    for(; func(*sys.idx); sys.idx++);
+    for(; func(*sys.idx) && sys.idx_loc < sys.idx_len; sys.idx++) {
+        sys.idx_loc++;
+    }
 
     char *tmp_idx = sys.idx;
-    for(i = 0; !func(*tmp_idx) && *tmp_idx != '\0'; i++) 
+    int tmp_loc = sys.idx_loc, i;
+    for(i = 0; !func(*tmp_idx) && tmp_loc < sys.idx_len; i++) {
         tmp_idx++;
+        tmp_loc++;
+    }
 
     char *tmp_buf = malloc(i + 1);
-    for(int j = 0; j < i; j++) 
-        tmp_buf[j] = sys.idx[j];
+    memcpy(tmp_buf, sys.idx, i);
 
     tmp_buf[i] = '\0';
 
-    sys.idx = tmp_idx;
-    sys.idx++;
+    sys.idx = tmp_idx + 1;
+    sys.idx_loc = tmp_loc + 1; 
     
-    sys.idx_loc = sys.idx - sys.tib; 
     return tmp_buf;
 }
 
@@ -448,13 +450,13 @@ int32_t int32_convert(char *buf, int *err) {
     return num;
 }
 
-//Word that runs the FORTH system, including the interpreter/compiler
+// Word that runs the FORTH system, including the interpreter/compiler
 void quit() {
-    //We're not aborting anymore
+    // We're not aborting anymore
     sys.ABORT = false;
 
-    //If QUIT was called by some means other than the normal way
-    //QUIT loops
+    // If QUIT was called by some means other than the normal way
+    // QUIT loops
     if(sys.rstack == sys.rstack_0 || *rstack_at(0) != 0) {
         sys.OKAY = false;
         rstack_clear();
@@ -468,34 +470,38 @@ void quit() {
         if(islower(buf[i])) buf[i] = toupper(buf[i]);
     }
     
-    //If we need to read some input, do so
+    // If we need to get some more input, do so
     if(strlen(buf) == 0) {
-        free(buf);
-        if(sys.OKAY) {
-            printf("ok");
+        if (sys.source_id == 0) {
+            free(buf);
+            if(sys.OKAY) {
+                printf("ok");
+            } else {
+                sys.OKAY = true;
+            }
+            printf("\n");
+            int num_bytes = read(0, sys.tib, sys.tib_len);
+            sys.tib[num_bytes - 1] = '\0'; // Chop off the trailing newline
+            // sys.tib[num_bytes] = '\0';
+            sys.idx_len = num_bytes - 1;
+            
+            sys.idx = sys.tib;
+            sys.idx_loc = 0;
         } else {
-            sys.OKAY = true;
+            free(buf);
+            sys.source_id = *rstack_at(0);
+            sys.idx_loc = *rstack_at(1);
+            sys.idx_len = *rstack_at(2);
+            sys.idx = *(char **) rstack_at(3);
+            rstack_pop(4);
         }
-        printf("\n");
-        int num_bytes = read(0, sys.tib, sys.tib_len);
-        sys.tib[num_bytes - 1] = '\0'; //Chop off the trailing newline
-        sys.tib[num_bytes] = '\0';
-        
-        sys.idx = sys.tib;
-        sys.idx_loc = 0;
+
         buf = get_substring(isspace);
         for(int i = 0; i < strlen(buf); i++) {
             if(islower(buf[i])) buf[i] = toupper(buf[i]);
         }
     }
-
-    /* 
-    if(strlen(buf) == 0) {
-        free(buf);
-        return;
-    } 
-    */
-
+    
     int precedence;
     int32_t wd = cfind(buf, &precedence);
 
@@ -503,7 +509,7 @@ void quit() {
         if(!sys.COMPILE || precedence == -1) {
             rstack_push(wd);
         } else {
-            //Some necessary optimizations, needed to make some stuff work
+            // Some necessary optimizations, needed to make some stuff work
             if(*(((uint32_t *) wd) + 1) == (uint32_t) exit_) {
                 *(sys.cp) = *(uint32_t *) wd;
             } else {
@@ -586,10 +592,14 @@ void does_runtime() {
 
 void evaluate() {
     rstack_push((int32_t) sys.idx);
+    rstack_push((int32_t) sys.idx_len);
     rstack_push((int32_t) sys.idx_loc);
     rstack_push(sys.source_id);
-    sys.idx = *(char **) stack_at(0);
-    
+    sys.idx_len = *stack_at(0);
+    sys.idx = *(char **) stack_at(1);
+    stack_pop(2);
+    sys.idx_loc = 0; 
+    sys.source_id = -1;
 }
 
 void immediate() {

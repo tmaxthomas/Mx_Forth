@@ -106,8 +106,9 @@ void urjprint() {
     uint32_t num_spaces = size - (uint32_t) floor(log10((float)data));
     stack_pop(2);
     if(sys.ABORT) return;
-    for(uint32_t i = 0; i < num_spaces; i++)
+    for(uint32_t i = 0; i < num_spaces; i++) {
         printf(" ");
+    }
     ubprint(data);
     fflush(stdout);
 }
@@ -130,8 +131,9 @@ void drjprint() {
     int64_t num_spaces = size - (int64_t) floor(log10((float)data));
     stack_pop(3);
     if(sys.ABORT) return;
-    for(int64_t i = 0; i < num_spaces; i++)
+    for(int64_t i = 0; i < num_spaces; i++) {
         printf(" ");
+    }
     bprint(data);
     fflush(stdout);
 }
@@ -139,7 +141,8 @@ void drjprint() {
 // ( -- )
 //Prints the contents of the stack
 void printS() {
-    for(uint32_t* a = sys.stack; a != sys.stack_0; a++)
+    for(uint32_t* a = sys.stack; a != sys.stack_0; a++) {
         bprint(*(int32_t *) a);
+    }
     fflush(stdout);
 }
