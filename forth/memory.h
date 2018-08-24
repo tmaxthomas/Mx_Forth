@@ -43,4 +43,6 @@ void aligned();
 
 void here();
 
+void move();
+
 #endif

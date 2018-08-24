@@ -638,3 +638,12 @@ void immediate() {
     uint8_t *precedence = (uint8_t *) sys.gloss_head;
     *precedence = 1;
 }
+
+void literal() {
+    uint32_t num = *stack_at(0);
+    stack_pop(1);
+    *(sys.cp) = (uint32_t) num_runtime;
+    sys.cp++;
+    *(int32_t*) (sys.cp) = num;
+    sys.cp++;
+}

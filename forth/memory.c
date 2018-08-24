@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "memory.h"
 #include "output.h"
@@ -294,4 +295,12 @@ void aligned() {
 
 void here() {
     stack_push((int32_t) sys.cp);
+}
+
+void move() {
+    uint32_t n = *stack_at(0);
+    void *dest = *(void **) stack_at(1);
+    void *src = *(void **) stack_at(2);
+    stack_pop(3);
+    memmove(src, dest, n);
 }

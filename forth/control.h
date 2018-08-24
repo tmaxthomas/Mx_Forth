@@ -41,5 +41,6 @@ void does();
 void does_runtime();
 void evaluate();
 void immediate();
+void literal();
 
 #endif

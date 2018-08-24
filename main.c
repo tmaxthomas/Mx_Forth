@@ -236,6 +236,8 @@ int main() {
     add_basic_word("RSHIFT", rshift, 0);
     add_basic_word("XOR", xor, 0);
     add_basic_word("EVALUATE", evaluate, 0);
+    add_basic_word("LITERAL", literal, 1);
+    add_basic_word("MOVE", move, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);
