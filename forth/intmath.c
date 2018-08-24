@@ -282,3 +282,9 @@ void xor() {
     stack_pop(2);
     stack_push(a ^ b);
 }
+
+void stod() {
+    int32_t num = *stack_at(0);
+    stack_pop(1);
+    stack_push(num);
+}

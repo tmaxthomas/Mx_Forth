@@ -37,5 +37,6 @@ void base();
 void decimal();
 void invert();
 void xor();
+void stod();
 
 #endif

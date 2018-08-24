@@ -45,5 +45,6 @@ void literal();
 void postpone();
 void state();
 void unloop();
+void recurse();
 
 #endif

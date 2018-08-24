@@ -16,6 +16,7 @@ struct system_t {
     uint32_t *inst;
     uint32_t *q_addr;
     uint32_t source_id;
+    uint32_t *curr_def;
     
     int COMPILE;
     bool PAGE, OKAY, ABORT;

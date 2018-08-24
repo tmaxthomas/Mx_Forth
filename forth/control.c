@@ -325,6 +325,7 @@ void colon() {
     char *name = get_substring(isspace);
     uint32_t *new_wd = add_def(name, 0);
     stack_push((int32_t) new_wd);
+    sys.curr_def = stack_at(0);
     free(name);
     rbracket(); 
 }
@@ -673,4 +674,9 @@ void state() {
 
 void unloop() {
     rstack_pop(2);
+}
+
+void recurse() {
+    *(sys.cp) = (uint32_t) get_xt(sys.curr_def);
+    sys.cp++;
 }
