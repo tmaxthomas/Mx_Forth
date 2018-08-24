@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+void exec(uint32_t *func);
 uint32_t *add_def(char *name, uint8_t precedence);
 char *get_substring(int(*func)(int));
 int to_num(int c);

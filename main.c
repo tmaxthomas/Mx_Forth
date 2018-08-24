@@ -24,23 +24,6 @@ struct system_t sys;
 struct sys_util_t sys_util;
 
 
-//Runs the FORTH program at func within the FORTH environment
-void exec(uint32_t* func) {
-    rstack_push(0);
-    sys.inst = func;
-    while(sys.inst) {
-        uint32_t* xt_ptr = (uint32_t*)*sys.inst;
-        if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
-            rstack_push((int32_t) (sys.inst + 1));
-            sys.inst = xt_ptr;
-        } else {
-            void(*fn)() = (void(*)()) *sys.inst;
-            fn();
-            if(sys.inst)
-                sys.inst++;
-        }
-    }
-}
 
 //Adds a new empty definition to the dictionary with the
 //provided name and precedence, and returns a pointer to

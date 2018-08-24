@@ -118,17 +118,15 @@ void count() {
 
 void dot_quote() {
     char *buf = get_substring(is_quote);
-    if(sys.COMPILE) {
-        *sys.cp = (uint32_t) dot_quote_runtime;
+    *sys.cp = (uint32_t) dot_quote_runtime;
+    sys.cp++;
+    char *ccp = (char *) sys.cp;
+    *ccp = strlen(buf);
+    memcpy(ccp + 1, buf, *ccp);
+    int count = *ccp + 1;
+    sys.cp += count / 4;
+    if (count % 4 != 0) {
         sys.cp++;
-        char *ccp = (char *) sys.cp;
-        *ccp = strlen(buf);
-        memcpy(ccp + 1, buf, *ccp);
-        int count = *ccp + 1;
-        sys.cp += count / 4;
-        if (count % 4 != 0) sys.cp++;
-    } else {
-        printf("%s", buf);
     }
     free(buf);
 }
@@ -141,7 +139,8 @@ void dot_quote_runtime() {
     buf[(int) *c] = '\0';
     printf("%s", buf);
     sys.inst += ((*c + 1) / 4);
-    if((*c + 1) % 4 == 0)
+    if((*c + 1) % 4 == 0) {
         sys.inst--;
+    }
     free(buf);
 }

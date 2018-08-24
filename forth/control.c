@@ -9,8 +9,26 @@
 #include "control.h"
 
 
-
 /* HELPER FUNCTIONS */
+
+//Runs the FORTH program at func within the FORTH environment
+void exec(uint32_t* func) {
+    rstack_push(0);
+    sys.inst = func;
+    while(sys.inst) {
+        uint32_t* xt_ptr = (uint32_t*)*sys.inst;
+        if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
+            rstack_push((int32_t) (sys.inst + 1));
+            sys.inst = xt_ptr;
+        } else {
+            void(*fn)() = (void(*)()) *sys.inst;
+            fn();
+            if(sys.inst)
+                sys.inst++;
+        }
+    }
+}
+
 
 char *get_substring(int(*func)(int)) {
     for(; func(*sys.idx) && sys.idx_loc < sys.idx_len; sys.idx++) {
@@ -462,8 +480,6 @@ void quit() {
         rstack_clear();
         rstack_push(0);
     }
-
-    rstack_push((int32_t) sys.q_addr);
     
     char *buf = get_substring(isspace);
     for(int i = 0; i < strlen(buf); i++) {
@@ -487,13 +503,9 @@ void quit() {
             
             sys.idx = sys.tib;
             sys.idx_loc = 0;
-        } else {
+        } else { // If quit() was run from within evaluate()
             free(buf);
-            sys.source_id = *rstack_at(0);
-            sys.idx_loc = *rstack_at(1);
-            sys.idx_len = *rstack_at(2);
-            sys.idx = *(char **) rstack_at(3);
-            rstack_pop(4);
+            return;
         }
 
         buf = get_substring(isspace);
@@ -501,6 +513,8 @@ void quit() {
             if(islower(buf[i])) buf[i] = toupper(buf[i]);
         }
     }
+    
+    rstack_push((int32_t) sys.q_addr);
     
     int precedence;
     int32_t wd = cfind(buf, &precedence);
@@ -591,15 +605,33 @@ void does_runtime() {
 }
 
 void evaluate() {
+    // Store the current input source, whatever it may be, and set
+    // the base of the rstack to make a new stack frame
     rstack_push((int32_t) sys.idx);
     rstack_push((int32_t) sys.idx_len);
     rstack_push((int32_t) sys.idx_loc);
     rstack_push(sys.source_id);
+    rstack_push((int32_t) sys.inst);
+    rstack_push((int32_t) sys.rstack_0);
+    sys.rstack_0 = sys.rstack;
     sys.idx_len = *stack_at(0);
     sys.idx = *(char **) stack_at(1);
     stack_pop(2);
     sys.idx_loc = 0; 
     sys.source_id = -1;
+    
+    // Now spin up a new instance of the FORTH system
+    exec(sys.q_addr);
+
+    // Finally, pop the stack frame we made
+    sys.rstack = sys.rstack_0;
+    sys.rstack_0 = *(uint32_t **) sys.rstack;
+    sys.inst = *(uint32_t **) rstack_at(1);
+    sys.source_id = *rstack_at(2);
+    sys.idx_loc = *rstack_at(3);
+    sys.idx_len = *rstack_at(4);
+    sys.idx = *(char **) rstack_at(5);
+    rstack_pop(6);
 }
 
 void immediate() {
