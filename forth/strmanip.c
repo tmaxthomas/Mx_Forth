@@ -144,3 +144,8 @@ void dot_quote_runtime() {
     }
     free(buf);
 }
+
+void source() {
+    stack_push((int32_t) sys.idx);
+    stack_push((int32_t) sys.idx_len);
+}

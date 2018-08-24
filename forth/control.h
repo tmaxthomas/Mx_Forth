@@ -42,5 +42,8 @@ void does_runtime();
 void evaluate();
 void immediate();
 void literal();
+void postpone();
+void state();
+void unloop();
 
 #endif

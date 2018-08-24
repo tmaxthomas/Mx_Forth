@@ -16,8 +16,9 @@ struct system_t {
     uint32_t *inst;
     uint32_t *q_addr;
     uint32_t source_id;
-
-    bool PAGE, COMPILE, OKAY, ABORT;
+    
+    int COMPILE;
+    bool PAGE, OKAY, ABORT;
 };
 
 struct sys_util_t {

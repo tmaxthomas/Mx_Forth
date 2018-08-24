@@ -647,3 +647,30 @@ void literal() {
     *(int32_t*) (sys.cp) = num;
     sys.cp++;
 }
+
+void postpone() {
+    char *buf = get_substring(isspace);
+    int32_t wd = cfind(buf, NULL);
+    if (wd) {
+        // Some necessary optimizations, needed to make some stuff work
+        if(*(((uint32_t *) wd) + 1) == (uint32_t) exit_) {
+            *(sys.cp) = *(uint32_t *) wd;
+        } else {
+            *(sys.cp) = (uint32_t) wd; 
+        }
+        sys.cp++;
+        free(buf);
+    } else {
+        fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
+        free(buf);
+        abort_();
+    }
+}
+
+void state() {
+    stack_push((int32_t) &sys.COMPILE);
+}
+
+void unloop() {
+    rstack_pop(2);
+}

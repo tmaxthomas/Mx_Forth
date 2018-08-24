@@ -20,4 +20,6 @@ void count();
 void dot_quote();
 void dot_quote_runtime();
 
+void source();
+
 #endif

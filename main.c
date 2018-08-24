@@ -238,6 +238,10 @@ int main() {
     add_basic_word("EVALUATE", evaluate, 0);
     add_basic_word("LITERAL", literal, 1);
     add_basic_word("MOVE", move, 0);
+    add_basic_word("POSTPONE", postpone, 1);
+    add_basic_word("SOURCE", source, 0);
+    add_basic_word("STATE", state, 0);
+    add_basic_word("UNLOOP", unloop, 0);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);
