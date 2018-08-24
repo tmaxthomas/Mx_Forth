@@ -244,6 +244,9 @@ int main() {
     add_basic_word("UNLOOP", unloop, 0);
     add_basic_word("S>D", stod, 0);
     add_basic_word("RECURSE", recurse, 1);
+    add_basic_word("S\"", s_quote, 1);
+    add_basic_word("WORD", word, 0);
+    add_basic_word("[']", bracket_tick_bracket, 1);
 
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);

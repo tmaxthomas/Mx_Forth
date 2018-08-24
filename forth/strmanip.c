@@ -145,7 +145,49 @@ void dot_quote_runtime() {
     free(buf);
 }
 
+void s_quote() {
+    char *buf = get_substring(is_quote);
+    *sys.cp = (uint32_t) s_quote_runtime;
+    sys.cp++;
+    char *ccp = (char *) sys.cp;
+    *ccp = strlen(buf);
+    memcpy(ccp + 1, buf, *ccp);
+    int count = *ccp + 1;
+    sys.cp += count / 4;
+    if (count % 4 != 0) {
+        sys.cp++;
+    }
+    free(buf);
+}
+
+void s_quote_runtime() {
+    sys.inst++;
+    char *c = (char *) sys.inst;
+    stack_push((int32_t) (c + 1));
+    stack_push((int32_t) *c);
+    sys.inst += ((*c + 1) / 4);
+    if((*c + 1) % 4 == 0) {
+        sys.inst--;
+    }
+}
+
 void source() {
     stack_push((int32_t) sys.idx);
     stack_push((int32_t) sys.idx_len);
+}
+
+int word_delim = '\0';
+
+int is_word_delim(int c) {
+    return c == word_delim;
+}
+
+void word() {
+    word_delim = *sys.idx;
+    char *buf = get_substring(is_word_delim);
+    sys.pad = (char *) sys.stack + 256;
+    sys.pad[0] = strlen(buf);
+    memcpy(sys.pad + 1, buf, sys.pad[0]);
+    sys.pad[sys.pad[0] + 2] = ' ';
+    stack_push((int32_t) sys.pad);
 }

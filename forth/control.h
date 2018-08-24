@@ -10,6 +10,7 @@ int to_num(int c);
 
 void find();
 void tick();
+void bracket_tick_bracket();
 void execute();
 void exit_();
 void if_();
@@ -31,6 +32,8 @@ void lbracket();
 void rbracket();
 void colon();
 void semicolon();
+void num_runtime();
+void dnum_runtime();
 void quit();
 void bye();
 void abort_();

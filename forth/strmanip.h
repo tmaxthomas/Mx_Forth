@@ -19,7 +19,10 @@ void count();
 
 void dot_quote();
 void dot_quote_runtime();
+void s_quote();
+void s_quote_runtime();
 
 void source();
+void word();
 
 #endif

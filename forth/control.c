@@ -148,7 +148,34 @@ void tick() {
         buf[i] = toupper(buf[i]);
     }
     int32_t xt = cfind(buf, NULL);
+    if (!xt) {
+        fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
+        free(buf);
+        abort_();
+        return;
+    }
     stack_push(xt);
+    free(buf);
+}
+
+void bracket_tick_bracket() {
+    char *buf = get_substring(isspace);
+    for(int i = 0; i < strlen(buf); i++) {
+        buf[i] = toupper(buf[i]);
+    }
+
+    int32_t xt = cfind(buf, NULL);
+    if (!xt) {
+        fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
+        free(buf);
+        abort_();
+        return;
+    }
+
+    *sys.cp = (uint32_t) num_runtime;
+    sys.cp++;
+    *sys.cp = xt;
+    sys.cp++;
     free(buf);
 }
 
