@@ -180,7 +180,7 @@ int main() {
     add_basic_word("IMMEDIATE", immediate, 0);
     add_basic_word("INVERT", invert, 0);
     add_basic_word("J", retCopy3, 0);
-    //KEY
+    add_basic_word("KEY", key, 0);
     add_basic_word("LEAVE", leave, 1);
     add_basic_word("LITERAL", literal, 1);
     add_basic_word("LOOP", loop, 1);
