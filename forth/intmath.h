@@ -4,10 +4,8 @@
 #include <stdint.h>
 
 void add();
-void Dadd();
 void Madd();
 void sub();
-void Dsub();
 void mult();
 void umult();
 void Mmult();
@@ -24,13 +22,9 @@ void sub1();
 void add2();
 void sub2();
 void abs_();
-void dabs();
 void neg();
-void Dneg();
 void min();
-void Dmin();
 void max();
-void Dmax();
 void lshift();
 void rshift();
 void base();

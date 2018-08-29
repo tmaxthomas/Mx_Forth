@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-void trailing();
 void bracket_pound();
 void pound_bracket();
 void pound();

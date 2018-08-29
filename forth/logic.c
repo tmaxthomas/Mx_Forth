@@ -31,17 +31,6 @@ void equals(){
         stack_push(0x00000000);
 }
 
-// ( d1 d2 -- f )
-//Compares two double-length numbers at the top of the stack for equality
-void Dequals() {
-    int64_t a = *(int64_t*)stack_at(0), b = *(int64_t*)stack_at(2);
-    stack_pop(4);
-    if(a == b)
-        stack_push((int32_t)0xffffffff);
-    else
-        stack_push(0x00000000);
-}
-
 // ( n1 n2 -- f )
 void lessThan(){
     int32_t a = *(int32_t*)stack_at(1), b = *(int32_t*)stack_at(0);
@@ -56,26 +45,6 @@ void lessThan(){
 void UlessThan(){
     uint32_t a = *stack_at(1), b = *stack_at(0);
     stack_pop(2);
-    if(a < b)
-        stack_push((int32_t)0xffffffff);
-    else
-        stack_push(0x00000000);
-}
-
-// ( d1 d2 -- f )
-void DlessThan() {
-    int64_t a = *(int64_t*)stack_at(0), b = *(int64_t*)stack_at(2);
-    stack_pop(4);
-    if(a < b)
-        stack_push((int32_t)0xffffffff);
-    else
-        stack_push(0x00000000);
-}
-
-// ( d1 d2 -- f )
-void DUlessThan() {
-    uint64_t a = *(uint64_t*)stack_at(1), b = *(uint64_t*)stack_at(3);
-    stack_pop(4);
     if(a < b)
         stack_push((int32_t)0xffffffff);
     else
@@ -97,17 +66,6 @@ void greaterThan(){
 void zeroEquals(){
     int32_t a = *(int32_t*)stack_at(0);
     stack_pop(1);
-    if(a == 0)
-        stack_push((int32_t)0xffffffff);
-    else
-        stack_push(0x00000000);
-}
-
-// ( d -- f )
-// Tests whether the double-length top of the stack is equal to zero
-void DzeroEquals(){
-    int64_t a = *(int64_t*)stack_at(0);
-    stack_pop(2);
     if(a == 0)
         stack_push((int32_t)0xffffffff);
     else

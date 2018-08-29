@@ -8,17 +8,6 @@
 #include "control.h"
 #include "strmanip.h"
 
-// ( addr u1 -- addr u2 )
-void trailing() {
-    uint32_t u = *stack_at(0);
-    char* str = (char*)*stack_at(1);
-    stack_pop(1);
-    //Creatively (ab)using for loops for fun and profit
-    for(; str[u-1] != ' '; u--);
-    str[u] = '\0';
-    stack_push((int32_t) u);
-}
-
 // ( ud -- ud )
 void bracket_pound() {
     sys.pad = (char *) sys.stack + 256;

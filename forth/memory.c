@@ -106,13 +106,6 @@ void c_fetch() {
     }
 }
 
-// ( addr -- n )
-// Equivalent to @ .
-void query() {
-    fetch();
-    print();
-}
-
 // ( -- 4 )
 // Pushes 4 (the size of a cell) onto the stack
 void cell() {
@@ -159,13 +152,6 @@ void fill() {
     }
 }
 
-// ( n addr -- )
-// Fills n bytes at addr with 0
-void erase() {
-    stack_push(0);
-    fill();
-}
-
 // ( u addr -- )
 // Prints the contents of u bytes at addr
 void dump() {
@@ -185,15 +171,6 @@ void variable() {
     sys.old_cp = sys.cp;
 }
 
-void variable2() {
-    char *name = get_substring(isspace);
-    uint32_t *new_wd = add_def(name, 0);
-    sys.gloss_head = new_wd;
-    *sys.cp = (uint32_t) create_runtime;
-    sys.cp += 3;
-    sys.old_cp = sys.cp;
-}
-
 void constant() {
     char *name = get_substring(isspace);
     uint32_t *new_wd = add_def(name, 0);
@@ -204,18 +181,6 @@ void constant() {
     stack_pop(1);
     sys.cp++;
     sys.old_cp = sys.cp;
-}
-
-void constant2() {
-    char *name = get_substring(isspace);
-    uint32_t *new_wd = add_def(name, 0);
-    sys.gloss_head = new_wd;
-    *sys.cp = (uint32_t) constant2_runtime;
-    sys.cp++;
-    *(int64_t *) sys.cp = *(int64_t *) stack_at(0);
-    stack_pop(1);
-    sys.cp += 2;
-    sys.old_cp = sys.cp; 
 }
 
 void allot() {
@@ -242,11 +207,6 @@ void create_runtime() {
 
 void constant_runtime() {
     stack_push(*(int32_t *) (sys.inst + 1));
-    exit_();
-}
-
-void constant2_runtime() {
-    stack_push_d(*(int64_t *) (sys.inst + 1));
     exit_();
 }
 

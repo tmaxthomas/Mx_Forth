@@ -185,7 +185,8 @@ void execute() {
     uint32_t* xt_ptr = *(uint32_t **) stack_at(0);
     stack_pop(1);
     rstack_push((int32_t) (sys.inst + 1));
-    rstack_push((int32_t) (xt_ptr));
+    sys.inst = xt_ptr;
+    sys.inst--;
 }
 
 // ( -- )

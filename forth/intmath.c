@@ -14,14 +14,6 @@ void add() {
     *(int32_t*)stack_at(0) += s;
 }
 
-// ( d1 d2 -- sum )
-// Adds d2 to d1
-void Dadd() {
-    int64_t s = *(int64_t*)stack_at(0);
-    stack_pop(2);
-    *(int64_t*)stack_at(0) += s;
-}
-
 // ( d n -- sum )
 // Adds n to d - double length result
 void Madd() {
@@ -36,14 +28,6 @@ void sub() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);
     *(int32_t*)stack_at(0) -= s;
-}
-
-// ( d1 d2 -- diff )
-// Subtracts d2 from d1
-void Dsub() {
-    int64_t s = *(int64_t*)stack_at(0);
-    stack_pop(2);
-    *(int64_t*)stack_at(0) -= s;
 }
 
 // ( n1 n2 -- prod )
@@ -194,21 +178,10 @@ void abs_(){
     *(int32_t*)stack_at(0) = abs(*(int32_t*)stack_at(0));
 }
 
-// ( d -- ud )
-void dabs() {
-    *(int64_t*)stack_at(0) = llabs(*(int64_t*)stack_at(0));
-}
-
 // ( n1 -- n2 )
 //Negates the top of the stack
 void neg(){
     *(int32_t*)stack_at(0) *= -1;
-}
-
-// ( d1 -- d2 )
-//Negates the double-length top of the stack
-void Dneg() {
-    *(int64_t*)stack_at(0) *= -1;
 }
 
 // ( n1 n2 -- n3 )
@@ -224,19 +197,6 @@ void min(){
         stack_push(a);
 }
 
-// ( d1 d2 -- d3 )
-// Returns the minimum of 2 double-length numbers
-void Dmin(){
-    int64_t a = *(int64_t*)stack_at(0);
-    stack_pop(2);
-    int64_t b = *(int64_t*)stack_at(0);
-    stack_pop(2);
-    if(a > b)
-        stack_push_d(b);
-    else
-        stack_push_d(a);
-}
-
 // ( n1 n2 -- n3 )
 //Returns maximum of 2 numbers
 void max(){
@@ -248,19 +208,6 @@ void max(){
         stack_push(a);
     else
         stack_push(b);
-}
-
-// ( d1 d2 -- d3 )
-// Returns the maximum of 2 double-length numbers
-void Dmax(){
-    int64_t a = *(int64_t*)stack_at(0);
-    stack_pop(2);
-    int64_t b = *(int64_t*)stack_at(0);
-    stack_pop(2);
-    if(a > b)
-        stack_push_d(a);
-    else
-        stack_push_d(b);
 }
 
 void base() {
