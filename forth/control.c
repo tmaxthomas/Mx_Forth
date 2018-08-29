@@ -235,6 +235,7 @@ void do_() {
     *sys.cp = (uint32_t) do_runtime;
     sys.cp++;
     stack_push((int32_t) sys.cp);
+    stack_push(0);
 }
 
 void do_runtime() {
@@ -246,11 +247,19 @@ void do_runtime() {
 }
 
 void loop() {
-    uint32_t addr = *stack_at(0); 
+    // Handle all the LEAVE state
+    while (*stack_at(0)) {
+        uint32_t *leave_addr = *(uint32_t **) stack_at(0);
+        *leave_addr = (uint32_t) (sys.cp + 2);
+        stack_pop(1);
+    }
+    stack_pop(1);
+
+    uint32_t do_addr = *stack_at(0); 
     stack_pop(1);
     *sys.cp = (uint32_t) loop_runtime;
     sys.cp++;
-    *sys.cp = addr;
+    *sys.cp = do_addr;
     sys.cp++;
 }
 
@@ -268,11 +277,19 @@ void loop_runtime() {
 }
 
 void plus_loop() {
-    uint32_t addr = *stack_at(0); 
+    // Handle all the LEAVE state
+    while (*stack_at(0)) {
+        uint32_t *leave_addr = *(uint32_t **) stack_at(0);
+        *leave_addr = (uint32_t) (sys.cp + 2);
+        stack_pop(1);
+    }
+    stack_pop(1);
+
+    uint32_t do_addr = *stack_at(0); 
     stack_pop(1);
     *sys.cp = (uint32_t) plus_loop_runtime;
     sys.cp++;
-    *sys.cp = addr;
+    *sys.cp = do_addr;
     sys.cp++;
 }
 
@@ -428,11 +445,6 @@ void abort_quote_runtime() {
             sys.inst--;
     }
     return;
-}
-
-void swp(char *c1, char *c2) {
-    char a = *c1, b = *c2;
-    *c1 = b, *c2 = a;
 }
 
 //Case-insensitive base-compliant digit converter
@@ -714,7 +726,16 @@ void unloop() {
 }
 
 void leave() {
-    
+    *sys.cp = (uint32_t) unloop;
+    sys.cp++;
+    *sys.cp = (uint32_t) jump;
+    sys.cp++;
+    int i;
+    for(i = 0; *stack_at(i); i++);
+    memmove(sys.stack - 1, sys.stack, i * 4);
+    sys.stack--;
+    *stack_at(i) = (uint32_t) sys.cp;
+    sys.cp++;
 }
 
 void recurse() {
