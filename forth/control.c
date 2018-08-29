@@ -179,6 +179,15 @@ void bracket_tick_bracket() {
     free(buf);
 }
 
+void bracket_char_bracket() {
+    char *buf = get_substring(isspace);
+    *sys.cp = (uint32_t) num_runtime;
+    sys.cp++;
+    *sys.cp = buf[0];
+    sys.cp++;
+    free(buf);
+}
+
 // ( addr -- )
 // Executes the word pointed to by addr by moving the instruction pointer
 void execute() {
@@ -702,6 +711,10 @@ void state() {
 
 void unloop() {
     rstack_pop(2);
+}
+
+void leave() {
+    
 }
 
 void recurse() {

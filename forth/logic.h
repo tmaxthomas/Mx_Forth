@@ -11,7 +11,5 @@ void UlessThan();
 void greaterThan();
 void zeroEquals();
 void zeroLessThan();
-void zeroGreaterThan();
-void stack_q();
 
 #endif

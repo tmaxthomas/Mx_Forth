@@ -14,14 +14,6 @@ void add() {
     *(int32_t*)stack_at(0) += s;
 }
 
-// ( d n -- sum )
-// Adds n to d - double length result
-void Madd() {
-    int32_t n = *(int32_t*)stack_at(0);
-    stack_pop(2);
-    *(int64_t*)stack_at(0) += (int64_t)n;
-}
-
 // ( n1 n2 -- diff )
 // Subtracts n2 from n1
 void sub() {
@@ -145,18 +137,6 @@ void add1() {
 //Decrements the top of the stack
 void sub1() {
     (*(int32_t*)stack_at(0))--;
-}
-
-// ( n1 -- n2 )
-//Adds 2 to the top of the stack
-void add2() {
-    *(int32_t*)stack_at(0) += 2;
-}
-
-// ( n1 -- n2 )
-//Subtracts 2 from the top of the stack
-void sub2() {
-    *(int32_t*)stack_at(0) -= 2;
 }
 
 // ( n1 -- n2 )

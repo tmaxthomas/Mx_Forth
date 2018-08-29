@@ -28,9 +28,6 @@ void c_comma();
 void create_runtime();
 void constant_runtime();
 
-void sp_at();
-void tib();
-void pound_tib();
 void to_body();
 
 void align();

@@ -13,7 +13,6 @@ void over2();
 void rot();
 void drop();
 void drop2();
-void tuck();
 void depth();
 
 #endif

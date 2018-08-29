@@ -223,12 +223,6 @@ void c_comma() {
     stack_pop(1);
 }
 
-// ( -- addr )
-//Pushes the address of the top of the stack onto the stack_q
-void sp_at() {
-    stack_push((int32_t) stack_at(0));
-}
-
 void to_body() {
     *stack_at(0) += 4;
 }

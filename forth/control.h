@@ -11,6 +11,7 @@ int to_num(int c);
 void find();
 void tick();
 void bracket_tick_bracket();
+void bracket_char_bracket();
 void execute();
 void exit_();
 void if_();
@@ -48,6 +49,7 @@ void literal();
 void postpone();
 void state();
 void unloop();
+void leave();
 void recurse();
 
 #endif

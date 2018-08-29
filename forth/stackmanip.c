@@ -85,16 +85,6 @@ void drop2() {
     stack_pop(2);
 }
 
-// ( n1 n2 -- n2 n1 n2 )
-void tuck() {
-    int32_t n1 = *(int32_t*)stack_at(0);
-    int32_t n2 = *(int32_t*)stack_at(1);
-    stack_pop(2);
-    stack_push(n1);
-    stack_push(n2);
-    stack_push(n1);
-}
-
 void depth() {
     stack_push(sys.stack_0 - sys.stack);
 }

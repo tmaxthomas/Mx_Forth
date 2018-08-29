@@ -82,22 +82,3 @@ void zeroLessThan(){
     else
         stack_push(0x00000000);
 }
-
-// ( n -- f )
-// Tests whether the top of the stack is greater than zero
-void zeroGreaterThan(){
-    int32_t a = *(int32_t*)stack_at(0);
-    stack_pop(1);
-    if(0 > a)
-        stack_push((int32_t)0xffffffff);
-    else
-        stack_push(0x00000000);
-}
-
-// ( -- f )
-// Pushes true if the stack is empty, pushes false otherwise
-void stack_q() {
-    if(sys.stack == sys.stack_0) stack_push((int32_t)0xffffffff);
-    else stack_push(0x00000000);
-
-}

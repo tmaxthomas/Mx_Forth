@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 void add();
-void Madd();
 void sub();
 void mult();
 void umult();
@@ -19,8 +18,6 @@ void multDiv();
 void multDivMod();
 void add1();
 void sub1();
-void add2();
-void sub2();
 void abs_();
 void neg();
 void min();
