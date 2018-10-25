@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -std=c99 -g -m32 -lm -Wall -Werror
+CFLAGS = -std=c99 -g -m32 -Wall -Werror
+LDFLAGS = -lm
 FDIR = forth
 
 FDEPS = intmath.h input.h logic.h stackmanip.h strmanip.h output.h memory.h rstack.h control.h misc.h
@@ -14,5 +15,5 @@ OBJ += $(patsubst %, $(FDIR)/%, $(FOBJ))
 		$(CC) -c -o $@ $< $(CFLAGS)
 
 mxf: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
 	rm -f *.o $(FDIR)/*.o
