@@ -116,6 +116,8 @@ int main() {
     add_func(abort_quote_runtime);
     add_func(does_runtime);
     add_func(unloop);
+    add_func(create_runtime);
+    add_func(constant_runtime);
    
     add_basic_word("!", store, 0);
     add_basic_word("#", pound, 0);

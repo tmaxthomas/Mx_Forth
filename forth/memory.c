@@ -8,6 +8,7 @@
 #include "control.h"
 #include "../stack.h"
 #include "../sys.h"
+#include "../defs.h"
 
 // ( n addr -- )
 // Stores n at the memory location pointed to by addr
@@ -166,7 +167,7 @@ void variable() {
     char *name = get_substring(isspace);
     uint32_t *new_wd = add_def(name, 0);
     sys.gloss_head = new_wd;
-    *sys.cp = (uint32_t) create_runtime;
+    *sys.cp = CREATE_RUNTIME_ADDR;
     sys.cp += 2;
     sys.old_cp = sys.cp;
 }
@@ -175,7 +176,7 @@ void constant() {
     char *name = get_substring(isspace);
     uint32_t *new_wd = add_def(name, 0);
     sys.gloss_head = new_wd;
-    *sys.cp = (uint32_t) constant_runtime;
+    *sys.cp = CONSTANT_RUNTIME_ADDR;
     sys.cp++;
     *(int32_t *) sys.cp = *(int32_t *) stack_at(0);
     stack_pop(1);
@@ -194,7 +195,7 @@ void create() {
     char *name = get_substring(isspace);
     uint32_t *new_wd = add_def(name, 0);
     sys.gloss_head = new_wd;
-    *sys.cp = (uint32_t) create_runtime;
+    *sys.cp = CREATE_RUNTIME_ADDR;
     sys.old_cp = sys.cp;
     sys.cp++;
     sys_util.alloc = 0;

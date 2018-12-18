@@ -21,11 +21,14 @@ void exec(uint32_t* func) {
         if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
             rstack_push((int32_t) (sys.inst + 1));
             sys.inst = xt_ptr;
-        } else {
+        } else if (*sys.inst < ft_size) {
             void(*fn)() = func_table[*sys.inst];
             fn();
             if(sys.inst)
                 sys.inst++;
+        } else {
+            fprintf(stderr, "ERROR: Invalid execution address, aborting\n");
+            abort_();
         }
     }
 }
@@ -452,23 +455,12 @@ void abort_quote_runtime() {
 int to_num(int c) {
     if(c >= 'a' && c <= 'z') {
         c -= 87;
-        if(c < sys.base) 
-            return c;
-        else 
-            return -1;
     } else if(c >= 'A' && c <= 'Z') {
         c -= 55;
-        if(c < sys.base)
-            return c;
-        else
-            return -1;
     } else if(isdigit(c)) {
         c -= '0';
-        if(c < sys.base)
-            return c;
     }
-
-    return -1; 
+    return (c < sys.base) ? c : -1;
 }
 
 int64_t int64_convert(char *buf, int *err) {
