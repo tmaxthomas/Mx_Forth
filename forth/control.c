@@ -172,7 +172,7 @@ void bracket_tick_bracket() {
         return;
     }
 
-    *sys.cp = (uint32_t) num_runtime;
+    *sys.cp = NUM_RUNTIME_ADDR;
     sys.cp++;
     *sys.cp = xt;
     sys.cp++;
@@ -181,7 +181,7 @@ void bracket_tick_bracket() {
 
 void bracket_char_bracket() {
     char *buf = get_substring(isspace);
-    *sys.cp = (uint32_t) num_runtime;
+    *sys.cp = NUM_RUNTIME_ADDR;
     sys.cp++;
     *sys.cp = buf[0];
     sys.cp++;
@@ -207,7 +207,7 @@ void exit_() {
 }
 
 void if_() {
-    *sys.cp = (uint32_t) cond_jump;
+    *sys.cp = COND_JUMP_ADDR;
     sys.cp++;
     stack_push((int32_t) sys.cp);
     sys.cp++;
@@ -217,7 +217,7 @@ void else_() {
     uint32_t **loc = *(uint32_t ***)stack_at(0);
     stack_pop(1);
 
-    *sys.cp = (uint32_t) jump;
+    *sys.cp = JUMP_ADDR;
     sys.cp++;
     stack_push((int32_t) sys.cp);
     sys.cp++;
@@ -232,7 +232,7 @@ void then(){
 }
 
 void do_() { 
-    *sys.cp = (uint32_t) do_runtime;
+    *sys.cp = DO_RUNTIME_ADDR;
     sys.cp++;
     stack_push((int32_t) sys.cp);
     stack_push(0);
@@ -257,7 +257,7 @@ void loop() {
 
     uint32_t do_addr = *stack_at(0); 
     stack_pop(1);
-    *sys.cp = (uint32_t) loop_runtime;
+    *sys.cp = LOOP_RUNTIME_ADDR;
     sys.cp++;
     *sys.cp = do_addr;
     sys.cp++;
@@ -287,7 +287,7 @@ void plus_loop() {
 
     uint32_t do_addr = *stack_at(0); 
     stack_pop(1);
-    *sys.cp = (uint32_t) plus_loop_runtime;
+    *sys.cp = PLUS_LOOP_RUNTIME_ADDR;
     sys.cp++;
     *sys.cp = do_addr;
     sys.cp++;
@@ -316,14 +316,14 @@ void begin() {
 void until() {
     uint32_t jmp_addr = *stack_at(0);
     stack_pop(1);
-    *sys.cp = (uint32_t) cond_jump;
+    *sys.cp = COND_JUMP_ADDR;
     sys.cp++;
     *sys.cp = jmp_addr;
     sys.cp++; 
 }
 
 void while_() { 
-    *sys.cp = (uint32_t) cond_jump;
+    *sys.cp = COND_JUMP_ADDR;
     sys.cp++;
     stack_push((int32_t) sys.cp);
     sys.cp++;
@@ -335,7 +335,7 @@ void repeat() {
 
     stack_pop(2);
     
-    *sys.cp = (uint32_t) jump;
+    *sys.cp = JUMP_ADDR;
     sys.cp++;
     *sys.cp = begin_addr;
     sys.cp++;
@@ -385,7 +385,7 @@ void colon() {
 }
 
 void semicolon() {
-    *(sys.cp) = (uint32_t) exit_;
+    *(sys.cp) = EXIT_ADDR;
     sys.cp++;
     uint32_t *new_wd = *(uint32_t**)stack_at(0);
     stack_pop(1);
@@ -414,7 +414,7 @@ int isquote(int ch) {
 
 void abort_quote() {
     char *buf = get_substring(isquote);
-    *sys.cp = (uint32_t) abort_quote_runtime;
+    *sys.cp = ABORT_QUOTE_RUNTIME_ADDR;
     sys.cp++;
     char *ccp = (char *) sys.cp;
     *ccp = strlen(buf);
@@ -596,7 +596,7 @@ void quit() {
             if(!sys.COMPILE) {
                 stack_push_d(num);
             } else {    
-                *(sys.cp) = (uint32_t) dnum_runtime;
+                *(sys.cp) = DNUM_RUNTIME_ADDR;
                 sys.cp++;
                 *(int64_t*) (sys.cp) = num;
                 sys.cp += 2;
@@ -612,7 +612,7 @@ void quit() {
             if(!sys.COMPILE) {
                 stack_push(num);
             } else {
-                *(sys.cp) = (uint32_t) num_runtime;
+                *(sys.cp) = NUM_RUNTIME_ADDR;
                 sys.cp++;
                 *(int32_t*) (sys.cp) = num;
                 sys.cp++;
@@ -641,7 +641,7 @@ void does() {
     uint8_t len = *(uint8_t *) dict_ptr_val;
     dict_ptr_val += len + 5;
     uint32_t *dict_ptr = (uint32_t *) dict_ptr_val;
-    *dict_ptr = (uint32_t) does_runtime;
+    *dict_ptr = DOES_RUNTIME_ADDR;
     dict_ptr++;
     memmove(dict_ptr + 1, dict_ptr, sys_util.alloc);
     *dict_ptr = (uint32_t) (sys.inst + 1);
@@ -692,7 +692,7 @@ void immediate() {
 void literal() {
     uint32_t num = *stack_at(0);
     stack_pop(1);
-    *(sys.cp) = (uint32_t) num_runtime;
+    *(sys.cp) = NUM_RUNTIME_ADDR;
     sys.cp++;
     *(int32_t*) (sys.cp) = num;
     sys.cp++;
@@ -726,9 +726,9 @@ void unloop() {
 }
 
 void leave() {
-    *sys.cp = (uint32_t) unloop;
+    *sys.cp = UNLOOP_ADDR;
     sys.cp++;
-    *sys.cp = (uint32_t) jump;
+    *sys.cp = JUMP_ADDR;
     sys.cp++;
     int i;
     for(i = 0; *stack_at(i); i++);

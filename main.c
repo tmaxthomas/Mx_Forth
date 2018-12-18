@@ -73,7 +73,7 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
     add_func(func);
     *(sys.cp) = ft_size - 1;
     sys.cp++;
-    *(sys.cp) = 0;
+    *(sys.cp) = EXIT_ADDR;
     sys.cp++;
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
@@ -111,6 +111,18 @@ int main() {
     
     // Need to add EXIT first since add_basic_word depends on the table index of EXIT being 0
     add_basic_word("EXIT", exit_, 0);
+
+    // Now need to add a few funcs that aren't words but need definite addresses in the table
+    add_func(dnum_runtime);
+    add_func(num_runtime);
+    add_func(cond_jump);
+    add_func(jump);
+    add_func(do_runtime);
+    add_func(loop_runtime);
+    add_func(plus_loop_runtime);
+    add_func(abort_quote_runtime);
+    add_func(does_runtime);
+    add_func(unloop);
    
     add_basic_word("!", store, 0);
     add_basic_word("#", pound, 0);
