@@ -23,19 +23,31 @@
 struct system_t sys;
 struct sys_util_t sys_util;
 
+void (** func_table)() = NULL;
+uint32_t ft_size = 0, ft_alloc = 0;
+
+void add_func(void (*func)()) {
+    if (ft_size == ft_alloc) {
+        ft_alloc <<= 1;
+        func_table = realloc(func_table, ft_alloc * sizeof(void (*)()));
+    }
+
+    func_table[ft_size] = func;
+    ft_size++;
+}
 
 
 //Adds a new empty definition to the dictionary with the
 //provided name and precedence, and returns a pointer to
 //the end of the new definition
-uint32_t* add_def(char* name, uint8_t precedence) {
+uint32_t *add_def(char *name, uint8_t precedence) {
     //Make sure the name gets stored as uppercase
     for(int i = 0; i < strlen(name); i++) {
         if(islower(name[i])) name[i] = toupper(name[i]);
     }
     //Set up traversal pointers
     uint32_t *new_wd = sys.cp;
-    uint8_t *ccp = (uint8_t*) sys.cp;
+    uint8_t *ccp = (uint8_t *) sys.cp;
     //Set precedence byte
     *ccp = precedence;
     ccp++;
@@ -58,9 +70,10 @@ uint32_t* add_def(char* name, uint8_t precedence) {
 
 void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
     uint32_t *new_wd = add_def(name, precedence);
-    *(sys.cp) = (uint32_t) func;
+    add_func(func);
+    *(sys.cp) = ft_size - 1;
     sys.cp++;
-    *(sys.cp) = (uint32_t) exit_;
+    *(sys.cp) = 0;
     sys.cp++;
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
@@ -68,7 +81,11 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 
 int main() {
     // Set up the FORTH system
+    ft_alloc = 32;
+    func_table = malloc(sizeof(void (**)()) * ft_alloc);
+
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t));
+    sys.sys_base = 100000;
     sys.sys_top = sys.sys + SYSTEM_SIZE;
     sys.stack = sys.sys + (SYSTEM_SIZE / 2);
     sys.stack_0 = sys.stack;
@@ -91,6 +108,9 @@ int main() {
     sys.source_id = 0;
 
     //Build the glossary
+    
+    // Need to add EXIT first since add_basic_word depends on the table index of EXIT being 0
+    add_basic_word("EXIT", exit_, 0);
    
     add_basic_word("!", store, 0);
     add_basic_word("#", pound, 0);
@@ -169,7 +189,6 @@ int main() {
     add_basic_word("ENVIRONMENT?", environment, 0);
     add_basic_word("EVALUATE", evaluate, 0); 
     add_basic_word("EXECUTE", execute, 0);
-    add_basic_word("EXIT", exit_, 0);
     add_basic_word("FILL", fill, 0);
     add_basic_word("FIND", find, 0);
     add_basic_word("FM/MOD", FmodDiv, 0); 

@@ -1,7 +1,17 @@
+# Temp text files
 *.txt*
+
+# Executables
 *.exe*
-.gdb_history
 mxf
+
+# GDB garbage
+.gdb_history
+
+# Vim swap
 *.swp
 *.swo
+
+# YCM stuff
 *.py
+*.json

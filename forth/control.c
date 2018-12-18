@@ -21,7 +21,7 @@ void exec(uint32_t* func) {
             rstack_push((int32_t) (sys.inst + 1));
             sys.inst = xt_ptr;
         } else {
-            void(*fn)() = (void(*)()) *sys.inst;
+            void(*fn)() = func_table[*sys.inst];
             fn();
             if(sys.inst)
                 sys.inst++;

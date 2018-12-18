@@ -7,6 +7,7 @@
 //Struct containing FORTH system data
 struct system_t {
     uint32_t *sys, *sys_top;
+    uint32_t sys_base;
     char *idx, *tib, *pad;
     uint32_t tib_loc, idx_loc, idx_len;
     uint32_t tib_len, pad_len, base;
@@ -28,5 +29,7 @@ struct sys_util_t {
 
 extern struct system_t sys;
 extern struct sys_util_t sys_util;
+extern void (** func_table)();
+extern uint32_t ft_size;
 
 #endif
