@@ -6,6 +6,7 @@
 
 #include "../sys.h"
 #include "../stack.h"
+#include "../defs.h"
 #include "control.h"
 
 

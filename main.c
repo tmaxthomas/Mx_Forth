@@ -23,15 +23,11 @@
 struct system_t sys;
 struct sys_util_t sys_util;
 
-void (** func_table)() = NULL;
-uint32_t ft_size = 0, ft_alloc = 0;
+void (* func_table[512])();
+uint32_t ft_size = 0;
 
-void add_func(void (*func)()) {
-    if (ft_size == ft_alloc) {
-        ft_alloc <<= 1;
-        func_table = realloc(func_table, ft_alloc * sizeof(void (*)()));
-    }
-
+// Quickie helper function to add funcs to the function table
+static inline void add_func(void (*func)()) {
     func_table[ft_size] = func;
     ft_size++;
 }
@@ -81,9 +77,6 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 
 int main() {
     // Set up the FORTH system
-    ft_alloc = 32;
-    func_table = malloc(sizeof(void (**)()) * ft_alloc);
-
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t));
     sys.sys_base = 100000;
     sys.sys_top = sys.sys + SYSTEM_SIZE;
@@ -109,10 +102,10 @@ int main() {
 
     //Build the glossary
     
-    // Need to add EXIT first since add_basic_word depends on the table index of EXIT being 0
+    // Need to add EXIT first since a bunch of stuff depends on the table index of EXIT being 0
     add_basic_word("EXIT", exit_, 0);
 
-    // Now need to add a few funcs that aren't words but need definite addresses in the table
+    // Now need to add a few funcs that aren't words but need addresses in the table
     add_func(dnum_runtime);
     add_func(num_runtime);
     add_func(cond_jump);
@@ -258,15 +251,18 @@ int main() {
     add_basic_word("[CHAR]", bracket_char_bracket, 1);
     add_basic_word("]", lbracket, 1);
     
-
+    // Locate QUIT within the dictionary
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);
     find();
     stack_pop(1);
     sys.q_addr = (uint32_t*)*stack_at(0);
     stack_pop(1);
-    exec(sys.q_addr);
 
+    // Spin up the execution engine, running QUIT
+    exec(sys.q_addr);
+    
+    // Free up the system and return
     free(sys.sys);
     return 0;
 }

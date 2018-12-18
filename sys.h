@@ -1,21 +1,8 @@
-#ifndef __SYS_H
-#define __SYS_H
+#ifndef __SYS_H_
+#define __SYS_H_
 
 #include <stdint.h>
 #include <stdbool.h>
-
-// Some global constants
-#define EXIT_ADDR 0
-#define DNUM_RUNTIME_ADDR 1
-#define NUM_RUNTIME_ADDR 2
-#define COND_JUMP_ADDR 3
-#define JUMP_ADDR 4
-#define DO_RUNTIME_ADDR 5
-#define LOOP_RUNTIME_ADDR 6
-#define PLUS_LOOP_RUNTIME_ADDR 7
-#define ABORT_QUOTE_RUNTIME_ADDR 8
-#define DOES_RUNTIME_ADDR 9
-#define UNLOOP_ADDR 10
 
 //Struct containing FORTH system data
 struct system_t {
@@ -42,7 +29,7 @@ struct sys_util_t {
 
 extern struct system_t sys;
 extern struct sys_util_t sys_util;
-extern void (** func_table)();
+extern void (* func_table[])();
 extern uint32_t ft_size;
 
 uint32_t *sys_addr(uint32_t);
