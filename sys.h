@@ -32,4 +32,7 @@ extern struct sys_util_t sys_util;
 extern void (** func_table)();
 extern uint32_t ft_size;
 
+uint32_t *sys_addr(uint32_t);
+uint32_t forth_addr(uint32_t *);
+
 #endif
