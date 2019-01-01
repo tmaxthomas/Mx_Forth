@@ -32,7 +32,6 @@ static inline void add_func(void (*func)()) {
     ft_size++;
 }
 
-
 //Adds a new empty definition to the dictionary with the
 //provided name and precedence, and returns a pointer to
 //the end of the new definition
@@ -70,6 +69,8 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
     *(sys.cp) = ft_size - 1;
     sys.cp++;
     *(sys.cp) = EXIT_ADDR;
+    sys.cp++;
+    *(sys.cp) = 0;
     sys.cp++;
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;

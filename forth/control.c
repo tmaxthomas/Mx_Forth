@@ -391,6 +391,8 @@ void colon() {
 void semicolon() {
     *(sys.cp) = EXIT_ADDR;
     sys.cp++;
+    *(sys.cp) = 0;
+    sys.cp++;
     uint32_t *new_wd = *(uint32_t**)stack_at(0);
     stack_pop(1);
     sys.gloss_head = new_wd; 
@@ -566,9 +568,10 @@ void quit() {
         if(!sys.COMPILE || precedence == -1) {
             rstack_push(wd);
         } else {
+            uint32_t *wd_ptr = (uint32_t *) wd;
             // Some necessary optimizations, needed to make some stuff work
-            if(*(((uint32_t *) wd) + 1) == (uint32_t) exit_) {
-                *(sys.cp) = *(uint32_t *) wd;
+            if(!wd_ptr[1] && !wd_ptr[2]) {
+                *(sys.cp) = *wd_ptr;
             } else {
                 *(sys.cp) = (uint32_t) wd; 
             }
