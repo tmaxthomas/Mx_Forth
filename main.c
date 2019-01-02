@@ -23,7 +23,7 @@
 struct system_t sys;
 struct sys_util_t sys_util;
 
-void (* func_table[512])();
+void (*func_table[512])();
 uint32_t ft_size = 0;
 
 // Quickie helper function to add funcs to the function table
@@ -91,7 +91,7 @@ int main() {
     sys.gloss_base = sys.gloss_head;
     sys.cp++;
     sys.old_cp = sys.cp;
-	sys.tib = (char*) sys.stack_0 + 1;
+    sys.tib = (char*) sys.stack_0 + 1;
     sys.tib[0] = '\0';
     sys.idx = sys.tib;
     sys.idx_loc = 0;
@@ -102,7 +102,7 @@ int main() {
     sys.source_id = 0;
 
     //Build the glossary
-    
+
     // Need to add EXIT first since a bunch of stuff depends on the table index of EXIT being 0
     add_basic_word("EXIT", exit_, 0);
 
@@ -119,7 +119,7 @@ int main() {
     add_func(unloop);
     add_func(create_runtime);
     add_func(constant_runtime);
-   
+
     add_basic_word("!", store, 0);
     add_basic_word("#", pound, 0);
     add_basic_word("#>", pound_bracket, 0);
@@ -130,7 +130,7 @@ int main() {
     add_basic_word("*/", multDiv, 0);
     add_basic_word("*/MOD", multDivMod, 0);
     add_basic_word("+", add, 0);
-    add_basic_word("+!", plus_store, 0); 
+    add_basic_word("+!", plus_store, 0);
     add_basic_word("+LOOP", plus_loop, 1);
     add_basic_word(",", comma, 0);
     add_basic_word("-", sub, 0);
@@ -174,10 +174,10 @@ int main() {
     add_basic_word("BEGIN", begin, 1);
     add_basic_word("BL", bl, 0);
     add_basic_word("BYE", bye, 0);
-    add_basic_word("C!", c_store, 0); 
+    add_basic_word("C!", c_store, 0);
     add_basic_word("C,", c_comma, 0);
-    add_basic_word("C@", c_fetch, 0); 
-    add_basic_word("CELL+", cell_plus, 0); 
+    add_basic_word("C@", c_fetch, 0);
+    add_basic_word("CELL+", cell_plus, 0);
     add_basic_word("CELLS", cells, 0);
     add_basic_word("CHAR", char_, 0);
     add_basic_word("CHAR+", char_plus, 0);
@@ -195,11 +195,11 @@ int main() {
     add_basic_word("ELSE", else_, 1);
     add_basic_word("EMIT", emit, 0);
     add_basic_word("ENVIRONMENT?", environment, 0);
-    add_basic_word("EVALUATE", evaluate, 0); 
+    add_basic_word("EVALUATE", evaluate, 0);
     add_basic_word("EXECUTE", execute, 0);
     add_basic_word("FILL", fill, 0);
     add_basic_word("FIND", find, 0);
-    add_basic_word("FM/MOD", FmodDiv, 0); 
+    add_basic_word("FM/MOD", FmodDiv, 0);
     add_basic_word("HERE", here, 0);
     add_basic_word("HOLD", hold, 0);
     add_basic_word("I", retCopy, 0);
@@ -223,7 +223,7 @@ int main() {
     add_basic_word("POSTPONE", postpone, 1);
     add_basic_word("QUIT", quit, 0);
     add_basic_word("R>", retPop, 0);
-    add_basic_word("R@", retCopy, 0); 
+    add_basic_word("R@", retCopy, 0);
     add_basic_word("RECURSE", recurse, 1);
     add_basic_word("REPEAT", repeat, 1);
     add_basic_word("ROT", rot, 0);
@@ -234,7 +234,7 @@ int main() {
     add_basic_word("SM/REM", SmodDiv, 0);
     add_basic_word("SOURCE", source, 0);
     add_basic_word("SPACE", space, 0);
-    add_basic_word("SPACES", spaces, 0); 
+    add_basic_word("SPACES", spaces, 0);
     add_basic_word("STATE", state, 0);
     add_basic_word("SWAP", swap, 0);
     add_basic_word("THEN", then, 1);
@@ -253,7 +253,7 @@ int main() {
     add_basic_word("[']", bracket_tick_bracket, 1);
     add_basic_word("[CHAR]", bracket_char_bracket, 1);
     add_basic_word("]", lbracket, 1);
-    
+
     // Locate QUIT within the dictionary
     unsigned char name[5] = "\x04QUIT";
     stack_push((uint32_t) name);
@@ -264,7 +264,7 @@ int main() {
 
     // Spin up the execution engine, running QUIT
     exec(sys.q_addr);
-    
+
     // Free up the system and return
     free(sys.sys);
     return 0;

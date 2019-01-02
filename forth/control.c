@@ -52,8 +52,8 @@ char *get_substring(int(*func)(int)) {
     tmp_buf[i] = '\0';
 
     sys.idx = tmp_idx + 1;
-    sys.idx_loc = tmp_loc + 1; 
-    
+    sys.idx_loc = tmp_loc + 1;
+
     return tmp_buf;
 }
 
@@ -61,7 +61,7 @@ int64_t ipow(int64_t base, int64_t exp) {
     int64_t ret = 1;
     for(int i = 0; i < exp; i++)
         ret *= base;
-    
+
     return ret;
 }
 
@@ -77,7 +77,7 @@ bool str_eq(uint8_t* c1, uint8_t* c2) {
     } else {
         len = *c1;
         buf = malloc(len + 1);
-        memset(buf, 0, len + 1); 
+        memset(buf, 0, len + 1);
         memcpy(buf, c2, *c2 + 1);
         c2 = buf;
     }
@@ -107,7 +107,7 @@ int32_t cfind(char *str, int *precedence) {
         return 0;
     } else {
         if(precedence) {
-            *precedence = *stack_at(0);           
+            *precedence = *stack_at(0);
         }
         int32_t ret = *stack_at(1);
         stack_pop(2);
@@ -117,8 +117,6 @@ int32_t cfind(char *str, int *precedence) {
 
 /* FORTH FUNCTIONS */
 
-// ( c-addr -- c-addr 0 | xt 1 | xt -1 )
-//Finds words in the glossary
 void find() {
     uint8_t* name = (uint8_t*)*stack_at(0);
     stack_pop(1);
@@ -128,7 +126,7 @@ void find() {
         if(str_eq(ccp + 1, name)) {
             stack_push((int32_t) get_xt(gloss_loc));
             if(*ccp == 0) { // Not immediate
-                stack_push(1); 
+                stack_push(1);
             } else { // Immediate
                 stack_push(-1);
             }
@@ -144,8 +142,6 @@ void find() {
     stack_push(0);
 }
 
-// ( -- addr )
-// Pushes the exectuion address of the next word in the input stream onto the stack
 void tick() {
     char *buf = get_substring(isspace);
     for(int i = 0; i < strlen(buf); i++) {
@@ -192,8 +188,6 @@ void bracket_char_bracket() {
     free(buf);
 }
 
-// ( addr -- )
-// Executes the word pointed to by addr by moving the instruction pointer
 void execute() {
     uint32_t* xt_ptr = *(uint32_t **) stack_at(0);
     stack_pop(1);
@@ -202,8 +196,6 @@ void execute() {
     sys.inst--;
 }
 
-// ( -- )
-//Sets the instruction pointer to the top of the rstack, then pops the rstack
 void exit_() {
     sys.inst = (uint32_t*)*rstack_at(0);
     rstack_pop(1);
@@ -217,7 +209,7 @@ void if_() {
     sys.cp++;
 }
 
-void else_() { 
+void else_() {
     uint32_t **loc = *(uint32_t ***)stack_at(0);
     stack_pop(1);
 
@@ -235,7 +227,7 @@ void then(){
     *loc = sys.cp;
 }
 
-void do_() { 
+void do_() {
     *sys.cp = DO_RUNTIME_ADDR;
     sys.cp++;
     stack_push((int32_t) sys.cp);
@@ -259,7 +251,7 @@ void loop() {
     }
     stack_pop(1);
 
-    uint32_t do_addr = *stack_at(0); 
+    uint32_t do_addr = *stack_at(0);
     stack_pop(1);
     *sys.cp = LOOP_RUNTIME_ADDR;
     sys.cp++;
@@ -270,14 +262,14 @@ void loop() {
 void loop_runtime() {
     int32_t *i = (int32_t *) rstack_at(0),
             n = *(int32_t *) rstack_at(1);
-    
+
     (*i)++;
     if(*i == n) {
         rstack_pop(2);
         sys.inst++;
     } else {
         jump();
-    } 
+    }
 }
 
 void plus_loop() {
@@ -289,7 +281,7 @@ void plus_loop() {
     }
     stack_pop(1);
 
-    uint32_t do_addr = *stack_at(0); 
+    uint32_t do_addr = *stack_at(0);
     stack_pop(1);
     *sys.cp = PLUS_LOOP_RUNTIME_ADDR;
     sys.cp++;
@@ -301,9 +293,9 @@ void plus_loop_runtime() {
     int32_t *i = (int32_t *) rstack_at(0),
             n = *(int32_t *) rstack_at(1),
             k = *(int32_t *) stack_at(0);
-    
+
     stack_pop(1);
-    
+
     *i += k;
     if((k > 0 && *i >= n) || (k <= 0 && *i < n)) {
         rstack_pop(2);
@@ -313,7 +305,7 @@ void plus_loop_runtime() {
     }
 }
 
-void begin() { 
+void begin() {
     stack_push((int32_t) sys.cp);
 }
 
@@ -323,10 +315,10 @@ void until() {
     *sys.cp = COND_JUMP_ADDR;
     sys.cp++;
     *sys.cp = jmp_addr;
-    sys.cp++; 
+    sys.cp++;
 }
 
-void while_() { 
+void while_() {
     *sys.cp = COND_JUMP_ADDR;
     sys.cp++;
     stack_push((int32_t) sys.cp);
@@ -338,7 +330,7 @@ void repeat() {
              begin_addr = *stack_at(1);
 
     stack_pop(2);
-    
+
     *sys.cp = JUMP_ADDR;
     sys.cp++;
     *sys.cp = begin_addr;
@@ -346,15 +338,15 @@ void repeat() {
     *while_addr = (uint32_t) sys.cp;
 }
 
-void jump() { 
+void jump() {
     sys.inst = *(uint32_t **) (sys.inst + 1);
     sys.inst--;
 }
 
-void cond_jump() { 
+void cond_jump() {
     uint32_t flag = *stack_at(0);
     stack_pop(1);
-    if(!flag) 
+    if(!flag)
         jump();
     else
         sys.inst++;
@@ -371,7 +363,7 @@ void dnum_runtime() {
     sys.inst++;
 }
 
-void lbracket() { 
+void lbracket() {
     sys.COMPILE = false;
 }
 
@@ -385,7 +377,7 @@ void colon() {
     stack_push((int32_t) new_wd);
     sys.curr_def = stack_at(0);
     free(name);
-    rbracket(); 
+    rbracket();
 }
 
 void semicolon() {
@@ -395,13 +387,13 @@ void semicolon() {
     sys.cp++;
     uint32_t *new_wd = *(uint32_t**)stack_at(0);
     stack_pop(1);
-    sys.gloss_head = new_wd; 
+    sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
     lbracket();
 }
 
 //In case of emergency, burn everything to the ground and start over
-void abort_() { 
+void abort_() {
     stack_clear();
     rstack_clear();
     strcpy(sys.tib, "");
@@ -474,7 +466,7 @@ int64_t int64_convert(char *buf, int *err) {
     } else if(buf[0] == '+') {
         neg = 1;
         memmove(buf, buf + 1, strlen(buf) + 1);
-    } 
+    }
 
     for(int i = strlen(buf); i > 0; i--) {
         int n;
@@ -498,7 +490,7 @@ int32_t int32_convert(char *buf, int *err) {
     } else if(buf[0] == '+') {
         neg = 1;
         memmove(buf, buf + 1, strlen(buf) + 1);
-    } 
+    }
 
     for(int i = strlen(buf); i > 0; i--) {
         int n;
@@ -525,12 +517,12 @@ void quit() {
         rstack_clear();
         rstack_push(0);
     }
-    
+
     char *buf = get_substring(isspace);
     for(int i = 0; i < strlen(buf); i++) {
         if(islower(buf[i])) buf[i] = toupper(buf[i]);
     }
-    
+
     // If we need to get some more input, do so
     if(strlen(buf) == 0) {
         if (sys.source_id == 0) {
@@ -545,7 +537,7 @@ void quit() {
             sys.tib[num_bytes - 1] = '\0'; // Chop off the trailing newline
             // sys.tib[num_bytes] = '\0';
             sys.idx_len = num_bytes - 1;
-            
+
             sys.idx = sys.tib;
             sys.idx_loc = 0;
         } else { // If quit() was run from within evaluate()
@@ -558,9 +550,9 @@ void quit() {
             if(islower(buf[i])) buf[i] = toupper(buf[i]);
         }
     }
-    
+
     rstack_push((int32_t) sys.q_addr);
-    
+
     int precedence;
     int32_t wd = cfind(buf, &precedence);
 
@@ -573,7 +565,7 @@ void quit() {
             if(!wd_ptr[1] && !wd_ptr[2]) {
                 *(sys.cp) = *wd_ptr;
             } else {
-                *(sys.cp) = (uint32_t) wd; 
+                *(sys.cp) = (uint32_t) wd;
             }
             sys.cp++;
 
@@ -591,7 +583,7 @@ void quit() {
             }
             if(!sys.COMPILE) {
                 stack_push_d(num);
-            } else {    
+            } else {
                 *(sys.cp) = DNUM_RUNTIME_ADDR;
                 sys.cp++;
                 *(int64_t*) (sys.cp) = num;
@@ -647,7 +639,7 @@ void does() {
 void does_runtime() {
     stack_push((int32_t) (sys.inst + 2));
     sys.inst = *(uint32_t **) (sys.inst + 1);
-    sys.inst--;    
+    sys.inst--;
 }
 
 void evaluate() {
@@ -663,9 +655,9 @@ void evaluate() {
     sys.idx_len = *stack_at(0);
     sys.idx = *(char **) stack_at(1);
     stack_pop(2);
-    sys.idx_loc = 0; 
+    sys.idx_loc = 0;
     sys.source_id = -1;
-    
+
     // Now spin up a new instance of the FORTH system
     exec(sys.q_addr);
 
@@ -702,7 +694,7 @@ void postpone() {
         if(*(((uint32_t *) wd) + 1) == (uint32_t) exit_) {
             *(sys.cp) = *(uint32_t *) wd;
         } else {
-            *(sys.cp) = (uint32_t) wd; 
+            *(sys.cp) = (uint32_t) wd;
         }
         sys.cp++;
         free(buf);
