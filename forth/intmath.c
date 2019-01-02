@@ -7,7 +7,7 @@
 #include "../sys.h"
 
 // ( n1 n2 -- sum )
-//Adds n2 to n1
+// Adds n2 to n1
 void add() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);
@@ -81,7 +81,7 @@ void UmodDiv() {
     stack_pop(1);
     m = *stack_at(0) % s;
     *stack_at(0) /= s;
-    //Pointer hackery to get an unsigned int32_t pushed onto the stack
+    // Pointer hackery to get an unsigned int32_t pushed onto the stack
     stack_push(*(int32_t*)&m);
 }
 
@@ -127,45 +127,45 @@ void multDivMod(){
 }
 
 // ( n1 -- n2 )
-//Increments the top of the stack
+// Increments the top of the stack
 void add1() {
     (*(int32_t*)stack_at(0))++;
 
 }
 
 // ( n1 -- n2 )
-//Decrements the top of the stack
+// Decrements the top of the stack
 void sub1() {
     (*(int32_t*)stack_at(0))--;
 }
 
 // ( n1 -- n2 )
-//Leftshifts the top of the stack by 1
+// Leftshifts the top of the stack by 1
 void lshift() {
     *(int32_t*)stack_at(0) *= 2;
 }
 
 // ( n1 -- n2 )
-//Rightshifts the top of the stack by 1
+// Rightshifts the top of the stack by 1
 void rshift() {
     *(int32_t*)stack_at(0) /= 2;
 }
 
 
 // ( n -- u)
-//Computes absolute value of the top of the stack
+// Computes absolute value of the top of the stack
 void abs_(){
     *(int32_t*)stack_at(0) = abs(*(int32_t*)stack_at(0));
 }
 
 // ( n1 -- n2 )
-//Negates the top of the stack
+// Negates the top of the stack
 void neg(){
     *(int32_t*)stack_at(0) *= -1;
 }
 
 // ( n1 n2 -- n3 )
-//Returns minimum of n1 and n2
+// Returns minimum of n1 and n2
 void min(){
     int32_t a = *(int32_t*)stack_at(0);
     stack_pop(1);
@@ -178,7 +178,7 @@ void min(){
 }
 
 // ( n1 n2 -- n3 )
-//Returns maximum of 2 numbers
+// Returns maximum of 2 numbers
 void max(){
     int32_t a = *(int32_t*)stack_at(0);
     stack_pop(1);

@@ -2,7 +2,7 @@
 #include "../sys.h"
 
 // ( n1 n2 -- n2 n1 )
-//Swaps top two elements of the stack
+// Swaps top two elements of the stack
 void swap() {
     int32_t t = *stack_at(0);
     stack_pop(1);
@@ -13,7 +13,7 @@ void swap() {
 }
 
 // ( d1 d2 -- d2 d1 )
-//Swaps top two elements of the stack for the next two
+// Swaps top two elements of the stack for the next two
 void swap2() {
     int64_t t = *(int64_t*)stack_at(0);
     stack_pop(2);
@@ -24,13 +24,13 @@ void swap2() {
 }
 
 // ( n -- n n )
-//Duplicates the top of the stack
+// Duplicates the top of the stack
 void dup() {
     stack_push(*(int32_t*)stack_at(0));
 }
 
 // ( d -- d d )
-//Duplicates the top two elements of the stack
+// Duplicates the top two elements of the stack
 void dup2() {
     stack_push(*(int64_t*)stack_at(0));
 }
@@ -43,7 +43,7 @@ void dup_if() {
 }
 
 // ( n1 n2 -- n1 n2 n1 )
-//Pushes the second element of the stack onto the stack
+// Pushes the second element of the stack onto the stack
 void over() {
     int32_t t = *stack_at(0);
     stack_pop(1);
@@ -53,14 +53,14 @@ void over() {
 }
 
 // ( d1 d2 -- d1 d2 d1 )
-//Pushes the third and fourth elements of the stack onto the stack
+// Pushes the third and fourth elements of the stack onto the stack
 void over2() {
     int64_t t = *(int64_t*)stack_at(0);
     stack_push(t);
 }
 
 // ( n1 n2 n3 -- n2 n3 n1 )
-//Removes the third element of the stack and pushes it onto the stack
+// Removes the third element of the stack and pushes it onto the stack
 void rot() {
     int32_t t = *stack_at(0);
     stack_pop(1);
@@ -74,13 +74,13 @@ void rot() {
 }
 
 // ( n -- )
-//Pops the top of the stack
+// Pops the top of the stack
 void drop() {
     stack_pop(1);
 }
 
 // ( d -- )
-//Pops the top 2 elements of the stack
+// Pops the top 2 elements of the stack
 void drop2() {
     stack_pop(2);
 }

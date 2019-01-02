@@ -1,7 +1,7 @@
 #include "../stack.h"
 
 // ( n -- )     rstack: ( -- n )
-//Pushes top of stack onto return stack
+// Pushes top of stack onto return stack
 void retPush(){
     int32_t a = *(int32_t *) stack_at(0);
     stack_pop(1);
@@ -9,7 +9,7 @@ void retPush(){
 }
 
 // ( -- n )     rstack: ( n -- )
-//Pushes top of return stack onto stack
+// Pushes top of return stack onto stack
 void retPop(){
     int32_t a = *(int32_t *) rstack_at(0);
     rstack_pop(1);
@@ -17,14 +17,14 @@ void retPop(){
 }
 
 // ( -- n)      rstack: ( -- )
-//Copies top of return stack onto stack
+// Copies top of return stack onto stack
 void retCopy(){
     int32_t a = *(int32_t *) rstack_at(0);
     stack_push(a);
 }
 
 // ( -- n )     rstack: ( -- )
-//Copies 3rd value on return stack onto stack
+// Copies 3rd value on return stack onto stack
 void retCopy3(){
     int32_t a = *(int32_t *) rstack_at(2);
     stack_push(a);

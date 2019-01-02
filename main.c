@@ -32,32 +32,32 @@ static inline void add_func(void (*func)()) {
     ft_size++;
 }
 
-//Adds a new empty definition to the dictionary with the
-//provided name and precedence, and returns a pointer to
-//the end of the new definition
+// Adds a new empty definition to the dictionary with the
+// provided name and precedence, and returns a pointer to
+// the end of the new definition
 uint32_t *add_def(char *name, uint8_t precedence) {
-    //Make sure the name gets stored as uppercase
+    // Make sure the name gets stored as uppercase
     for(int i = 0; i < strlen(name); i++) {
         if(islower(name[i])) name[i] = toupper(name[i]);
     }
-    //Set up traversal pointers
+    // Set up traversal pointers
     uint32_t *new_wd = sys.cp;
     uint8_t *ccp = (uint8_t *) sys.cp;
-    //Set precedence byte
+    // Set precedence byte
     *ccp = precedence;
     ccp++;
-    //Set string length byte
+    // Set string length byte
     uint8_t len = (uint8_t) strlen(name);
     uint8_t mem_len = ((len + 2) % 4 == 0) ? len : (len + 4 - ((len + 2) % 4));
     *ccp = mem_len;
     ccp++;
-    //Copy the name into glossary memory
+    // Copy the name into glossary memory
     memset(ccp, 0, mem_len);
     memcpy(ccp, name, len);
     ccp += mem_len;
-    //Move & align system cp pointer
+    // Move & align system cp pointer
     sys.cp = (uint32_t*) ccp;
-    //Set up back pointer
+    // Set up back pointer
     *sys.cp = (uint32_t) sys.gloss_head;
     sys.cp++;
     return new_wd;
@@ -101,7 +101,7 @@ int main() {
     sys.OKAY = false;
     sys.source_id = 0;
 
-    //Build the glossary
+    // Build the glossary
 
     // Need to add EXIT first since a bunch of stuff depends on the table index of EXIT being 0
     add_basic_word("EXIT", exit_, 0);

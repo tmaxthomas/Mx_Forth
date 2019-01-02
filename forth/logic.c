@@ -5,7 +5,7 @@
 #include "../sys.h"
 
 // ( f1 f2 -- f3 )
-//Bitwise and operator
+// Bitwise and operator
 void and_() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);
@@ -13,7 +13,7 @@ void and_() {
 }
 
 // ( f1 f2 -- f3 )
-//Bitwise or operator
+// Bitwise or operator
 void or_() {
     int32_t s = *(int32_t*)stack_at(0);
     stack_pop(1);

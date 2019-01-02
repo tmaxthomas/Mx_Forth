@@ -25,7 +25,7 @@ void pound_bracket() {
 void pound() {
     uint64_t ud = *(uint64_t *) stack_at(1);
     memmove(sys.pad + 1, sys.pad, sys.pad_len);
-    //ASCII table magic
+    // ASCII table magic
     char digit = (ud % sys.base) + '0';
     sys.pad[0] = digit;
     *(uint64_t*)stack_at(1) /= sys.base;
@@ -77,34 +77,35 @@ void to_number() {
     stack_push(n - i);
 }
 
+// ( -- addr )
 void to_in() {
     stack_push((int32_t) &sys.idx_loc);
-}
-
-void parse() {
-    
 }
 
 int is_quote(int ch) {
     return ch == '\"';
 }
 
+// ( -- c )
 void bl() {
     stack_push((int32_t) ' ');
 }
 
+// ( -- c )
 void char_() {
     char *buf = get_substring(isspace);
     stack_push(buf[0]);
     free(buf);
 }
 
+// ( c-addr -- c-addr c )
 void count() {
     char *len = *(char **) stack_at(0);
     (*stack_at(0))++;
     stack_push((int32_t) *len);
 }
 
+// ( -- )
 void dot_quote() {
     char *buf = get_substring(is_quote);
     *sys.cp = (uint32_t) dot_quote_runtime;
@@ -134,6 +135,7 @@ void dot_quote_runtime() {
     free(buf);
 }
 
+// ( -- )
 void s_quote() {
     char *buf = get_substring(is_quote);
     *sys.cp = (uint32_t) s_quote_runtime;
@@ -160,6 +162,7 @@ void s_quote_runtime() {
     }
 }
 
+// ( -- addr n )
 void source() {
     stack_push((int32_t) sys.idx);
     stack_push((int32_t) sys.idx_len);
@@ -170,6 +173,7 @@ int word_delim = '\0';
 int is_word_delim(int c) {
     return c == word_delim;
 }
+
 
 void word() {
     word_delim = *sys.idx;

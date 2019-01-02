@@ -7,7 +7,7 @@
 #include "output.h"
 
 
-//Prints a 64-bit unsigned number in the given base
+// Prints a 64-bit unsigned number in the given base
 void ubprint(uint64_t num) {
     char buf[32];
     memset(buf, 0, 32);
@@ -33,15 +33,15 @@ void bprint(int64_t num) {
     ubprint(num);
 }
 
-//( -- )
-//Prints a newline character to the terminal
+// ( -- )
+// Prints a newline character to the terminal
 void cr() {
     printf("\n");
     fflush(stdout);
 }
 
-//( n -- )
-//Prints n spaces
+// ( n -- )
+// Prints n spaces
 void spaces() {
     for(uint32_t i = 0; i < *(uint32_t*)stack_at(0); i++)
         printf(" ");
@@ -50,15 +50,15 @@ void spaces() {
     fflush(stdout);
 }
 
-//( -- )
-//Prints a space
+// ( -- )
+// Prints a space
 void space() {
     printf(" ");
     fflush(stdout);
 }
 
-//( c -- )
-//Prints character c
+// ( c -- )
+// Prints character c
 void emit() {
     char ch = (char)*stack_at(0);
     printf("%c", ch);
@@ -68,7 +68,7 @@ void emit() {
 }
 
 // ( n -- )
-//Prints and pops the top of the stack, followed by a space
+// Prints and pops the top of the stack, followed by a space
 void print() {
     int32_t n = *(int32_t*)stack_at(0);
     stack_pop(1);
@@ -78,7 +78,7 @@ void print() {
 }
 
 // ( u -- )
-//Unsigned int32_t print
+// Unsigned int32_t print
 void uprint() {
     uint32_t n = *stack_at(0);
     stack_pop(1);

@@ -12,7 +12,7 @@
 
 /* HELPER FUNCTIONS */
 
-//Runs the FORTH program at func within the FORTH environment
+// Runs the FORTH program at func within the FORTH environment
 void exec(uint32_t* func) {
     rstack_push(0);
     sys.inst = func;
@@ -87,14 +87,14 @@ bool str_eq(uint8_t* c1, uint8_t* c2) {
     return result;
 }
 
-//Returns a pointer to the start of the code section for func
+// Returns a pointer to the start of the code section for func
 uint32_t* get_xt(uint32_t* func) {
     uint8_t len = *(((uint8_t*) func) + 1);
     uint32_t xt = ((uint32_t) func) + len + 6;
     return (uint32_t*) xt;
 }
 
-//Finds a c string in the dictionary, if it exists
+// Finds a c string in the dictionary, if it exists
 int32_t cfind(char *str, int *precedence) {
     char* fstr = malloc(strlen(str) + 1);
     fstr[0] = strlen(str);
@@ -133,7 +133,7 @@ void find() {
             return;
         } else {
             uint8_t len = *(ccp + 1);
-            //Locate back pointer and assign dereferenced value to gloss_loc
+            // Locate back pointer and assign dereferenced value to gloss_loc
             uint32_t bp = ((uint32_t) gloss_loc) + len + 2;
             gloss_loc = *((uint32_t**) bp);
         }
@@ -199,7 +199,7 @@ void execute() {
 void exit_() {
     sys.inst = (uint32_t*)*rstack_at(0);
     rstack_pop(1);
-    sys.inst--; //Needed to circumvent a particular bit of logic in exec() that causes shit to not work
+    sys.inst--; // Needed to circumvent a particular bit of logic in exec() that causes shit to not work
 }
 
 void if_() {
@@ -392,7 +392,7 @@ void semicolon() {
     lbracket();
 }
 
-//In case of emergency, burn everything to the ground and start over
+// In case of emergency, burn everything to the ground and start over
 void abort_() {
     stack_clear();
     rstack_clear();
@@ -445,7 +445,7 @@ void abort_quote_runtime() {
     return;
 }
 
-//Case-insensitive base-compliant digit converter
+// Case-insensitive base-compliant digit converter
 int to_num(int c) {
     if(c >= 'a' && c <= 'z') {
         c -= 87;
