@@ -16,16 +16,20 @@
 void exec(uint32_t* func) {
     rstack_push(0);
     sys.inst = func;
+    // Main program loop - run until the instruction pointer is NULL
     while(sys.inst) {
-        uint32_t* xt_ptr = (uint32_t*)*sys.inst;
+        uint32_t* xt_ptr = (uint32_t*) sys_addr(*sys.inst);
+        // If the top of the stack pointed somewhere in the glossary, it's a FORTH word. Call it.
         if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
-            rstack_push((int32_t) (sys.inst + 1));
+            rstack_push(forth_addr(sys.inst + 1));
             sys.inst = xt_ptr;
+        // If the top of the stack contained a function table address,
+        // run the function and increment.
         } else if (*sys.inst < ft_size) {
-            void(*fn)() = func_table[*sys.inst];
-            fn();
-            if(sys.inst)
+            func_table[*sys.inst]();
+            if(sys.inst) {
                 sys.inst++;
+            }
         } else {
             fprintf(stderr, "ERROR: Invalid execution address, aborting\n");
             abort_();
@@ -33,7 +37,7 @@ void exec(uint32_t* func) {
     }
 }
 
-
+// Finds substrings delimited by characters that return 1 when fed to func() in a malloc-ed buffer
 char *get_substring(int(*func)(int)) {
     for(; func(*sys.idx) && sys.idx_loc < sys.idx_len; sys.idx++) {
         sys.idx_loc++;
@@ -57,15 +61,17 @@ char *get_substring(int(*func)(int)) {
     return tmp_buf;
 }
 
+// 64-bit integer pow() function
 int64_t ipow(int64_t base, int64_t exp) {
     int64_t ret = 1;
-    for(int i = 0; i < exp; i++)
+    for(int i = 0; i < exp; i++) {
         ret *= base;
+    }
 
     return ret;
 }
 
-// Compares two counted strings for equality
+// Compares two counted (FORTH) strings for equality
 bool str_eq(uint8_t* c1, uint8_t* c2) {
     uint8_t len = 0, *buf = NULL;
     if (*c1 <= *c2) {
@@ -124,7 +130,7 @@ void find() {
     while(*gloss_loc) {
         uint8_t* ccp = (uint8_t*) gloss_loc;
         if(str_eq(ccp + 1, name)) {
-            stack_push((int32_t) get_xt(gloss_loc));
+            stack_push(forth_addr(get_xt(gloss_loc)));
             if(*ccp == 0) { // Not immediate
                 stack_push(1);
             } else { // Immediate
@@ -189,17 +195,23 @@ void bracket_char_bracket() {
 }
 
 void execute() {
-    uint32_t* xt_ptr = *(uint32_t **) stack_at(0);
+    uint32_t xt = *(uint32_t *) stack_at(0);
     stack_pop(1);
-    rstack_push((int32_t) (sys.inst + 1));
-    sys.inst = xt_ptr;
-    sys.inst--;
+    uint32_t *xt_addr = sys_addr(xt);
+    if (sys.gloss_base < xt_addr && xt_addr < sys.cp) {
+        rstack_push((int32_t) (sys.inst + 1));
+        sys.inst = sys_addr(xt);
+        sys.inst--;
+    } else {
+        fprintf(stderr, "ERROR: invalid xt passed to EXECUTE, aborting\n");
+        abort_();
+    }
 }
 
 void exit_() {
-    sys.inst = (uint32_t*)*rstack_at(0);
+    sys.inst = sys_addr(*rstack_at(0));
     rstack_pop(1);
-    sys.inst--; // Needed to circumvent a particular bit of logic in exec() that causes shit to not work
+    sys.inst--;
 }
 
 void if_() {
@@ -210,7 +222,7 @@ void if_() {
 }
 
 void else_() {
-    uint32_t **loc = *(uint32_t ***)stack_at(0);
+    uint32_t **loc = *(uint32_t ***) stack_at(0);
     stack_pop(1);
 
     *sys.cp = JUMP_ADDR;
@@ -222,7 +234,7 @@ void else_() {
 }
 
 void then(){
-    uint32_t **loc = *(uint32_t ***)stack_at(0);
+    uint32_t **loc = *(uint32_t ***) stack_at(0);
     stack_pop(1);
     *loc = sys.cp;
 }
@@ -394,12 +406,17 @@ void semicolon() {
 
 // In case of emergency, burn everything to the ground and start over
 void abort_() {
+    // Empty the stack and rstack
     stack_clear();
     rstack_clear();
+    // Clear the terminal input buffer
     strcpy(sys.tib, "");
     sys.idx = sys.tib;
     sys.idx_loc = 0;
+    // Clean up whatever garbage might be at the end of the glossary
+    // (in case we aborted while compiling a definition)
     sys.cp = sys.old_cp;
+    // Reset the instruction pointer
     sys.inst = sys.q_addr;
     sys.inst--;
     sys.ABORT = true;
@@ -439,8 +456,9 @@ void abort_quote_runtime() {
         sys.inst++;
         char *c = (char *) sys.inst;
         sys.inst += ((*c + 1) / 4);
-        if((*c + 1) % 4 == 0)
+        if((*c + 1) % 4 == 0) {
             sys.inst--;
+        }
     }
     return;
 }
@@ -527,6 +545,8 @@ void quit() {
     if(strlen(buf) == 0) {
         if (sys.source_id == 0) {
             free(buf);
+            // If "ok" needs to be printed, print it
+            // otherwise establish that it'll need to be printed
             if(sys.OKAY) {
                 printf("ok");
             } else {
@@ -534,13 +554,14 @@ void quit() {
             }
             printf("\n");
             int num_bytes = read(0, sys.tib, sys.tib_len);
-            sys.tib[num_bytes - 1] = '\0'; // Chop off the trailing newline
-            // sys.tib[num_bytes] = '\0';
+            // Chop off the trailing line feed
+            sys.tib[num_bytes - 1] = '\0';
             sys.idx_len = num_bytes - 1;
 
             sys.idx = sys.tib;
             sys.idx_loc = 0;
-        } else { // If quit() was run from within evaluate()
+        // If quit() was run from within evaluate()
+        } else {
             free(buf);
             return;
         }
@@ -551,7 +572,7 @@ void quit() {
         }
     }
 
-    rstack_push((int32_t) sys.q_addr);
+    rstack_push(sys.q_fth_addr);
 
     int precedence;
     int32_t wd = cfind(buf, &precedence);
@@ -561,7 +582,7 @@ void quit() {
             rstack_push(wd);
         } else {
             uint32_t *wd_ptr = (uint32_t *) wd;
-            // Some necessary optimizations, needed to make some stuff work
+
             if(!wd_ptr[1] && !wd_ptr[2]) {
                 *(sys.cp) = *wd_ptr;
             } else {
@@ -572,17 +593,22 @@ void quit() {
         }
     } else {
         int err = 0;
-        if(buf[strlen(buf)] == '.') {
+
+        // Need two separate cases, one for 32-bit numbers, one for 64-bit
+        if (buf[strlen(buf)] == '.') {
             buf[strlen(buf)] = '\0';
             int64_t num = int64_convert(buf, &err);
-            if(err) {
+            // If this wasn't actually a number
+            if (err) {
                 fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
                 free(buf);
                 abort_();
                 return;
             }
-            if(!sys.COMPILE) {
+            // If we're in interpretation mode
+            if (!sys.COMPILE) {
                 stack_push_d(num);
+            // If we're in compilation mode
             } else {
                 *(sys.cp) = DNUM_RUNTIME_ADDR;
                 sys.cp++;
@@ -591,14 +617,17 @@ void quit() {
             }
         } else {
             int32_t num = int32_convert(buf, &err);
-            if(err) {
+            // If this wasn't actually a number
+            if (err) {
                 fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
                 free(buf);
                 abort_();
                 return;
             }
-            if(!sys.COMPILE) {
+            // If we're in interpretation mode
+            if (!sys.COMPILE) {
                 stack_push(num);
+            // If we're in compilation mode
             } else {
                 *(sys.cp) = NUM_RUNTIME_ADDR;
                 sys.cp++;

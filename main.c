@@ -78,14 +78,13 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 
 int main() {
     // Set up the FORTH system
-    sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t));
-    sys.sys_base = 100000;
-    sys.sys_top = sys.sys + SYSTEM_SIZE;
-    sys.stack = sys.sys + (SYSTEM_SIZE / 2);
+    sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t) * 4);
+    sys.sys_top = sys.sys + SYSTEM_SIZE * 4;
+    sys.stack = sys.sys + SYSTEM_SIZE * 2;
     sys.stack_0 = sys.stack;
-    sys.rstack = sys.sys + 3*(SYSTEM_SIZE / 4);
+    sys.rstack = sys.sys + SYSTEM_SIZE * 3;
     sys.rstack_0 = sys.rstack;
-    sys.cp = sys.sys + (SYSTEM_SIZE / 4);
+    sys.cp = sys.sys + SYSTEM_SIZE;
     *sys.cp = 0;
     sys.gloss_head = sys.cp;
     sys.gloss_base = sys.gloss_head;
@@ -100,6 +99,7 @@ int main() {
     sys.inst = 0;
     sys.OKAY = false;
     sys.source_id = 0;
+    sys.addr_offset = 0x10000;
 
     // Build the glossary
 
@@ -259,7 +259,8 @@ int main() {
     stack_push((uint32_t) name);
     find();
     stack_pop(1);
-    sys.q_addr = (uint32_t*)*stack_at(0);
+    sys.q_fth_addr = *stack_at(0);
+    sys.q_addr = sys_addr(sys.q_fth_addr);
     stack_pop(1);
 
     // Spin up the execution engine, running QUIT

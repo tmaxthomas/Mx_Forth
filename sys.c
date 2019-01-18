@@ -3,9 +3,9 @@
 #include "sys.h"
 
 uint32_t *sys_addr(uint32_t forth_addr) {
-    return NULL;
+    return (uint32_t *) (forth_addr - sys.addr_offset + (uint32_t) sys.sys);
 }
 
 uint32_t forth_addr(uint32_t *sys_addr) {
-    return 0;
+    return ((uint32_t) sys_addr) - ((uint32_t) sys.sys) + sys.addr_offset;
 }

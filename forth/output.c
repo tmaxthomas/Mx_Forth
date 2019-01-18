@@ -14,7 +14,7 @@ void ubprint(uint64_t num) {
     buf[0] = '0';
     uint64_t tmpnum = num;
     int len = (int) (log(tmpnum) / log(sys.base));
-    for(int i = len; tmpnum > 0; i--) {
+    for (int i = len; tmpnum > 0; i--) {
         char digit = (tmpnum % sys.base) + '0';
         if (digit > '9') digit += 7;
         buf[i] = digit;
@@ -25,7 +25,7 @@ void ubprint(uint64_t num) {
 }
 
 void bprint(int64_t num) {
-    if(num < 0) { 
+    if (num < 0) { 
         printf("-");
         num *= -1;
     }
@@ -43,10 +43,12 @@ void cr() {
 // ( n -- )
 // Prints n spaces
 void spaces() {
-    for(uint32_t i = 0; i < *(uint32_t*)stack_at(0); i++)
-        printf(" ");
+    uint32_t n = *stack_at(0);
     stack_pop(1);
-    if(sys.ABORT) return;
+    if (sys.ABORT) return;
+    for (uint32_t i = 0; i < n; i++) {
+        printf(" ");
+    }
     fflush(stdout);
 }
 
@@ -60,19 +62,19 @@ void space() {
 // ( c -- )
 // Prints character c
 void emit() {
-    char ch = (char)*stack_at(0);
-    printf("%c", ch);
+    char ch = *(char *) stack_at(0);
     stack_pop(1);
-    if(sys.ABORT) return;
+    if (sys.ABORT) return;
+    printf("%c", ch);
     fflush(stdout);
 }
 
 // ( n -- )
 // Prints and pops the top of the stack, followed by a space
 void print() {
-    int32_t n = *(int32_t*)stack_at(0);
+    int32_t n = *(int32_t *) stack_at(0);
     stack_pop(1);
-    if(sys.ABORT) return;
+    if (sys.ABORT) return;
     bprint(n);
     fflush(stdout);
 }
@@ -82,7 +84,7 @@ void print() {
 void uprint() {
     uint32_t n = *stack_at(0);
     stack_pop(1);
-    if(sys.ABORT) return;
+    if (sys.ABORT) return;
     ubprint(n);
     fflush(stdout);
 }
@@ -90,7 +92,7 @@ void uprint() {
 // ( addr u -- )
 void type() {
     uint32_t u = *stack_at(0);
-    char* str = (char*)*stack_at(1);
+    char* str = (char *) sys_addr(*stack_at(1));
     stack_pop(2);
     if(sys.ABORT) return;
     fwrite(str, 1, u, stdout);

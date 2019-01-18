@@ -17,8 +17,8 @@ void bracket_pound() {
 // ( ud -- addr u )
 void pound_bracket() {
     stack_pop(2);
-    stack_push((int32_t) sys.pad);
-    stack_push((int32_t) sys.pad_len);
+    stack_push(forth_addr((uint32_t *) sys.pad));
+    stack_push(sys.pad_len);
 }
 
 // ( ud1 -- ud2 )
@@ -28,7 +28,7 @@ void pound() {
     // ASCII table magic
     char digit = (ud % sys.base) + '0';
     sys.pad[0] = digit;
-    *(uint64_t*)stack_at(1) /= sys.base;
+    *(uint64_t *) stack_at(1) /= sys.base;
     sys.pad_len++;
 }
 
@@ -62,7 +62,7 @@ void sign() {
 // ( ud1 c-addr u1 -- ud2 c-addr u2 )
 void to_number() {
     uint32_t n = *stack_at(0);
-    char *str = *(char **) stack_at(1);
+    char *str = (char *) sys_addr(*stack_at(1));
     uint64_t b = *(uint64_t *) stack_at(2);
     stack_pop(4);
 
@@ -78,8 +78,9 @@ void to_number() {
 }
 
 // ( -- addr )
+// TODO: This will not work until I rejigger the system memory arrangement
 void to_in() {
-    stack_push((int32_t) &sys.idx_loc);
+    stack_push(forth_addr(&sys.idx_loc));
 }
 
 int is_quote(int ch) {
@@ -100,7 +101,7 @@ void char_() {
 
 // ( c-addr -- c-addr c )
 void count() {
-    char *len = *(char **) stack_at(0);
+    char *len = (char *) sys_addr(*stack_at(0));
     (*stack_at(0))++;
     stack_push((int32_t) *len);
 }
@@ -154,7 +155,7 @@ void s_quote() {
 void s_quote_runtime() {
     sys.inst++;
     char *c = (char *) sys.inst;
-    stack_push((int32_t) (c + 1));
+    stack_push(forth_addr((uint32_t *) (c + 1)));
     stack_push((int32_t) *c);
     sys.inst += ((*c + 1) / 4);
     if((*c + 1) % 4 == 0) {
@@ -164,7 +165,7 @@ void s_quote_runtime() {
 
 // ( -- addr n )
 void source() {
-    stack_push((int32_t) sys.idx);
+    stack_push(forth_addr((uint32_t *) sys.idx));
     stack_push((int32_t) sys.idx_len);
 }
 
@@ -182,5 +183,5 @@ void word() {
     sys.pad[0] = strlen(buf);
     memcpy(sys.pad + 1, buf, sys.pad[0]);
     sys.pad[sys.pad[0] + 2] = ' ';
-    stack_push((int32_t) sys.pad);
+    stack_push(forth_addr((uint32_t *) sys.pad));
 }
