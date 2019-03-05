@@ -19,7 +19,7 @@ void exec(uint32_t* func) {
     // Main program loop - run until the instruction pointer is NULL
     while(sys.inst) {
         uint32_t* xt_ptr = (uint32_t*) sys_addr(*sys.inst);
-        // If the top of the stack pointed somewhere in the glossary, it's a FORTH word. Call it.
+        // If the top of the rstack pointed somewhere in the glossary, it's a FORTH word. Call it.
         if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
             rstack_push(forth_addr(sys.inst + 1));
             sys.inst = xt_ptr;
@@ -27,9 +27,7 @@ void exec(uint32_t* func) {
         // run the function and increment.
         } else if (*sys.inst < ft_size) {
             func_table[*sys.inst]();
-            if(sys.inst) {
-                sys.inst++;
-            }
+            if (sys.inst) sys.inst++;
         } else {
             fprintf(stderr, "ERROR: Invalid execution address, aborting\n");
             abort_();
@@ -39,9 +37,7 @@ void exec(uint32_t* func) {
 
 // Finds substrings delimited by characters that return 1 when fed to func() in a malloc-ed buffer
 char *get_substring(int(*func)(int)) {
-    for(; func(*sys.idx) && sys.idx_loc < sys.idx_len; sys.idx++) {
-        sys.idx_loc++;
-    }
+    for(; func(*sys.idx) && sys.idx_loc < sys.idx_len; sys.idx++, sys.idx_loc++);
 
     char *tmp_idx = sys.idx;
     int tmp_loc = sys.idx_loc, i;
@@ -385,8 +381,7 @@ void rbracket() {
 
 void colon() {
     char *name = get_substring(isspace);
-    uint32_t *new_wd = add_def(name, 0);
-    stack_push((int32_t) new_wd);
+    stack_push((int32_t) add_def(name, 0));
     sys.curr_def = stack_at(0);
     free(name);
     rbracket();
@@ -397,7 +392,7 @@ void semicolon() {
     sys.cp++;
     *(sys.cp) = 0;
     sys.cp++;
-    uint32_t *new_wd = *(uint32_t**)stack_at(0);
+    uint32_t *new_wd = *(uint32_t**) stack_at(0);
     stack_pop(1);
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
@@ -631,7 +626,7 @@ void quit() {
             } else {
                 *(sys.cp) = NUM_RUNTIME_ADDR;
                 sys.cp++;
-                *(int32_t*) (sys.cp) = num;
+                *(int32_t *) sys.cp = num;
                 sys.cp++;
             }
         }

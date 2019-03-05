@@ -33,7 +33,7 @@ static inline void add_func(void (*func)()) {
 }
 
 // Adds a new empty definition to the dictionary with the
-// provided name and precedence, and returns a pointer to
+// provided name and precedence, and returns a system pointer to
 // the end of the new definition
 uint32_t *add_def(char *name, uint8_t precedence) {
     // Make sure the name gets stored as uppercase
@@ -266,7 +266,7 @@ int main() {
     // Spin up the execution engine, running QUIT
     exec(sys.q_addr);
 
-    // Free up the system and return
+    // After exec() exits, free up the system and return
     free(sys.sys);
     return 0;
 }
