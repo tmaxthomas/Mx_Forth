@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=c99 -g -O0 -m32 -Wall -Werror -fPIE
+CFLAGS = -std=gnu99 -g -O0 -m32 -Wall -Werror -fPIE
 LDFLAGS = -lm -pie
 FDIR = forth
 

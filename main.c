@@ -9,6 +9,7 @@
 #include "stack.h"
 #include "sys.h"
 #include "defs.h"
+#include "signals.h"
 #include "forth/intmath.h"
 #include "forth/input.h"
 #include "forth/logic.h"
@@ -66,17 +67,19 @@ uint32_t *add_def(char *name, uint8_t precedence) {
 void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
     uint32_t *new_wd = add_def(name, precedence);
     add_func(func);
-    *(sys.cp) = ft_size - 1;
+    *sys.cp = ft_size - 1;
     sys.cp++;
-    *(sys.cp) = EXIT_ADDR;
+    *sys.cp = EXIT_ADDR;
     sys.cp++;
-    *(sys.cp) = 0;
+    *sys.cp = 0;
     sys.cp++;
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
 }
 
 int main() {
+    // Register signal handlers
+    register_handlers();
     // Set up the FORTH system
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t) * 4);
     sys.sys_top = sys.sys + SYSTEM_SIZE * 4;

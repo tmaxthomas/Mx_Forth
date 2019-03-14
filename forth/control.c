@@ -104,11 +104,11 @@ int32_t cfind(char *str, int *precedence) {
     stack_push((int32_t) fstr);
     find();
     free(fstr);
-    if(*stack_at(0) == 0) {
+    if (*stack_at(0) == 0) {
         stack_pop(2);
         return 0;
     } else {
-        if(precedence) {
+        if (precedence) {
             *precedence = *stack_at(0);
         }
         int32_t ret = *stack_at(1);
@@ -123,11 +123,11 @@ void find() {
     uint8_t* name = (uint8_t*)*stack_at(0);
     stack_pop(1);
     uint32_t* gloss_loc = sys.gloss_head;
-    while(*gloss_loc) {
+    while (*gloss_loc) {
         uint8_t* ccp = (uint8_t*) gloss_loc;
-        if(str_eq(ccp + 1, name)) {
+        if (str_eq(ccp + 1, name)) {
             stack_push(forth_addr(get_xt(gloss_loc)));
-            if(*ccp == 0) { // Not immediate
+            if (*ccp == 0) { // Not immediate
                 stack_push(1);
             } else { // Immediate
                 stack_push(-1);
@@ -146,7 +146,7 @@ void find() {
 
 void tick() {
     char *buf = get_substring(isspace);
-    for(int i = 0; i < strlen(buf); i++) {
+    for (int i = 0; i < strlen(buf); i++) {
         buf[i] = toupper(buf[i]);
     }
     int32_t xt = cfind(buf, NULL);
@@ -162,7 +162,7 @@ void tick() {
 
 void bracket_tick_bracket() {
     char *buf = get_substring(isspace);
-    for(int i = 0; i < strlen(buf); i++) {
+    for (int i = 0; i < strlen(buf); i++) {
         buf[i] = toupper(buf[i]);
     }
 
@@ -576,7 +576,7 @@ void quit() {
         if(!sys.COMPILE || precedence == -1) {
             rstack_push(wd);
         } else {
-            uint32_t *wd_ptr = (uint32_t *) wd;
+            uint32_t *wd_ptr = sys_addr(wd);
 
             if(!wd_ptr[1] && !wd_ptr[2]) {
                 *(sys.cp) = *wd_ptr;
@@ -584,7 +584,6 @@ void quit() {
                 *(sys.cp) = (uint32_t) wd;
             }
             sys.cp++;
-
         }
     } else {
         int err = 0;
