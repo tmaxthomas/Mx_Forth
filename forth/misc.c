@@ -5,7 +5,7 @@
 #include <string.h>
 
 void environment() {
-    char *query = *(char **) stack_at(1);
+    char *query = (char *) sys_addr(*stack_at(1));
     uint32_t len = *stack_at(0);
     stack_pop(2);
 

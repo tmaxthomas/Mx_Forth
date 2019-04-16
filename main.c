@@ -9,6 +9,7 @@
 #include "stack.h"
 #include "sys.h"
 #include "defs.h"
+#include "signals.h"
 #include "forth/intmath.h"
 #include "forth/input.h"
 #include "forth/logic.h"
@@ -32,32 +33,32 @@ static inline void add_func(void (*func)()) {
     ft_size++;
 }
 
-//Adds a new empty definition to the dictionary with the
-//provided name and precedence, and returns a pointer to
-//the end of the new definition
+// Adds a new empty definition to the dictionary with the
+// provided name and precedence, and returns a system pointer to
+// the end of the new definition
 uint32_t *add_def(char *name, uint8_t precedence) {
-    //Make sure the name gets stored as uppercase
+    // Make sure the name gets stored as uppercase
     for(int i = 0; i < strlen(name); i++) {
         if(islower(name[i])) name[i] = toupper(name[i]);
     }
-    //Set up traversal pointers
+    // Set up traversal pointers
     uint32_t *new_wd = sys.cp;
     uint8_t *ccp = (uint8_t *) sys.cp;
-    //Set precedence byte
+    // Set precedence byte
     *ccp = precedence;
     ccp++;
-    //Set string length byte
+    // Set string length byte
     uint8_t len = (uint8_t) strlen(name);
     uint8_t mem_len = ((len + 2) % 4 == 0) ? len : (len + 4 - ((len + 2) % 4));
     *ccp = mem_len;
     ccp++;
-    //Copy the name into glossary memory
+    // Copy the name into glossary memory
     memset(ccp, 0, mem_len);
     memcpy(ccp, name, len);
     ccp += mem_len;
-    //Move & align system cp pointer
+    // Move & align system cp pointer
     sys.cp = (uint32_t*) ccp;
-    //Set up back pointer
+    // Set up back pointer
     *sys.cp = (uint32_t) sys.gloss_head;
     sys.cp++;
     return new_wd;
@@ -66,26 +67,27 @@ uint32_t *add_def(char *name, uint8_t precedence) {
 void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
     uint32_t *new_wd = add_def(name, precedence);
     add_func(func);
-    *(sys.cp) = ft_size - 1;
+    *sys.cp = ft_size - 1;
     sys.cp++;
-    *(sys.cp) = EXIT_ADDR;
+    *sys.cp = EXIT_ADDR;
     sys.cp++;
-    *(sys.cp) = 0;
+    *sys.cp = 0;
     sys.cp++;
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
 }
 
 int main() {
+    // Register signal handlers
+    register_handlers();
     // Set up the FORTH system
-    sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t));
-    sys.sys_base = 100000;
-    sys.sys_top = sys.sys + SYSTEM_SIZE;
-    sys.stack = sys.sys + (SYSTEM_SIZE / 2);
+    sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t) * 4);
+    sys.sys_top = sys.sys + SYSTEM_SIZE * 4;
+    sys.stack = sys.sys + SYSTEM_SIZE * 2;
     sys.stack_0 = sys.stack;
-    sys.rstack = sys.sys + 3*(SYSTEM_SIZE / 4);
+    sys.rstack = sys.sys + SYSTEM_SIZE * 3;
     sys.rstack_0 = sys.rstack;
-    sys.cp = sys.sys + (SYSTEM_SIZE / 4);
+    sys.cp = sys.sys + SYSTEM_SIZE;
     *sys.cp = 0;
     sys.gloss_head = sys.cp;
     sys.gloss_base = sys.gloss_head;
@@ -100,8 +102,9 @@ int main() {
     sys.inst = 0;
     sys.OKAY = false;
     sys.source_id = 0;
+    sys.addr_offset = 0x10000;
 
-    //Build the glossary
+    // Build the glossary
 
     // Need to add EXIT first since a bunch of stuff depends on the table index of EXIT being 0
     add_basic_word("EXIT", exit_, 0);
@@ -259,13 +262,14 @@ int main() {
     stack_push((uint32_t) name);
     find();
     stack_pop(1);
-    sys.q_addr = (uint32_t*)*stack_at(0);
+    sys.q_fth_addr = *stack_at(0);
+    sys.q_addr = sys_addr(sys.q_fth_addr);
     stack_pop(1);
 
     // Spin up the execution engine, running QUIT
     exec(sys.q_addr);
 
-    // Free up the system and return
+    // After exec() exits, free up the system and return
     free(sys.sys);
     return 0;
 }

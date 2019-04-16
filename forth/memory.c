@@ -13,12 +13,12 @@
 // ( n addr -- )
 // Stores n at the memory location pointed to by addr
 void store() {
-    int32_t* ptr = (int32_t*)*stack_at(0);
-    int32_t n = *(int32_t*)stack_at(1);
+    uint32_t *ptr = sys_addr(*stack_at(0));
+    int32_t n = *(int32_t *) stack_at(1);
     stack_pop(2);
-    if(((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top)
+    if((ptr >= sys.sys && ptr < sys.sys_top)
             || (uint32_t *) ptr == &sys.base) {
-        *ptr = n;
+        *(int32_t *) ptr = n;
     } else {
         fprintf(stderr, "ERROR: Out-of-bounds access attempted, aborting\n");
         abort_();
@@ -28,7 +28,7 @@ void store() {
 // ( d addr -- )
 // Stores d at the memory location pointed to by addr
 void store2() {
-    int64_t* ptr = (int64_t*)*stack_at(0);
+    int64_t* ptr = (int64_t *) sys_addr(*stack_at(0));
     int64_t n = *(int64_t*)stack_at(2);
     stack_pop(3);
     if(((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top)
@@ -43,7 +43,7 @@ void store2() {
 // ( c addr -- )
 // Stores c at the memory location pointed to by addr
 void c_store() {
-    char *ptr = (char *) *stack_at(0);
+    char *ptr = (char *) sys_addr(*stack_at(0));
     char n = *(char *) stack_at(1);
     stack_pop(2);
     if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
@@ -57,8 +57,8 @@ void c_store() {
 // ( n addr -- )
 // Adds n to the number stored at addr
 void plus_store() {
-    int32_t* ptr = (int32_t*)*stack_at(0);
-    int32_t n = *(int32_t*)stack_at(1);
+    int32_t* ptr = (int32_t *) sys_addr(*stack_at(0));
+    int32_t n = *(int32_t *) stack_at(1);
     stack_pop(2);
     if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         *ptr += n;
@@ -71,7 +71,7 @@ void plus_store() {
 // ( addr -- n )
 // Pushes the contents of addr to the top of the stack
 void fetch() {
-    int* ptr = (int32_t*)*stack_at(0);
+    int* ptr = (int32_t *) sys_addr(*stack_at(0));
     stack_pop(1);
     if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         stack_push(*ptr);
@@ -84,7 +84,7 @@ void fetch() {
 // ( addr -- d )
 // Pushes the double-length contents of addr to the top of the stack
 void fetch2() {
-    int64_t* ptr = (int64_t*)*stack_at(0);
+    int64_t* ptr = (int64_t *) sys_addr(*stack_at(0));
     stack_pop(1);
     if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         stack_push_d(*ptr);
@@ -97,7 +97,7 @@ void fetch2() {
 // ( addr -- c )
 // Pushes the byte pointed to by addr to the top of the stack
 void c_fetch() {
-    char* ptr = (char*)*stack_at(0);
+    char* ptr = (char*) sys_addr(*stack_at(0));
     stack_pop(1);
     if((uint32_t *) ptr >= sys.sys && (uint32_t *) ptr < sys.sys_top) {
         stack_push((int32_t)*ptr);
@@ -126,7 +126,7 @@ void cell_plus() {
     add();
 }
 
-// In this implementation, chars() is effectively a no-op
+// In this implementation, CHARS is effectively a no-op
 // It still needs to check the top of the stack though, because
 // it's supposed to crash if the stack is empty
 void chars() {
@@ -140,9 +140,9 @@ void char_plus() {
 // ( n c addr -- )
 // Fills n1 bytes at addr with byte c
 void fill() {
-    char b = *(char*)stack_at(0);
-    int32_t n = *(int32_t*)stack_at(1);
-    char* addr = (char*)*stack_at(2);
+    char b = *(char *) stack_at(0);
+    int32_t n = *(int32_t *) stack_at(1);
+    char* addr = (char *) sys_addr(*stack_at(2));
     stack_pop(3);
     if((uint32_t *) addr >= sys.sys && (uint32_t *) addr < sys.sys_top) {
         for(int32_t i = 0; i < n; i++)
@@ -153,6 +153,8 @@ void fill() {
     }
 }
 
+// NOT CURRENTLY USED
+/*
 // ( u addr -- )
 // Prints the contents of u bytes at addr
 void dump() {
@@ -162,6 +164,7 @@ void dump() {
     for(uint32_t i = 0; i < c; i++)
         if(i % 4 == 0) printf("%d ", addr[i / 4]);
 }
+*/
 
 void variable() {
     char *name = get_substring(isspace);
@@ -202,7 +205,7 @@ void create() {
 }
 
 void create_runtime() {
-    stack_push((int32_t) (sys.inst + 1));
+    stack_push(forth_addr(sys.inst + 1));
     exit_();
 }
 
@@ -224,16 +227,9 @@ void c_comma() {
     stack_pop(1);
 }
 
+// TODO: Re-implement once I separate variable / compiled word space
 void to_body() {
     *stack_at(0) += 4;
-}
-
-uint32_t *align_(uint32_t *in) {
-    if((uint32_t) in % 4 != 0) {
-        uint32_t *ptr = (uint32_t *) &in;
-        *ptr += 4 - ((uint32_t) in % 4);
-    }
-    return in;
 }
 
 void align() {
@@ -244,18 +240,18 @@ void align() {
 }
 
 void aligned() {
-    uint32_t addr = (uint32_t) sys.cp + ((4 - ((uint32_t) sys.cp % 4)) % 4);
-    stack_push(addr);
+    uint32_t *addr = (uint32_t *) ((uint32_t) sys.cp + ((4 - ((uint32_t) sys.cp % 4)) % 4));
+    stack_push(forth_addr(addr));
 }
 
 void here() {
-    stack_push((int32_t) sys.cp);
+    stack_push(forth_addr(sys.cp));
 }
 
 void move() {
     uint32_t n = *stack_at(0);
-    void *dest = *(void **) stack_at(1);
-    void *src = *(void **) stack_at(2);
+    void *dest = (void *) sys_addr(*stack_at(1));
+    void *src = (void *) sys_addr(*stack_at(2));
     stack_pop(3);
     memmove(src, dest, n);
 }
