@@ -1,11 +1,11 @@
-CC = gcc
-CFLAGS = -std=c99 -g -O0 -m32 -Wall -Werror -fPIE
+CC      = gcc
+CFLAGS  = -std=c99 -g -O0 -m32 -Wall -Werror -fPIE
 LDFLAGS = -lm -pie
-FDIR = forth
+FDIR    = forth
 
-DEPS = $(wildcard $(FDIR/*.h)) $(wildcard *.h)
-SRC = $(wildcard $(FDIR)/*.c) $(wildcard *.c)
-OBJ = $(SRC:%.c=%.o)
+DEPS    = $(wildcard $(FDIR)/*.h) $(wildcard *.h)
+SRC     = $(wildcard $(FDIR)/*.c) $(wildcard *.c)
+OBJ     = $(SRC:%.c=%.o)
 
 all: mxf obj_clean
 
