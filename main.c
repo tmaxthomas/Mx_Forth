@@ -79,7 +79,7 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 
 int main() {
     // Register signal handlers
-    // register_handlers();
+    register_handlers();
     // Set up the FORTH system
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t) * 4);
     sys.sys_top = sys.sys + SYSTEM_SIZE * 4;
