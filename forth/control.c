@@ -13,14 +13,14 @@
 /* HELPER FUNCTIONS */
 
 // Runs the FORTH program at func within the FORTH environment
-void exec(uint32_t* func) {
+void exec(uint32_t * func) {
     rstack_push(0);
     sys.inst = func;
     // Main program loop - run until the instruction pointer is NULL
     while(sys.inst) {
-        uint32_t* xt_ptr = (uint32_t*) sys_addr(*sys.inst);
+        uint32_t *xt_ptr = sys_addr(*sys.inst);
         // If the top of the rstack pointed somewhere in the glossary, it's a FORTH word. Call it.
-        if(sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
+        if (sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
             rstack_push(forth_addr(sys.inst + 1));
             sys.inst = xt_ptr;
         // If the top of the stack contained a function table address,
@@ -37,11 +37,11 @@ void exec(uint32_t* func) {
 
 // Finds substrings delimited by characters that return 1 when fed to func() in a malloc-ed buffer
 char *get_substring(int(*func)(int)) {
-    for(; func(*sys.idx) && sys.idx_loc < sys.idx_len; sys.idx++, sys.idx_loc++);
+    for (; func(*sys.idx) && sys.idx_loc < sys.idx_len; sys.idx++, sys.idx_loc++);
 
     char *tmp_idx = sys.idx;
-    int tmp_loc = sys.idx_loc, i;
-    for(i = 0; !func(*tmp_idx) && tmp_loc < sys.idx_len; i++) {
+    uint32_t tmp_loc = sys.idx_loc, i;
+    for (i = 0; !func(*tmp_idx) && tmp_loc < sys.idx_len; i++) {
         tmp_idx++;
         tmp_loc++;
     }
@@ -60,7 +60,7 @@ char *get_substring(int(*func)(int)) {
 // 64-bit integer pow() function
 int64_t ipow(int64_t base, int64_t exp) {
     int64_t ret = 1;
-    for(int i = 0; i < exp; i++) {
+    for (int i = 0; i < exp; i++) {
         ret *= base;
     }
 
@@ -89,21 +89,21 @@ bool str_eq(uint8_t* c1, uint8_t* c2) {
     return result;
 }
 
-// Returns a pointer to the start of the code section for func
-uint32_t* get_xt(uint32_t* func) {
-    uint8_t len = *(((uint8_t*) func) + 1);
-    uint32_t xt = ((uint32_t) func) + len + 6;
-    return (uint32_t*) xt;
+// Returns a system pointer to the start of the code section for func
+uint32_t *get_xt(uint32_t * func) {
+    uint8_t len = *(((uint8_t *) func) + 1);
+    uintptr_t xt = ((uintptr_t) func) + len + 6;
+    return (uint32_t *) xt;
 }
 
-// Finds a c string in the dictionary, if it exists
-int32_t cfind(char *str, int *precedence) {
-    char* fstr = malloc(strlen(str) + 1);
+// Finds a c string in the dictionary, if it exists, returning a FORTH address with
+// the xt corresponding to the string
+uint32_t cfind(char *str, int *precedence) {
+    char *fstr = (char *) sys.cp + 256;
     fstr[0] = strlen(str);
     memcpy(fstr + 1, str, strlen(str));
-    stack_push((int32_t) fstr);
+    stack_push(forth_addr((uint32_t *) fstr));
     find();
-    free(fstr);
     if (*stack_at(0) == 0) {
         stack_pop(2);
         return 0;
@@ -120,11 +120,11 @@ int32_t cfind(char *str, int *precedence) {
 /* FORTH FUNCTIONS */
 
 void find() {
-    uint8_t* name = (uint8_t*)*stack_at(0);
+    uint8_t *name = (uint8_t *) sys_addr(*stack_at(0));
     stack_pop(1);
-    uint32_t* gloss_loc = sys.gloss_head;
+    uint32_t *gloss_loc = sys.gloss_head;
     while (*gloss_loc) {
-        uint8_t* ccp = (uint8_t*) gloss_loc;
+        uint8_t *ccp = (uint8_t *) gloss_loc;
         if (str_eq(ccp + 1, name)) {
             stack_push(forth_addr(get_xt(gloss_loc)));
             if (*ccp == 0) { // Not immediate
@@ -136,17 +136,17 @@ void find() {
         } else {
             uint8_t len = *(ccp + 1);
             // Locate back pointer and assign dereferenced value to gloss_loc
-            uint32_t bp = ((uint32_t) gloss_loc) + len + 2;
-            gloss_loc = *((uint32_t**) bp);
+            uint32_t *bp = (uint32_t *) (((uintptr_t) gloss_loc) + len + 2);
+            gloss_loc = sys_addr(*bp);
         }
     }
-    stack_push((int32_t) name);
+    stack_push(forth_addr((uint32_t *) name));
     stack_push(0);
 }
 
 void tick() {
     char *buf = get_substring(isspace);
-    for (int i = 0; i < strlen(buf); i++) {
+    for (uint32_t i = 0; i < strlen(buf); i++) {
         buf[i] = toupper(buf[i]);
     }
     int32_t xt = cfind(buf, NULL);
@@ -162,7 +162,7 @@ void tick() {
 
 void bracket_tick_bracket() {
     char *buf = get_substring(isspace);
-    for (int i = 0; i < strlen(buf); i++) {
+    for (uint32_t i = 0; i < strlen(buf); i++) {
         buf[i] = toupper(buf[i]);
     }
 
@@ -195,7 +195,7 @@ void execute() {
     stack_pop(1);
     uint32_t *xt_addr = sys_addr(xt);
     if (sys.gloss_base < xt_addr && xt_addr < sys.cp) {
-        rstack_push((int32_t) (sys.inst + 1));
+        rstack_push(forth_addr(sys.inst + 1));
         sys.inst = sys_addr(xt);
         sys.inst--;
     } else {
@@ -213,32 +213,32 @@ void exit_() {
 void if_() {
     *sys.cp = COND_JUMP_ADDR;
     sys.cp++;
-    stack_push((int32_t) sys.cp);
+    stack_push(forth_addr(sys.cp));
     sys.cp++;
 }
 
 void else_() {
-    uint32_t **loc = *(uint32_t ***) stack_at(0);
+    uint32_t *loc = sys_addr(*stack_at(0));
     stack_pop(1);
 
     *sys.cp = JUMP_ADDR;
     sys.cp++;
-    stack_push((int32_t) sys.cp);
+    stack_push(forth_addr(sys.cp));
     sys.cp++;
 
-    *loc = sys.cp;
+    *loc = forth_addr(sys.cp);
 }
 
 void then(){
-    uint32_t **loc = *(uint32_t ***) stack_at(0);
+    uint32_t *loc = sys_addr(*stack_at(0));
     stack_pop(1);
-    *loc = sys.cp;
+    *loc = forth_addr(sys.cp);
 }
 
 void do_() {
     *sys.cp = DO_RUNTIME_ADDR;
     sys.cp++;
-    stack_push((int32_t) sys.cp);
+    stack_push(forth_addr(sys.cp));
     stack_push(0);
 }
 
@@ -253,8 +253,8 @@ void do_runtime() {
 void loop() {
     // Handle all the LEAVE state
     while (*stack_at(0)) {
-        uint32_t *leave_addr = *(uint32_t **) stack_at(0);
-        *leave_addr = (uint32_t) (sys.cp + 2);
+        uint32_t *leave_addr = sys_addr(*stack_at(0));
+        *leave_addr = forth_addr(sys.cp + 2);
         stack_pop(1);
     }
     stack_pop(1);
@@ -272,7 +272,7 @@ void loop_runtime() {
             n = *(int32_t *) rstack_at(1);
 
     (*i)++;
-    if(*i == n) {
+    if (*i == n) {
         rstack_pop(2);
         sys.inst++;
     } else {
@@ -283,8 +283,8 @@ void loop_runtime() {
 void plus_loop() {
     // Handle all the LEAVE state
     while (*stack_at(0)) {
-        uint32_t *leave_addr = *(uint32_t **) stack_at(0);
-        *leave_addr = (uint32_t) (sys.cp + 2);
+        uint32_t *leave_addr = sys_addr(*stack_at(0));
+        *leave_addr = forth_addr(sys.cp + 2);
         stack_pop(1);
     }
     stack_pop(1);
@@ -305,7 +305,7 @@ void plus_loop_runtime() {
     stack_pop(1);
 
     *i += k;
-    if((k > 0 && *i >= n) || (k <= 0 && *i < n)) {
+    if ((k > 0 && *i >= n) || (k <= 0 && *i < n)) {
         rstack_pop(2);
         sys.inst++;
     } else {
@@ -314,7 +314,7 @@ void plus_loop_runtime() {
 }
 
 void begin() {
-    stack_push((int32_t) sys.cp);
+    stack_push(forth_addr(sys.cp));
 }
 
 void until() {
@@ -329,12 +329,12 @@ void until() {
 void while_() {
     *sys.cp = COND_JUMP_ADDR;
     sys.cp++;
-    stack_push((int32_t) sys.cp);
+    stack_push(forth_addr(sys.cp));
     sys.cp++;
 }
 
 void repeat() {
-    uint32_t *while_addr = *(uint32_t **) stack_at(0),
+    uint32_t *while_addr = sys_addr(*stack_at(0)),
              begin_addr = *stack_at(1);
 
     stack_pop(2);
@@ -343,21 +343,22 @@ void repeat() {
     sys.cp++;
     *sys.cp = begin_addr;
     sys.cp++;
-    *while_addr = (uint32_t) sys.cp;
+    *while_addr = forth_addr(sys.cp);
 }
 
 void jump() {
-    sys.inst = *(uint32_t **) (sys.inst + 1);
+    sys.inst = sys_addr(*(sys.inst + 1));
     sys.inst--;
 }
 
 void cond_jump() {
     uint32_t flag = *stack_at(0);
     stack_pop(1);
-    if(!flag)
+    if (!flag) {
         jump();
-    else
+    } else {
         sys.inst++;
+    }
 }
 
 void num_runtime() {
@@ -372,27 +373,27 @@ void dnum_runtime() {
 }
 
 void lbracket() {
-    sys.COMPILE = false;
+    *sys.COMPILE = false;
 }
 
 void rbracket() {
-    sys.COMPILE = true;
+    *sys.COMPILE = true;
 }
 
 void colon() {
     char *name = get_substring(isspace);
-    stack_push((int32_t) add_def(name, 0));
-    sys.curr_def = stack_at(0);
+    sys.curr_def = add_def(name, 0);
+    stack_push(forth_addr(sys.curr_def));
     free(name);
     rbracket();
 }
 
 void semicolon() {
-    *(sys.cp) = EXIT_ADDR;
+    *sys.cp = EXIT_ADDR;
     sys.cp++;
-    *(sys.cp) = 0;
+    *sys.cp = 0;
     sys.cp++;
-    uint32_t *new_wd = *(uint32_t**) stack_at(0);
+    uint32_t *new_wd = sys_addr(*stack_at(0));
     stack_pop(1);
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
@@ -412,10 +413,9 @@ void abort_() {
     // (in case we aborted while compiling a definition)
     sys.cp = sys.old_cp;
     // Reset the instruction pointer
-    sys.inst = sys.q_addr;
-    sys.inst--;
+    sys.inst = sys.q_addr-1;
     sys.ABORT = true;
-    sys.COMPILE = false;
+    *sys.COMPILE = false;
 }
 
 int isquote(int ch) {
@@ -439,19 +439,17 @@ void abort_quote_runtime() {
     uint32_t flag = *stack_at(0);
     stack_pop(1);
     if (flag) {
+        // Write the error string to stderr and then abort
         sys.inst++;
         char *c = (char *) sys.inst;
-        char *buf = malloc(*c + 1);
-        memcpy(buf, c + 1, *c);
-        buf[(int) *c] = '\0';
-        printf("%s", buf);
-        free(buf);
+        write(STDERR_FILENO, c+1, *c);
         abort_();
     } else {
+        // Otherwise, jump over the error string and carry on
         sys.inst++;
         char *c = (char *) sys.inst;
         sys.inst += ((*c + 1) / 4);
-        if((*c + 1) % 4 == 0) {
+        if ((*c + 1) % 4 == 0) {
             sys.inst--;
         }
     }
@@ -460,30 +458,31 @@ void abort_quote_runtime() {
 
 // Case-insensitive base-compliant digit converter
 int to_num(int c) {
-    if(c >= 'a' && c <= 'z') {
+    if (c >= 'a' && c <= 'z') {
         c -= 87;
-    } else if(c >= 'A' && c <= 'Z') {
+    } else if (c >= 'A' && c <= 'Z') {
         c -= 55;
-    } else if(isdigit(c)) {
+    } else if (isdigit(c)) {
         c -= '0';
     }
-    return (c < sys.base) ? c : -1;
+    return (c < (int) sys.base) ? c : -1;
 }
 
+// Converts the string in buf to a signed 64-bit integer
 int64_t int64_convert(char *buf, int *err) {
     int64_t num = 0, neg = 1;
 
-    if(buf[0] == '-') {
+    if (buf[0] == '-') {
         neg = -1;
         memmove(buf, buf + 1, strlen(buf) + 1);
-    } else if(buf[0] == '+') {
+    } else if (buf[0] == '+') {
         neg = 1;
         memmove(buf, buf + 1, strlen(buf) + 1);
     }
 
-    for(int i = strlen(buf); i > 0; i--) {
+    for (int i = strlen(buf); i > 0; i--) {
         int n;
-        if((n = to_num(buf[i - 1])) == -1) {
+        if ((n = to_num(buf[i - 1])) == -1) {
             *err = 1;
             return 0;
         } else {
@@ -494,20 +493,21 @@ int64_t int64_convert(char *buf, int *err) {
     return num;
 }
 
+// Converts the string in buf to a signed 32-bit integer
 int32_t int32_convert(char *buf, int *err) {
     int32_t num = 0, neg = 1;
 
-    if(buf[0] == '-') {
+    if (buf[0] == '-') {
         neg = -1;
         memmove(buf, buf + 1, strlen(buf) + 1);
-    } else if(buf[0] == '+') {
+    } else if (buf[0] == '+') {
         neg = 1;
         memmove(buf, buf + 1, strlen(buf) + 1);
     }
 
-    for(int i = strlen(buf); i > 0; i--) {
+    for (int i = strlen(buf); i > 0; i--) {
         int n;
-        if((n = to_num(buf[i - 1])) == -1) {
+        if ((n = to_num(buf[i - 1])) == -1) {
             *err = 1;
             return 0;
         } else {
@@ -525,30 +525,30 @@ void quit() {
 
     // If QUIT was called by some means other than the normal way
     // QUIT loops
-    if(sys.rstack == sys.rstack_0 || *rstack_at(0) != 0) {
+    if (sys.rstack == sys.rstack_0 || *rstack_at(0) != 0) {
         sys.OKAY = false;
         rstack_clear();
         rstack_push(0);
     }
 
     char *buf = get_substring(isspace);
-    for(int i = 0; i < strlen(buf); i++) {
-        if(islower(buf[i])) buf[i] = toupper(buf[i]);
+    for (uint32_t i = 0; i < strlen(buf); i++) {
+        if (islower(buf[i])) buf[i] = toupper(buf[i]);
     }
 
     // If we need to get some more input, do so
-    if(strlen(buf) == 0) {
+    if (strlen(buf) == 0) {
         if (sys.source_id == 0) {
             free(buf);
             // If "ok" needs to be printed, print it
             // otherwise establish that it'll need to be printed
-            if(sys.OKAY) {
+            if (sys.OKAY) {
                 printf("ok");
             } else {
                 sys.OKAY = true;
             }
             printf("\n");
-            int num_bytes = read(0, sys.tib, sys.tib_len);
+            int num_bytes = read(STDIN_FILENO, sys.tib, sys.tib_len);
             // Chop off the trailing line feed
             sys.tib[num_bytes - 1] = '\0';
             sys.idx_len = num_bytes - 1;
@@ -562,8 +562,8 @@ void quit() {
         }
 
         buf = get_substring(isspace);
-        for(int i = 0; i < strlen(buf); i++) {
-            if(islower(buf[i])) buf[i] = toupper(buf[i]);
+        for (uint32_t i = 0; i < strlen(buf); i++) {
+            if (islower(buf[i])) buf[i] = toupper(buf[i]);
         }
     }
 
@@ -572,13 +572,13 @@ void quit() {
     int precedence;
     int32_t wd = cfind(buf, &precedence);
 
-    if(wd) {
-        if(!sys.COMPILE || precedence == -1) {
+    if (wd) {
+        if (!*sys.COMPILE || precedence == -1) {
             rstack_push(wd);
         } else {
             uint32_t *wd_ptr = sys_addr(wd);
 
-            if(!wd_ptr[1] && !wd_ptr[2]) {
+            if (!wd_ptr[1] && !wd_ptr[2]) {
                 *(sys.cp) = *wd_ptr;
             } else {
                 *(sys.cp) = (uint32_t) wd;
@@ -600,7 +600,7 @@ void quit() {
                 return;
             }
             // If we're in interpretation mode
-            if (!sys.COMPILE) {
+            if (!*sys.COMPILE) {
                 stack_push_d(num);
             // If we're in compilation mode
             } else {
@@ -619,7 +619,7 @@ void quit() {
                 return;
             }
             // If we're in interpretation mode
-            if (!sys.COMPILE) {
+            if (!*sys.COMPILE) {
                 stack_push(num);
             // If we're in compilation mode
             } else {
@@ -648,35 +648,35 @@ void paren() {
 }
 
 void does() {
-    uint32_t dict_ptr_val = 1 + (uint32_t) sys.gloss_head;
+    uintptr_t dict_ptr_val = 1 + (uintptr_t) sys.gloss_head;
     uint8_t len = *(uint8_t *) dict_ptr_val;
     dict_ptr_val += len + 5;
     uint32_t *dict_ptr = (uint32_t *) dict_ptr_val;
     *dict_ptr = DOES_RUNTIME_ADDR;
     dict_ptr++;
     memmove(dict_ptr + 1, dict_ptr, sys_util.alloc);
-    *dict_ptr = (uint32_t) (sys.inst + 1);
+    *dict_ptr = forth_addr(sys.inst + 1);
     exit_();
 }
 
 void does_runtime() {
-    stack_push((int32_t) (sys.inst + 2));
-    sys.inst = *(uint32_t **) (sys.inst + 1);
+    stack_push(forth_addr(sys.inst + 2));
+    sys.inst = sys_addr(*(sys.inst + 1));
     sys.inst--;
 }
 
 void evaluate() {
     // Store the current input source, whatever it may be, and set
     // the base of the rstack to make a new stack frame
-    rstack_push((int32_t) sys.idx);
-    rstack_push((int32_t) sys.idx_len);
-    rstack_push((int32_t) sys.idx_loc);
+    rstack_push(forth_addr((uint32_t *) sys.idx));
+    rstack_push(sys.idx_len);
+    rstack_push(sys.idx_loc);
     rstack_push(sys.source_id);
-    rstack_push((int32_t) sys.inst);
-    rstack_push((int32_t) sys.rstack_0);
+    rstack_push(forth_addr(sys.inst));
+    rstack_push(forth_addr(sys.rstack_0));
     sys.rstack_0 = sys.rstack;
     sys.idx_len = *stack_at(0);
-    sys.idx = *(char **) stack_at(1);
+    sys.idx = (char *) sys_addr(*stack_at(1));
     stack_pop(2);
     sys.idx_loc = 0;
     sys.source_id = -1;
@@ -686,12 +686,12 @@ void evaluate() {
 
     // Finally, pop the stack frame we made
     sys.rstack = sys.rstack_0;
-    sys.rstack_0 = *(uint32_t **) sys.rstack;
-    sys.inst = *(uint32_t **) rstack_at(1);
+    sys.rstack_0 = sys_addr(*rstack_at(0));
+    sys.inst = sys_addr(*rstack_at(1));
     sys.source_id = *rstack_at(2);
     sys.idx_loc = *rstack_at(3);
     sys.idx_len = *rstack_at(4);
-    sys.idx = *(char **) rstack_at(5);
+    sys.idx = (char *) sys_addr(*rstack_at(5));
     rstack_pop(6);
 }
 
@@ -705,7 +705,7 @@ void literal() {
     stack_pop(1);
     *(sys.cp) = NUM_RUNTIME_ADDR;
     sys.cp++;
-    *(int32_t*) (sys.cp) = num;
+    *(int32_t *) (sys.cp) = num;
     sys.cp++;
 }
 
@@ -714,10 +714,10 @@ void postpone() {
     int32_t wd = cfind(buf, NULL);
     if (wd) {
         // Some necessary optimizations, needed to make some stuff work
-        if(*(((uint32_t *) wd) + 1) == (uint32_t) exit_) {
-            *(sys.cp) = *(uint32_t *) wd;
+        if (*(sys_addr(wd) + 1) == EXIT_ADDR) {
+            *sys.cp = *sys_addr(wd);
         } else {
-            *(sys.cp) = (uint32_t) wd;
+            *sys.cp = (uint32_t) wd;
         }
         sys.cp++;
         free(buf);
@@ -729,7 +729,7 @@ void postpone() {
 }
 
 void state() {
-    stack_push((int32_t) &sys.COMPILE);
+    stack_push(forth_addr(sys.COMPILE));
 }
 
 void unloop() {
@@ -742,14 +742,14 @@ void leave() {
     *sys.cp = JUMP_ADDR;
     sys.cp++;
     int i;
-    for(i = 0; *stack_at(i); i++);
+    for (i = 0; *stack_at(i); i++);
     memmove(sys.stack - 1, sys.stack, i * 4);
     sys.stack--;
-    *stack_at(i) = (uint32_t) sys.cp;
+    *stack_at(i) = forth_addr(sys.cp);
     sys.cp++;
 }
 
 void recurse() {
-    *(sys.cp) = (uint32_t) get_xt(sys.curr_def);
+    *(sys.cp) = forth_addr(get_xt(sys.curr_def));
     sys.cp++;
 }

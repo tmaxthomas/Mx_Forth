@@ -186,7 +186,7 @@ void max(){
 }
 
 void base() {
-    stack_push((int32_t) &sys.base);
+    stack_push(forth_addr(&sys.base));
 }
 
 void decimal() {

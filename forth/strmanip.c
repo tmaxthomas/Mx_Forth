@@ -5,6 +5,7 @@
 
 #include "../stack.h"
 #include "../sys.h"
+#include "../defs.h"
 #include "control.h"
 #include "strmanip.h"
 
@@ -66,14 +67,15 @@ void to_number() {
     uint64_t b = *(uint64_t *) stack_at(2);
     stack_pop(4);
 
-    int i, num;
+    uint32_t i;
+    int num;
     for(i = 0; i < n && ((num = to_num(*str)) != -1); i++, str++) {
         b *= sys.base;
         b += n;
     }
 
     stack_push_d(n);
-    stack_push((int32_t) str);
+    stack_push(forth_addr((uint32_t *) str));
     stack_push(n - i);
 }
 
@@ -109,7 +111,7 @@ void count() {
 // ( -- )
 void dot_quote() {
     char *buf = get_substring(is_quote);
-    *sys.cp = (uint32_t) dot_quote_runtime;
+    *sys.cp = DOT_QUOTE_RUNTIME_ADDR;
     sys.cp++;
     char *ccp = (char *) sys.cp;
     *ccp = strlen(buf);
@@ -139,7 +141,7 @@ void dot_quote_runtime() {
 // ( -- )
 void s_quote() {
     char *buf = get_substring(is_quote);
-    *sys.cp = (uint32_t) s_quote_runtime;
+    *sys.cp = S_QUOTE_RUNTIME_ADDR;
     sys.cp++;
     char *ccp = (char *) sys.cp;
     *ccp = strlen(buf);

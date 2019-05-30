@@ -233,14 +233,14 @@ void to_body() {
 }
 
 void align() {
-    if((uint32_t) sys.cp % 4 != 0) {
+    if((uintptr_t) sys.cp % 4 != 0) {
         uint32_t *cp_ptr = (uint32_t *) &sys.cp;
-        *cp_ptr += 4 - ((uint32_t) sys.cp % 4);
+        *cp_ptr += 4 - ((uintptr_t) sys.cp % 4);
     }
 }
 
 void aligned() {
-    uint32_t *addr = (uint32_t *) ((uint32_t) sys.cp + ((4 - ((uint32_t) sys.cp % 4)) % 4));
+    uint32_t *addr = (uint32_t *) ((uintptr_t) sys.cp + ((4 - ((uintptr_t) sys.cp % 4)) % 4));
     stack_push(forth_addr(addr));
 }
 

@@ -4,12 +4,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-//Struct containing FORTH system data
+// Struct containing FORTH system data
+// All pointers contain system addresses unless otherwise noted
 struct system_t {
     uint32_t *sys, *sys_top;
     char *idx, *tib, *pad;
-    uint32_t tib_loc, idx_loc, idx_len;
-    uint32_t tib_len, pad_len, base;
+    uint32_t tib_loc, idx_loc;
+    uint32_t idx_len, tib_len, pad_len, base;
     uint32_t *stack, *stack_0;
     uint32_t *rstack, *rstack_0;
     uint32_t *cp, *old_cp, *gloss_head, *gloss_base;
@@ -17,9 +18,9 @@ struct system_t {
     uint32_t *q_addr, q_fth_addr;
     uint32_t source_id;
     uint32_t *curr_def;
-    uint32_t addr_offset;
+    uintptr_t addr_offset;
     
-    int COMPILE;
+    uint32_t *COMPILE;
     bool PAGE, OKAY, ABORT;
 };
 

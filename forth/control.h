@@ -7,6 +7,7 @@ void exec(uint32_t *func);
 uint32_t *add_def(char *name, uint8_t precedence);
 char *get_substring(int(*func)(int));
 int to_num(int c);
+uint32_t cfind(char *str, int *precedence);
 
 void find();
 void tick();

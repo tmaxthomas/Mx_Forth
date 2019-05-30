@@ -38,8 +38,8 @@ static inline void add_func(void (*func)()) {
 // the end of the new definition
 uint32_t *add_def(char *name, uint8_t precedence) {
     // Make sure the name gets stored as uppercase
-    for(int i = 0; i < strlen(name); i++) {
-        if(islower(name[i])) name[i] = toupper(name[i]);
+    for (uint32_t i = 0; i < strlen(name); i++) {
+        if (islower(name[i])) name[i] = toupper(name[i]);
     }
     // Set up traversal pointers
     uint32_t *new_wd = sys.cp;
@@ -59,7 +59,7 @@ uint32_t *add_def(char *name, uint8_t precedence) {
     // Move & align system cp pointer
     sys.cp = (uint32_t*) ccp;
     // Set up back pointer
-    *sys.cp = (uint32_t) sys.gloss_head;
+    *sys.cp = forth_addr(sys.gloss_head);
     sys.cp++;
     return new_wd;
 }
@@ -79,7 +79,7 @@ void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
 
 int main() {
     // Register signal handlers
-    register_handlers();
+    // register_handlers();
     // Set up the FORTH system
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t) * 4);
     sys.sys_top = sys.sys + SYSTEM_SIZE * 4;
@@ -88,6 +88,8 @@ int main() {
     sys.rstack = sys.sys + SYSTEM_SIZE * 3;
     sys.rstack_0 = sys.rstack;
     sys.cp = sys.sys + SYSTEM_SIZE;
+    sys.COMPILE = sys.cp;
+    sys.cp++;
     *sys.cp = 0;
     sys.gloss_head = sys.cp;
     sys.gloss_base = sys.gloss_head;
@@ -122,6 +124,8 @@ int main() {
     add_func(unloop);
     add_func(create_runtime);
     add_func(constant_runtime);
+    add_func(dot_quote_runtime);
+    add_func(s_quote_runtime);
 
     add_basic_word("!", store, 0);
     add_basic_word("#", pound, 0);
@@ -258,18 +262,14 @@ int main() {
     add_basic_word("]", lbracket, 1);
 
     // Locate QUIT within the dictionary
-    unsigned char name[5] = "\x04QUIT";
-    stack_push((uint32_t) name);
-    find();
-    stack_pop(1);
-    sys.q_fth_addr = *stack_at(0);
+    sys.q_fth_addr = cfind("QUIT", NULL);
     sys.q_addr = sys_addr(sys.q_fth_addr);
-    stack_pop(1);
 
     // Spin up the execution engine, running QUIT
     exec(sys.q_addr);
 
     // After exec() exits, free up the system and return
+    // Note that this should only hit if we exit without BYE and without something sending SIGKILL
     free(sys.sys);
     return 0;
 }
