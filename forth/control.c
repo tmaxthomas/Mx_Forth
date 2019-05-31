@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include "../sys.h"
 #include "../stack.h"
@@ -114,6 +116,131 @@ uint32_t cfind(char *str, int *precedence) {
         int32_t ret = *stack_at(1);
         stack_pop(2);
         return ret;
+    }
+}
+
+// Case-insensitive base-compliant digit converter
+int to_num(int c) {
+    if (c >= 'a' && c <= 'z') {
+        c -= 87;
+    } else if (c >= 'A' && c <= 'Z') {
+        c -= 55;
+    } else if (isdigit(c)) {
+        c -= '0';
+    }
+    return (c < (int) sys.base) ? c : -1;
+}
+
+// Converts the string in buf to a signed 64-bit integer
+int64_t int64_convert(char *buf, int *err) {
+    int64_t num = 0, neg = 1;
+
+    if (buf[0] == '-') {
+        neg = -1;
+        memmove(buf, buf + 1, strlen(buf) + 1);
+    } else if (buf[0] == '+') {
+        neg = 1;
+        memmove(buf, buf + 1, strlen(buf) + 1);
+    }
+
+    for (int i = strlen(buf); i > 0; i--) {
+        int n;
+        if ((n = to_num(buf[i - 1])) == -1) {
+            *err = 1;
+            return 0;
+        } else {
+            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
+        }
+    }
+    num *= neg;
+    return num;
+}
+
+// Converts the string in buf to a signed 32-bit integer
+int32_t int32_convert(char *buf, int *err) {
+    int32_t num = 0, neg = 1;
+
+    if (buf[0] == '-') {
+        neg = -1;
+        memmove(buf, buf + 1, strlen(buf) + 1);
+    } else if (buf[0] == '+') {
+        neg = 1;
+        memmove(buf, buf + 1, strlen(buf) + 1);
+    }
+
+    for (int i = strlen(buf); i > 0; i--) {
+        int n;
+        if ((n = to_num(buf[i - 1])) == -1) {
+            *err = 1;
+            return 0;
+        } else {
+            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
+        }
+    }
+    num *= neg;
+    return num;
+}
+
+// Interprets the word/number contained within buf
+void interpret(char *buf) {
+    int precedence;
+    int32_t wd = cfind(buf, &precedence);
+
+    if (wd) {
+        if (!*sys.COMPILE || precedence == -1) {
+            rstack_push(wd);
+        } else {
+            uint32_t *wd_ptr = sys_addr(wd);
+
+            if (!wd_ptr[1] && !wd_ptr[2]) {
+                *sys.cp = *wd_ptr;
+            } else {
+                *sys.cp = (uint32_t) wd;
+            }
+            sys.cp++;
+        }
+    } else {
+        int err = 0;
+
+        // Need two separate cases, one for 32-bit numbers, one for 64-bit
+        if (buf[strlen(buf)] == '.') {
+            buf[strlen(buf)] = '\0';
+            int64_t num = int64_convert(buf, &err);
+            // If this wasn't actually a number
+            if (err) {
+                fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
+                abort_();
+                return;
+            }
+            // If we're in interpretation mode
+            if (!*sys.COMPILE) {
+                stack_push_d(num);
+            // If we're in compilation mode
+            } else {
+                *(sys.cp) = DNUM_RUNTIME_ADDR;
+                sys.cp++;
+                *(int64_t*) (sys.cp) = num;
+                sys.cp += 2;
+            }
+        } else {
+            int32_t num = int32_convert(buf, &err);
+            // If this wasn't actually a number
+            if (err) {
+                fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
+                abort_();
+                return;
+            }
+            // If we're in interpretation mode
+            if (!*sys.COMPILE) {
+                stack_push(num);
+            // If we're in compilation mode
+            } else {
+                *(sys.cp) = NUM_RUNTIME_ADDR;
+                sys.cp++;
+                *(int32_t *) sys.cp = num;
+                sys.cp++;
+            }
+        }
     }
 }
 
@@ -456,67 +583,6 @@ void abort_quote_runtime() {
     return;
 }
 
-// Case-insensitive base-compliant digit converter
-int to_num(int c) {
-    if (c >= 'a' && c <= 'z') {
-        c -= 87;
-    } else if (c >= 'A' && c <= 'Z') {
-        c -= 55;
-    } else if (isdigit(c)) {
-        c -= '0';
-    }
-    return (c < (int) sys.base) ? c : -1;
-}
-
-// Converts the string in buf to a signed 64-bit integer
-int64_t int64_convert(char *buf, int *err) {
-    int64_t num = 0, neg = 1;
-
-    if (buf[0] == '-') {
-        neg = -1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
-    } else if (buf[0] == '+') {
-        neg = 1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
-    }
-
-    for (int i = strlen(buf); i > 0; i--) {
-        int n;
-        if ((n = to_num(buf[i - 1])) == -1) {
-            *err = 1;
-            return 0;
-        } else {
-            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
-        }
-    }
-    num *= neg;
-    return num;
-}
-
-// Converts the string in buf to a signed 32-bit integer
-int32_t int32_convert(char *buf, int *err) {
-    int32_t num = 0, neg = 1;
-
-    if (buf[0] == '-') {
-        neg = -1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
-    } else if (buf[0] == '+') {
-        neg = 1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
-    }
-
-    for (int i = strlen(buf); i > 0; i--) {
-        int n;
-        if ((n = to_num(buf[i - 1])) == -1) {
-            *err = 1;
-            return 0;
-        } else {
-            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
-        }
-    }
-    num *= neg;
-    return num;
-}
 
 // Word that runs the FORTH system, including the interpreter/compiler
 void quit() {
@@ -569,67 +635,7 @@ void quit() {
 
     rstack_push(sys.q_fth_addr);
 
-    int precedence;
-    int32_t wd = cfind(buf, &precedence);
-
-    if (wd) {
-        if (!*sys.COMPILE || precedence == -1) {
-            rstack_push(wd);
-        } else {
-            uint32_t *wd_ptr = sys_addr(wd);
-
-            if (!wd_ptr[1] && !wd_ptr[2]) {
-                *(sys.cp) = *wd_ptr;
-            } else {
-                *(sys.cp) = (uint32_t) wd;
-            }
-            sys.cp++;
-        }
-    } else {
-        int err = 0;
-
-        // Need two separate cases, one for 32-bit numbers, one for 64-bit
-        if (buf[strlen(buf)] == '.') {
-            buf[strlen(buf)] = '\0';
-            int64_t num = int64_convert(buf, &err);
-            // If this wasn't actually a number
-            if (err) {
-                fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
-                free(buf);
-                abort_();
-                return;
-            }
-            // If we're in interpretation mode
-            if (!*sys.COMPILE) {
-                stack_push_d(num);
-            // If we're in compilation mode
-            } else {
-                *(sys.cp) = DNUM_RUNTIME_ADDR;
-                sys.cp++;
-                *(int64_t*) (sys.cp) = num;
-                sys.cp += 2;
-            }
-        } else {
-            int32_t num = int32_convert(buf, &err);
-            // If this wasn't actually a number
-            if (err) {
-                fprintf(stderr, "ERROR: Unknown word %s, aborting\n", buf);
-                free(buf);
-                abort_();
-                return;
-            }
-            // If we're in interpretation mode
-            if (!*sys.COMPILE) {
-                stack_push(num);
-            // If we're in compilation mode
-            } else {
-                *(sys.cp) = NUM_RUNTIME_ADDR;
-                sys.cp++;
-                *(int32_t *) sys.cp = num;
-                sys.cp++;
-            }
-        }
-    }
+    interpret(buf);
     free(buf);
 }
 

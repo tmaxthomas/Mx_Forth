@@ -1,6 +1,6 @@
 CC 		= gcc
 CFLAGS  = -std=gnu99 -g -O0 -W -Werror -fPIE
-LDFLAGS = -lm -pie
+LDFLAGS = -lm -pie -lncurses -lreadline
 FDIR    = forth
 
 DEPS    = $(wildcard $(FDIR)/*.h) $(wildcard *.h)

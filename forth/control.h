@@ -3,11 +3,12 @@
 
 #include <stdint.h>
 
-void exec(uint32_t *func);
-uint32_t *add_def(char *name, uint8_t precedence);
-char *get_substring(int(*func)(int));
-int to_num(int c);
-uint32_t cfind(char *str, int *precedence);
+void exec(uint32_t *);
+uint32_t *add_def(char *, uint8_t);
+char *get_substring(int(*)(int));
+int to_num(int);
+uint32_t cfind(char *, int *);
+void interpret(char *);
 
 void find();
 void tick();
