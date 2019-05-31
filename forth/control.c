@@ -609,15 +609,22 @@ void quit() {
             // If "ok" needs to be printed, print it
             // otherwise establish that it'll need to be printed
             if (sys.OKAY) {
-                printf("ok");
+                printf("ok\n");
             } else {
                 sys.OKAY = true;
             }
-            printf("\n");
-            int num_bytes = read(STDIN_FILENO, sys.tib, sys.tib_len);
-            // Chop off the trailing line feed
-            sys.tib[num_bytes - 1] = '\0';
-            sys.idx_len = num_bytes - 1;
+            
+            // Get us some input using Readline
+            char *tmpbuf = readline(NULL);
+            sys.idx_len = strlen(tmpbuf);
+            // If the input is too long, freak out
+            if (sys.idx_len >= sys.tib_len) {
+                fprintf(stderr, "ERROR: Inputted line exceeds terminal input buffer size, aborting\n");
+                free(tmpbuf);
+                return;
+            }
+
+            memcpy(sys.tib, tmpbuf, sys.idx_len+1);
 
             sys.idx = sys.tib;
             sys.idx_loc = 0;

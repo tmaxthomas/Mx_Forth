@@ -21,7 +21,7 @@ struct system_t {
     uintptr_t addr_offset;
     
     uint32_t *COMPILE;
-    bool PAGE, OKAY, ABORT;
+    bool OKAY, ABORT;
 };
 
 struct sys_util_t {
