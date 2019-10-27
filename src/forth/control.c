@@ -135,50 +135,50 @@ int to_num(int c) {
 int64_t int64_convert(char *buf, int *err) {
     int64_t num = 0, neg = 1;
 
-    if (buf[0] == '-') {
+    if (*buf == '-') {
         neg = -1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
-    } else if (buf[0] == '+') {
-        neg = 1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
+        buf++;
+    } else if (*buf == '+') {
+        buf++;
     }
 
-    for (int i = strlen(buf); i > 0; i--) {
-        int n;
-        if ((n = to_num(buf[i - 1])) == -1) {
+    for (int i = strlen(buf)-1; i >= 0; i--) {
+        int64_t n = to_num(*buf);
+        if (n < 0) {
             *err = 1;
             return 0;
-        } else {
-            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
         }
+        
+		num += n * ipow(sys.base, i);
+		buf++;
     }
-    num *= neg;
-    return num;
+
+    return num * neg;
 }
 
 // Converts the string in buf to a signed 32-bit integer
 int32_t int32_convert(char *buf, int *err) {
     int32_t num = 0, neg = 1;
 
-    if (buf[0] == '-') {
+    if (*buf == '-') {
         neg = -1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
-    } else if (buf[0] == '+') {
-        neg = 1;
-        memmove(buf, buf + 1, strlen(buf) + 1);
+        buf++;
+    } else if (*buf == '+') {
+        buf++;
     }
 
-    for (int i = strlen(buf); i > 0; i--) {
-        int n;
-        if ((n = to_num(buf[i - 1])) == -1) {
+    for (int i = strlen(buf)-1; i >= 0; i--) {
+        int n = to_num(*buf);
+        if (n < 0) {
             *err = 1;
             return 0;
-        } else {
-            num += n * ipow((int64_t) sys.base, (int64_t) (strlen(buf) - i));
         }
+        
+		num += n * ipow(sys.base, i);
+		buf++;
     }
-    num *= neg;
-    return num;
+
+    return num * neg;
 }
 
 // Interprets the word/number contained within buf
@@ -203,8 +203,8 @@ void interpret(char *buf) {
         int err = 0;
 
         // Need two separate cases, one for 32-bit numbers, one for 64-bit
-        if (buf[strlen(buf)] == '.') {
-            buf[strlen(buf)] = '\0';
+        if (buf[strlen(buf)-1] == '.') {
+            buf[strlen(buf)-1] = '\0';
             int64_t num = int64_convert(buf, &err);
             // If this wasn't actually a number
             if (err) {
