@@ -13,7 +13,7 @@
 void register_handlers() {
     int failure = 0;
     struct sigaction s;
-    bzero(&s, sizeof(s));
+    bzero(&s, sizeof s);
     s.sa_handler = SIGSEGV_handler;
     failure |= sigaction(SIGSEGV, &s, NULL);
 

@@ -1,9 +1,9 @@
 # Temp text files
 *.txt*
 
-# Executables
-*.exe*
-mxf
+# Build files
+obj/*
+bin/*
 
 # GDB garbage
 .gdb_history

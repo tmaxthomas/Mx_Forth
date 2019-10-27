@@ -1,24 +1,34 @@
 CC 		= gcc
 CFLAGS  = -std=gnu99 -g -O0 -W -Werror -fPIE
 LDFLAGS = -lm -pie -lncurses -lreadline
-FDIR    = forth
 
-DEPS    = $(wildcard $(FDIR)/*.h) $(wildcard *.h)
-SRC     = $(wildcard $(FDIR)/*.c) $(wildcard *.c)
-OBJ     = $(SRC:%.c=%.o)
+TARGET  = $(BINDIR)/mxf
 
-all: mxf obj_clean
+SRCDIR  = src
+OBJDIR 	= obj
+BINDIR  = bin
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+SRC     = $(shell find $(SRCDIR) -type f -name *.c)
+HEADER  = $(shell find $(SRCDIR) -type f -name *.h)
+OBJ     = $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-mxf: $(OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
+all: directories $(TARGET)
 
-.PHONY: obj_clean clean
+directories:
+	@mkdir -p $(BINDIR)
+	@mkdir -p $(OBJDIR)
 
 obj_clean:
-	rm -f $(OBJ)
+	@rm -rf $(BUILDDIR)
 
 clean: obj_clean
-	rm -f mxf
+	@rm -rf $(BINDIR)
+
+$(TARGET): $(OBJ)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(HEADER)
+	@mkdir -p $(dir $@)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+.PHONY: all obj_clean clean directories
