@@ -10,6 +10,7 @@
 #include "sys.h"
 #include "defs.h"
 #include "signals.h"
+#include "dict.h"
 #include "forth/intmath.h"
 #include "forth/input.h"
 #include "forth/logic.h"
@@ -35,51 +36,57 @@ static inline void add_func(void (*func)()) {
 
 // Adds a new empty definition to the dictionary with the
 // provided name and precedence, and returns a system pointer to
-// the end of the new definition
-uint32_t *add_def(char *name, uint8_t precedence) {
-    // Make sure the name gets stored as uppercase
-    for (uint32_t i = 0; i < strlen(name); i++) {
-        if (islower(name[i])) name[i] = toupper(name[i]);
+// the start of the new entry
+dict_entry *add_def(char *name_in, uint8_t precedence) {
+    // Need to copy the name to a temp buffer in case name_in points to a string in
+    // the data segment (which is write-protected)
+    uint8_t len = strlen(name_in);
+    uint8_t *name = malloc(len+1);
+    memcpy(name, name_in, len+1);
+
+    // Make name all uppercase
+    for (uint32_t i = 0; i < len; i++) {
+        name[i] = toupper(name[i]);
     }
-    // Set up traversal pointers
-    uint32_t *new_wd = sys.cp;
-    uint8_t *ccp = (uint8_t *) sys.cp;
-    // Set precedence byte
-    *ccp = precedence;
-    ccp++;
-    // Set string length byte
-    uint8_t len = (uint8_t) strlen(name);
-    uint8_t mem_len = ((len + 2) % 4 == 0) ? len : (len + 4 - ((len + 2) % 4));
-    *ccp = mem_len;
-    ccp++;
-    // Copy the name into glossary memory
-    memset(ccp, 0, mem_len);
-    memcpy(ccp, name, len);
-    ccp += mem_len;
-    // Move & align system cp pointer
-    sys.cp = (uint32_t*) ccp;
-    // Set up back pointer
-    *sys.cp = forth_addr(sys.gloss_head);
-    sys.cp++;
+
+    dict_entry *new_wd = (dict_entry *) sys.cp;
+
+    // Set the precedence
+    new_wd->flags = 0 | precedence;
+
+    // Add the name, accounting for short-string optimization
+    // N.B. The name is stored as a FORTH string, not a C string
+    if (len < sizeof(new_wd->short_str)) {
+        new_wd->short_str[0] = len;
+        memcpy(new_wd->short_str + 1, name, len);
+        free(name);
+    } else {
+        memmove(name + 1, name, len);
+        name[0] = len;
+        new_wd->long_str = name;
+        new_wd->flags |= DICT_LONG_STRING;
+    }
+
+    new_wd->prev = sys.gloss_head;
+    sys.cp = new_wd->data;
+
     return new_wd;
 }
 
 void add_basic_word(char* name, void(*func)(), uint8_t precedence) {
-    uint32_t *new_wd = add_def(name, precedence);
+    dict_entry *new_wd = add_def(name, precedence);
     add_func(func);
-    *sys.cp = ft_size - 1;
-    sys.cp++;
-    *sys.cp = EXIT_ADDR;
-    sys.cp++;
-    *sys.cp = 0;
-    sys.cp++;
+    new_wd->data[0] = ft_size-1;
+    new_wd->data[1] = EXIT_ADDR;
+    new_wd->data[2] = 0;
+    sys.cp += 3;
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
 }
 
 int main() {
     // Register signal handlers
-    register_handlers();
+    // register_handlers();
     // Set up the FORTH system
     sys.sys = (uint32_t*) malloc(SYSTEM_SIZE * sizeof(uint32_t) * 4);
     sys.sys_top = sys.sys + SYSTEM_SIZE * 4;
@@ -91,7 +98,7 @@ int main() {
     sys.COMPILE = sys.cp;
     sys.cp++;
     *sys.cp = 0;
-    sys.gloss_head = sys.cp;
+    sys.gloss_head = (dict_entry *) sys.cp;
     sys.gloss_base = sys.gloss_head;
     sys.cp++;
     sys.old_cp = sys.cp;

@@ -15,14 +15,14 @@
 /* HELPER FUNCTIONS */
 
 // Runs the FORTH program at func within the FORTH environment
-void exec(uint32_t * func) {
+void exec(uint32_t *func) {
     rstack_push(0);
     sys.inst = func;
     // Main program loop - run until the instruction pointer is NULL
     while(sys.inst) {
         uint32_t *xt_ptr = sys_addr(*sys.inst);
-        // If the top of the rstack pointed somewhere in the glossary, it's a FORTH word. Call it.
-        if (sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
+        // If the instruction pointer pointed somewhere in the glossary, it's a FORTH word. Call it.
+        if ((uint32_t *) sys.gloss_base < xt_ptr && xt_ptr < sys.cp) {
             rstack_push(forth_addr(sys.inst + 1));
             sys.inst = xt_ptr;
         // If the top of the stack contained a function table address,
@@ -89,13 +89,6 @@ bool str_eq(uint8_t* c1, uint8_t* c2) {
     result = strncmp((char *) (c1 + 1), (char *) (c2 + 1), len) == 0;
     free(buf);
     return result;
-}
-
-// Returns a system pointer to the start of the code section for func
-uint32_t *get_xt(uint32_t * func) {
-    uint8_t len = *(((uint8_t *) func) + 1);
-    uintptr_t xt = ((uintptr_t) func) + len + 6;
-    return (uint32_t *) xt;
 }
 
 // Finds a c string in the dictionary, if it exists, returning a FORTH address with
@@ -249,22 +242,17 @@ void interpret(char *buf) {
 void find() {
     uint8_t *name = (uint8_t *) sys_addr(*stack_at(0));
     stack_pop(1);
-    uint32_t *gloss_loc = sys.gloss_head;
-    while (*gloss_loc) {
-        uint8_t *ccp = (uint8_t *) gloss_loc;
-        if (str_eq(ccp + 1, name)) {
-            stack_push(forth_addr(get_xt(gloss_loc)));
-            if (*ccp == 0) { // Not immediate
-                stack_push(1);
-            } else { // Immediate
-                stack_push(-1);
-            }
+    dict_entry *dict_ptr = sys.gloss_head;
+    while (dict_ptr != sys.gloss_base) {
+        uint8_t *wd_name = dict_ptr->flags & DICT_LONG_STRING ?
+						   dict_ptr->long_str : dict_ptr->short_str;
+
+        if (str_eq(wd_name, name)) {
+            stack_push(forth_addr(dict_ptr->data));
+            stack_push(dict_ptr->flags & DICT_IMMEDIATE ? -1 : 1);
             return;
         } else {
-            uint8_t len = *(ccp + 1);
-            // Locate back pointer and assign dereferenced value to gloss_loc
-            uint32_t *bp = (uint32_t *) (((uintptr_t) gloss_loc) + len + 2);
-            gloss_loc = sys_addr(*bp);
+            dict_ptr = dict_ptr->prev;
         }
     }
     stack_push(forth_addr((uint32_t *) name));
@@ -320,8 +308,8 @@ void bracket_char_bracket() {
 void execute() {
     uint32_t xt = *(uint32_t *) stack_at(0);
     stack_pop(1);
-    uint32_t *xt_addr = sys_addr(xt);
-    if (sys.gloss_base < xt_addr && xt_addr < sys.cp) {
+    dict_entry *xt_addr = sys_addr(xt);
+    if (sys.gloss_base < xt_addr && (uint32_t *) xt_addr < sys.cp) {
         rstack_push(forth_addr(sys.inst + 1));
         sys.inst = sys_addr(xt);
         sys.inst--;
@@ -516,11 +504,10 @@ void colon() {
 }
 
 void semicolon() {
-    *sys.cp = EXIT_ADDR;
-    sys.cp++;
-    *sys.cp = 0;
-    sys.cp++;
-    uint32_t *new_wd = sys_addr(*stack_at(0));
+    sys.cp[0] = EXIT_ADDR;
+	sys.cp[1] = 0;
+    sys.cp += 2;
+    dict_entry *new_wd = sys_addr(*stack_at(0));
     stack_pop(1);
     sys.gloss_head = new_wd;
     sys.old_cp = sys.cp;
@@ -726,12 +713,11 @@ void postpone() {
     char *buf = get_substring(isspace);
     int32_t wd = cfind(buf, NULL);
     if (wd) {
-        // Some necessary optimizations, needed to make some stuff work
-        if (*(sys_addr(wd) + 1) == EXIT_ADDR) {
-            *sys.cp = *sys_addr(wd);
-        } else {
-            *sys.cp = (uint32_t) wd;
-        }
+        // Auto-inline system words
+        *sys.cp = *((uint32_t *) sys_addr(wd) + 1) == EXIT_ADDR ?
+                  *(uint32_t *) sys_addr(wd) :
+                  (uint32_t) wd;
+
         sys.cp++;
         free(buf);
     } else {
@@ -763,6 +749,6 @@ void leave() {
 }
 
 void recurse() {
-    *(sys.cp) = forth_addr(get_xt(sys.curr_def));
+    *(sys.cp) = forth_addr(sys.curr_def->data);
     sys.cp++;
 }

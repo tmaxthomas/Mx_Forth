@@ -168,22 +168,21 @@ void dump() {
 
 void variable() {
     char *name = get_substring(isspace);
-    uint32_t *new_wd = add_def(name, 0);
+    dict_entry *new_wd = add_def(name, 0);
     sys.gloss_head = new_wd;
-    *sys.cp = CREATE_RUNTIME_ADDR;
+    new_wd->data[0] = CREATE_RUNTIME_ADDR;
     sys.cp += 2;
     sys.old_cp = sys.cp;
 }
 
 void constant() {
     char *name = get_substring(isspace);
-    uint32_t *new_wd = add_def(name, 0);
+    dict_entry *new_wd = add_def(name, 0);
     sys.gloss_head = new_wd;
-    *sys.cp = CONSTANT_RUNTIME_ADDR;
-    sys.cp++;
-    *(int32_t *) sys.cp = *(int32_t *) stack_at(0);
+    new_wd->data[0] = CONSTANT_RUNTIME_ADDR;
+    new_wd->data[1] = *stack_at(0);
     stack_pop(1);
-    sys.cp++;
+    sys.cp += 2;
     sys.old_cp = sys.cp;
 }
 
@@ -196,11 +195,11 @@ void allot() {
 
 void create() {
     char *name = get_substring(isspace);
-    uint32_t *new_wd = add_def(name, 0);
+    dict_entry *new_wd = add_def(name, 0);
     sys.gloss_head = new_wd;
-    *sys.cp = CREATE_RUNTIME_ADDR;
-    sys.old_cp = sys.cp;
+    new_wd->data[0] = CREATE_RUNTIME_ADDR;
     sys.cp++;
+    sys.old_cp = sys.cp;
     sys_util.alloc = 0;
 }
 

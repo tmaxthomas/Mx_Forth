@@ -3,8 +3,10 @@
 
 #include <stdint.h>
 
+#include "../dict.h"
+
 void exec(uint32_t *);
-uint32_t *add_def(char *, uint8_t);
+dict_entry *add_def(char *, uint8_t);
 char *get_substring(int(*)(int));
 int to_num(int);
 uint32_t cfind(char *, int *);

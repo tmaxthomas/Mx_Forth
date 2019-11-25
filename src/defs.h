@@ -1,9 +1,9 @@
 #ifndef __DEFS_H_
 #define __DEFS_H_
 
-//This file contains system-wide defines
+// This file contains system-wide defines
 
-//Size of a unit section of the FORTH system. For now, 4 MB or 2^20 words.
+// Size of a unit section of the FORTH system. For now, 4 MB or 2^20 words.
 #define SYSTEM_SIZE 4194304
 
 // Some global constants
@@ -22,5 +22,9 @@
 #define CONSTANT_RUNTIME_ADDR 12
 #define DOT_QUOTE_RUNTIME_ADDR 13
 #define S_QUOTE_RUNTIME_ADDR 14
+
+// Bit masks for dictionary entry flags
+#define DICT_IMMEDIATE 0b1
+#define DICT_LONG_STRING 0b10 
 
 #endif
