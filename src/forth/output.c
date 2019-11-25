@@ -45,7 +45,6 @@ void cr() {
 void spaces() {
     uint32_t n = *stack_at(0);
     stack_pop(1);
-    if (sys.ABORT) return;
     for (uint32_t i = 0; i < n; i++) {
         printf(" ");
     }
@@ -64,7 +63,6 @@ void space() {
 void emit() {
     char ch = *(char *) stack_at(0);
     stack_pop(1);
-    if (sys.ABORT) return;
     printf("%c", ch);
     fflush(stdout);
 }
@@ -74,7 +72,6 @@ void emit() {
 void print() {
     int32_t n = *(int32_t *) stack_at(0);
     stack_pop(1);
-    if (sys.ABORT) return;
     bprint(n);
     fflush(stdout);
 }
@@ -84,7 +81,6 @@ void print() {
 void uprint() {
     uint32_t n = *stack_at(0);
     stack_pop(1);
-    if (sys.ABORT) return;
     ubprint(n);
     fflush(stdout);
 }
@@ -94,7 +90,6 @@ void type() {
     uint32_t u = *stack_at(0);
     char* str = (char *) sys_addr(*stack_at(1));
     stack_pop(2);
-    if(sys.ABORT) return;
     fwrite(str, 1, u, stdout);
     fflush(stdout);
 }

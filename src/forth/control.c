@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <setjmp.h>
+#include <stdbool.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -16,6 +18,9 @@
 
 // Runs the FORTH program at func within the FORTH environment
 void exec(uint32_t *func) {
+    setjmp(sys.abort_buf);
+    sys.OKAY = false;
+
     rstack_push(0);
     sys.inst = func;
     // Main program loop - run until the instruction pointer is NULL
@@ -519,17 +524,21 @@ void abort_() {
     // Empty the stack and rstack
     stack_clear();
     rstack_clear();
+
     // Clear the terminal input buffer
     strcpy(sys.tib, "");
     sys.idx = sys.tib;
     sys.idx_loc = 0;
+    
     // Clean up whatever garbage might be at the end of the glossary
     // (in case we aborted while compiling a definition)
     sys.cp = sys.old_cp;
+    
     // Reset the instruction pointer
     sys.inst = sys.q_addr-1;
-    sys.ABORT = true;
     *sys.COMPILE = false;
+
+    longjmp(sys.abort_buf, 1);
 }
 
 int isquote(int ch) {
@@ -573,9 +582,6 @@ void abort_quote_runtime() {
 
 // Word that runs the FORTH system, including the interpreter/compiler
 void quit() {
-    // We're not aborting anymore
-    sys.ABORT = false;
-
     // If QUIT was called by some means other than the normal way
     // QUIT loops
     if (sys.rstack == sys.rstack_0 || *rstack_at(0) != 0) {

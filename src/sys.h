@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <setjmp.h>
 
 #include "dict.h"
 
@@ -21,9 +22,10 @@ struct system_t {
     uint32_t *q_addr, q_fth_addr;
     uint32_t source_id;
     uintptr_t addr_offset;
+    jmp_buf abort_buf;
     
     uint32_t *COMPILE;
-    bool OKAY, ABORT;
+    bool OKAY;
 };
 
 struct sys_util_t {
